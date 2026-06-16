@@ -1,0 +1,40 @@
+id,layer,name,file,paper_ref,deps,sorry_count,status
+P1,0,Category Theory,Mathlib.CategoryTheory.Category.Basic,Mathlib,,0,external
+P2,0,Knaster-Tarski / lfp / gfp,Mathlib.Order.FixedPoints,Mathlib,,0,external
+P3,0,Complete Lattice,Mathlib.Order.CompleteLattice,Mathlib,,0,external
+P4,0,Omega-CPO,Mathlib.Order.OmegaCompletePartialOrder,Mathlib,,0,external
+A1,1,Allegory,Allegory/Basic.lean,"Freyd-Scedrov §2.11",P1,0,scaffold
+A2,1,Distributive Allegory,Allegory/Distributive.lean,"Freyd-Scedrov §2.21",A1,0,scaffold
+A3,1,Division Allegory,Allegory/Division.lean,"Freyd-Scedrov §2.31",A2,0,scaffold-unused
+A4,1,Locally Complete Allegory,Allegory/LocallyComplete.lean,"Freyd-Scedrov §2.22 / Gavazzo Def. 2",A2;P3,0,scaffold
+A4r,1,Relators,Allegory/Relator/Basic.lean,"Gavazzo Def. 4",A4,0,scaffold
+A4c,1,Cocartesian Decomposition,Allegory/Relator/Cocartesian.lean,"Gavazzo Def. 5",A4r,0,scaffold
+T1,2,Term Relation Algebra,Allegory/TRA/Basic.lean,"Gavazzo Def. 6",A4;A4r;P4,0,scaffold
+E1,3,"Compatible / CUI / Substitutive / Leibniz",Allegory/TRA/Properties.lean,"Gavazzo Def. 15",T1,3,scaffold
+E2,3,"Modalities □ / ♦ / ♢ / Closed",Allegory/TRA/Modalities.lean,"Gavazzo §3.2.1",T1,12,scaffold
+E3,3,"Lemma 16 — closed lfp preserves closedness",Allegory/TRA/FixedPointLemmas.lean,"Gavazzo Lemma 16",E2;P2,2,scaffold
+H1,3,Harmony Axiom,Allegory/TRA/Harmony.lean,"Gavazzo §6.1",E1,0,under-review
+O1,4,Operational Decomposition,Allegory/TRA/Operational/Decomposition.lean,"Gavazzo Def. 23",T1;E2,2,scaffold
+O2,4,Gentzen Inversion Principle (GIP),Allegory/TRA/Operational/GIP.lean,"Gavazzo Def. 24",O1,2,scaffold
+O3,4,Gentzen Conservation Principle (GCP),Allegory/TRA/Operational/GCP.lean,"Gavazzo Def. 33",O1;E1,1,scaffold
+O4,4,F-Operator aᶠ,Allegory/TRA/Operational/FOperator.lean,"Gavazzo §5.1.2.1",O1;P2,3,scaffold
+R1,5,Reduction predicate,Allegory/TRA/Reduction/Basic.lean,"Gavazzo Def. 17",T1,2,scaffold
+R2,5,"Parallel reduction a⇛ / convertibility a≈",Allegory/TRA/Reduction/Parallel.lean,"Gavazzo §4",R1;E1;P2,3,scaffold
+R3,5,"Church-Rosser / Diamond / Confluence",Allegory/TRA/Reduction/Confluence.lean,"Gavazzo Def. 20",A4;P2,3,scaffold
+R4,5,Orthogonality,Allegory/TRA/Reduction/Orthogonality.lean,"Gavazzo Thm. 21 antecedent",T1;R1;R2;E1,1,scaffold
+R5,5,"Theorem 21 — orthogonal ⟹ confluent",Allegory/TRA/Reduction.lean,"Gavazzo Thm. 21",R3;R4,2,scaffold
+B1,6,One-step evaluation aᴱ,Allegory/TRA/Evaluation/OneStep.lean,"Gavazzo Def. 27",O1;O2;O4;R1;E3,2,scaffold
+B2,6,Big-step evaluation a⇓,Allegory/TRA/Evaluation/BigStep.lean,"Gavazzo Def. 28",B1;O1;E2;E3,3,scaffold
+B3,6,"Proposition 29 — inductive characterisation",Allegory/TRA/Evaluation/Proposition29.lean,"Gavazzo Prop. 29",B1;B2;O1;E2;E3;P2,4,scaffold
+B4,6,"Theorem 31 — determinism of big-step",Allegory/TRA/Evaluation/Determinism.lean,"Gavazzo Thm. 31",B2;B3;O1;O2;R1,3,scaffold
+S1,7,"b-Simulation / Similarity b⪆ / Bisimilarity",Allegory/TRA/Similarity/Basic.lean,"Gavazzo Def. 32 / §6.1",E2;B2;A4;P2,5,scaffold-with-def-sorry
+S2,7,op-Howe Extension a§,Allegory/TRA/Similarity/HoweExtension.lean,"Gavazzo §6.1.1",S1;T1;E1;E2;A4,4,scaffold
+S3,7,"Lemma 34 — Key Lemma for Congruence",Allegory/TRA/Similarity/Congruence.lean,"Gavazzo Lemma 34",S1;S2;O3;E1;E2;T1;P2;H1,0,dormant
+S4,7,"Theorem 35 — Congruence of Open Similarity",Allegory/TRA/Similarity/Theorem35.lean,"Gavazzo Thm. 35",S1;S2;S3;O3;B2;T1,6,scaffold
+M1,8,"Lemma 36 — GCP + GIP ⟹ Orthogonality",Allegory/TRA/Bridge/Lemma36.lean,"Gavazzo Lemma 36",O2;O3;R2;R4;T1,3,scaffold
+M2,8,"Theorem 37 — Bridge Theorem",Allegory/TRA/Bridge.lean,"Gavazzo Thm. 37",M1;R5;B4;S4,4,scaffold
+I1,9,First-Order TRA instance,Allegory/Instances/FirstOrder/TRA.lean,"Goguen et al. / Fiore-Plotkin-Turi §3.1.1",T1,0,placeholder
+I2,9,Lambda Terms,Allegory/Instances/Lambda/Terms.lean,"Fiore-Plotkin-Turi §3.1.2 / Aczel 1978",T1,0,placeholder
+I3,9,Lambda Operational Decomposition,Allegory/Instances/Lambda/Operational.lean,"Gavazzo §5",I2;O1,0,placeholder
+I4_6,9,"β-reduction: Reduction (I4) / Determinism (I5) / GCP (I6)",Allegory/Instances/Lambda/Beta.lean,"Gavazzo Ex. 19 / §6.1.1",I3;R1;B4;O3,0,placeholder
+I7,9,"Bridge Corollary on λ-calculus",Allegory/Instances/Lambda/Confluence.lean,"Gavazzo Thm. 37 instantiated",I4_6;M2,0,placeholder
