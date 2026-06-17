@@ -55,7 +55,7 @@ theorem bridge_determinism {X : A} (a : X ⟶ X)
 congruence of `♢((□a)=∼)`. Via S4. -/
 theorem bridge_congruence {X : A} (a : X ⟶ X)
     (_hRed : Reduction a) (_hGIP : GIP a) (_hGCP : GCP a) :
-    Precongruence (openExt (sorry : X ⟶ X)) := by
+    Precongruence (openExt (bisimilarity (box a))) := by
   -- deps: openBisimilarity_congruence, bisimilarity, box, box_substitution_invariant, Precongruence
   sorry
 
@@ -69,7 +69,7 @@ theorem bridge_theorem {X : A} (a : X ⟶ X)
     (_hClosedDet : box a ≫ converse (box a) ≤ 𝟙 X) :
     Confluent (parallelReduction a)
       ∧ converse (bigStep (box a)) ≫ bigStep (box a) ≤ delta_kappa
-      ∧ Precongruence (openExt (sorry : X ⟶ X)) := by
+      ∧ Precongruence (openExt (bisimilarity (box a))) := by
   -- deps: bridge_confluence, bridge_determinism, bridge_congruence
   sorry
 

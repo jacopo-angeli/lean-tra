@@ -40,11 +40,11 @@ namespace Allegory.TRA
 
 variable {A : Type*} [TRA A] [OperationalDecomposition A]
 
-/-- **Left residual** `c ← a` (Allegory division: `b ; a ≤ c ↔ b ≤ c ← a`). -/
-def leftResidual {X : A} (_c _a : X ⟶ X) : X ⟶ X :=
-  -- deps: unknown
-  -- TODO
-  sorry
+/-- **Left residual** `c ← a` (Allegory division: `T ; a ≤ c ↔ T ≤ c ← a`).
+Constructed as the join of all relations satisfying the Galois condition;
+in a locally complete allegory this `sSup` is the largest such `T`. -/
+def leftResidual {X : A} (c a : X ⟶ X) : X ⟶ X :=
+  sSup { T : X ⟶ X | T ≫ a ≤ c }
 
 /-- **Simulation functional** `B(a) := (b ; a) ← b` parameterised by the
 candidate similarity relation `b` (Paper 2026, Sec. 6.1). -/
@@ -73,11 +73,14 @@ def similarity {X : A} (b : X ⟶ X) : X ⟶ X :=
 def openSimilarity {X : A} (b : X ⟶ X) : X ⟶ X :=
   openExt (similarity b)
 
-/-- **Bisimilarity** `b=∼ := νx. ♢x ⊓ B(♢x°)°` (Paper 2026, Def. 32). -/
-def bisimilarity {X : A} (_b : X ⟶ X) : X ⟶ X :=
-  -- deps: unknown
-  -- TODO
-  sorry
+/-- **Bisimilarity** `b=∼ := νx. ♢x ⊓ B(♢x°)°` (Paper 2026, Def. 32).
+Given as the join of all postfixpoints of `x ↦ ♢x ⊓ B(♢x°)°`; by
+Knaster–Tarski on the complete hom-lattice this is the greatest fixed
+point of that map (monotonicity supplied by clients when needed). -/
+def bisimilarity {X : A} (b : X ⟶ X) : X ⟶ X :=
+  sSup { x : X ⟶ X |
+    x ≤ openExt x ⊓
+      converse (simulationFunctional b (converse (openExt x))) }
 
 /-- **Similarity is closed**: `□b⪆ = b⪆` (Paper 2026, Sec. 6.1,
 "b⪆ is complete (i.e. □b⪆ = b⪆)"). -/

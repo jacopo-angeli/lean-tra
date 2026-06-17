@@ -74,7 +74,7 @@ theorem openSimilarity_substitutive {X : A} (b : X ⟶ X) (_hGCP : GCP b) :
 /-- **Theorem 35** (Paper 2026, p. 76:24) — **Congruence of open
 similarity**: `♢b=∼` is a congruence (precongruence + symmetry). -/
 theorem openBisimilarity_congruence {X : A} (b : X ⟶ X) (_hGCP : GCP b) :
-    Precongruence (openExt (sorry : X ⟶ X)) := by
+    Precongruence (openExt (bisimilarity b)) := by
   -- deps: openSimilarity_compatible, openSimilarity_substitutive, bisimilarity, Precongruence, openExt, closed_iff_eq_box, box_le_self
   sorry
 
