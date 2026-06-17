@@ -86,13 +86,11 @@ namespace Allegory.TRA
     def bracketSingle [OperationalDecomposition A] {X : A} (a : X ⟶ X) : X ⟶ X := OperationalDecomposition.bracketRel a (𝟙 X)
 
     /-- **`Δκ` is coreflexive**: `Δκ ≤ 𝟙` (direct from `box_le_self`). -/
-    theorem delta_kappa_coreflexive {X : A} : (delta_kappa : X ⟶ X) ≤ 𝟙 X := by
-    -- deps: box_le_self
-    sorry
+    theorem delta_kappa_coreflexive {X : A} : (delta_kappa : X ⟶ X) ≤ 𝟙 X :=
+      box_le_self (𝟙 X)
 
     /-- **`Δκ` is closed**: `Δκ ≤ □Δκ` (direct from `closed_box` applied to `𝟙`). -/
-    theorem delta_kappa_closed {X : A} : Closed (delta_kappa : X ⟶ X) := by
-    -- deps: closed_box
-    sorry
+    theorem delta_kappa_closed {X : A} : Closed (delta_kappa : X ⟶ X) :=
+      closed_box (𝟙 X)
 
 end Allegory.TRA

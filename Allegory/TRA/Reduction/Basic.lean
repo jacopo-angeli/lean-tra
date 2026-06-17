@@ -40,9 +40,8 @@ def Reduction {X : A} (a : X ⟶ X) : Prop :=
 /-- **Reductions absorb variables on the left**: `Δη ; a ≤ ⊥` (the `≤`
 form of `Reduction`), useful in chains where the equality is not needed. -/
 theorem reduction_le {X : A} (a : X ⟶ X) (h : Reduction a) :
-    delta_eta ≫ a ≤ ⊥ := by
-  -- deps: le_refl
-  sorry
+    delta_eta ≫ a ≤ ⊥ :=
+  h.le
 
 /-- **Bottom is a reduction** (trivial example, used to lift facts about
 arbitrary morphisms to facts about reductions): `Δη ; ⊥ = ⊥`. -/

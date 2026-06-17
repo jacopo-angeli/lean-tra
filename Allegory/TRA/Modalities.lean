@@ -67,8 +67,10 @@ namespace Allegory.TRA
   /-- **S4 counit law `□a ≤ a`** (Paper 2026, p. 76:16: "□φ ⊆ φ"). -/
   theorem box_le_self {X : A} (a : X ⟶ X) :
     box a ≤ a := by
-      -- deps: Allegory.TRA.substitution_monotonicity_right, Allegory.TRA.substitution_right_unit, bot_le
-      sorry
+      show substitution a ⊥ ≤ a
+      calc substitution a ⊥
+          ≤ substitution a delta_eta := substitution_monotonicity_right a bot_le
+        _ = a := substitution_right_unit a
 
   /-- **S4 multiplicative law `□(a ; b) = □a ; □b`**
   (Paper 2026, p. 76:16: "□(φ; ψ) = □φ ; □ψ"). -/
@@ -132,8 +134,10 @@ namespace Allegory.TRA
   (standard comonad fact: the counit `box_le_self` produces a fixed point). -/
   theorem closed_box {X : A} (a : X ⟶ X) :
     Closed (box a) := by
-      -- deps: box_idempotent, le_refl
-      sorry
+      show box a ≤ box (box a)
+      show substitution a ⊥ ≤ substitution (substitution a ⊥) ⊥
+      rw [substitution_assoc]
+      exact substitution_monotonicity_right a bot_le
 
   /-- **Closedness ⟺ `a = box a`**: combining `Closed a` (`a ≤ box a`) with
   the S4 counit `box_le_self` (`box a ≤ a`) yields equality, and conversely
@@ -141,7 +145,8 @@ namespace Allegory.TRA
   such that `a ≤ □a` (and thus `□a = a`)"). -/
   theorem closed_iff_eq_box {X : A} (a : X ⟶ X) :
     Closed a ↔ a = box a := by
-      -- deps: box_le_self, le_antisymm, le_refl
-      sorry
+      refine ⟨fun h => le_antisymm h (box_le_self a), fun h => ?_⟩
+      show a ≤ box a
+      exact h.le
 
 end Allegory.TRA
