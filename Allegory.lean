@@ -44,6 +44,9 @@ import Allegory.TRA.Similarity.Theorem35
 import Allegory.TRA.Bridge.Lemma36
 import Allegory.TRA.Bridge
 
+-- Notation (paper-style aliases; optional, scoped)
+import Allegory.Notation
+
 -- Layer 9 — Istanze (placeholder)
 import Allegory.Instances.FirstOrder.TRA
 import Allegory.Instances.Lambda.Terms
