@@ -71,22 +71,22 @@ universe u
 arbitrary joins in a complete lattice (`IsQuantale`), equipped with an
 order-preserving contravariant involution `·ᵒ`.
 
-Corresponds to the one-object case of Gavazzo, LICS 2026 Definition 1, and
-draft Definition 2.1. Only three of the four involution laws listed by
-Gavazzo are taken as primitive here: `Δᵒ = Δ` and join-preservation are
-`converse_one` and `converse_sSup` below, both derived. -/
+The one-object case of the base algebra of the paper cited in the module
+`References` block, presented there over allegories. Only three of the four
+involution laws are taken as primitive here: `Δᵒ = Δ` and join-preservation
+are `converse_one` and `converse_sSup` below, both derived. -/
 class IsInvolutiveQuantale (α : Type u)
     [Monoid α] [CompleteLattice α] [IsQuantale α] where
   /-- The converse operation `·ᵒ`. -/
   converse : α → α
-  /-- Involutivity of converse. Ref: Gavazzo LICS 2026 Def. 1 / draft Def. 2.1. -/
+  /-- Involutivity of converse: applying converse twice is the identity. -/
   protected converse_converse (a : α) : converse (converse a) = a
-  /-- Contravariance of converse over composition. Ref: LICS 2026 Def. 1 / draft
-  Def. 2.1. -/
+  /-- Contravariance of converse over composition: swapping the endpoints of a
+  composite reverses the order of the factors. -/
   protected converse_mul (a b : α) : converse (a * b) = converse b * converse a
-  /-- Monotonicity of converse. Gavazzo instead lists join-preservation among the
-  axioms; the two are equivalent given involutivity, see `converse_sSup`. Ref:
-  LICS 2026 Def. 1 (order-preservation clause) / draft Def. 2.1. -/
+  /-- Monotonicity of converse. The source lists join-preservation among the
+  axioms instead; the two are equivalent given involutivity, see
+  `converse_sSup`. -/
   protected converse_mono ⦃a b : α⦄ : a ≤ b → converse a ≤ converse b
 
 @[inherit_doc]
@@ -101,19 +101,16 @@ variable {α : Type u} {ι : Sort*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
 variable {a b : α} {s : Set α} {f : ι → α}
 
-/-- Involutivity of converse, restated with notation. Axiom, ref. LICS 2026 Def. 1
-/ draft Def. 2.1. -/
+/-- Involutivity of converse, restated with notation. -/
 @[simp]
 theorem converse_involutive (a : α) : aᵒᵒ = a :=
   IsInvolutiveQuantale.converse_converse a
 
-/-- Contravariance of converse over composition, restated with notation. Axiom,
-ref. LICS 2026 Def. 1 / draft Def. 2.1. -/
+/-- Contravariance of converse over composition, restated with notation. -/
 theorem mul_converse (a b : α) : (a * b)ᵒ = bᵒ * aᵒ :=
   IsInvolutiveQuantale.converse_mul a b
 
-/-- Monotonicity of converse, restated with notation. Axiom, ref. LICS 2026 Def. 1
-/ draft Def. 2.1. -/
+/-- Monotonicity of converse, restated with notation. -/
 theorem converse_le_converse (h : a ≤ b) : aᵒ ≤ bᵒ :=
   IsInvolutiveQuantale.converse_mono h
 
@@ -129,11 +126,10 @@ theorem converse_le_converse_iff : aᵒ ≤ bᵒ ↔ a ≤ b := by
   have := converse_le_converse h
   simpa using this
 
-/-- Gavazzo's `Δᵒ = Δ`: the identity is self-converse. Derived from the monoid
-unit laws together with `converse_involutive` and `mul_converse`; see the module
-docstring for the argument. Not an axiom, although Gavazzo lists it as one.
-
-Ref (as an axiom in the paper): LICS 2026 Def. 1 / draft Def. 2.1. -/
+/-- `Δᵒ = Δ`: the identity is self-converse. Derived from the monoid unit laws
+together with `converse_involutive` and `mul_converse`; see the module
+docstring for the argument. Not an axiom here, although the source lists it as
+one. -/
 @[simp]
 theorem converse_one : (1 : α)ᵒ = 1 := by
   have key : ∀ a : α, a * (1 : α)ᵒ = a := fun a =>
@@ -145,12 +141,10 @@ theorem converse_one : (1 : α)ᵒ = 1 := by
   have h := key 1
   rwa [one_mul] at h
 
-/-- Gavazzo's join-preservation: `(sSup s)ᵒ = sSup (·ᵒ '' s)`. Derived from
+/-- Join-preservation of converse: `(sSup s)ᵒ = sSup (·ᵒ '' s)`. Derived from
 monotonicity and involutivity (a monotone bijection with monotone inverse is an
-order isomorphism, hence preserves arbitrary joins). Not an axiom, although
-Gavazzo lists it as one.
-
-Ref (as an axiom in the paper): LICS 2026 Def. 1 / draft Def. 2.1. -/
+order isomorphism, hence preserves arbitrary joins). Not an axiom here, although
+the source lists it as one. -/
 theorem converse_sSup (s : Set α) : (sSup s)ᵒ = sSup (converse '' s) := by
   refine le_antisymm ?_ ?_
   · have h : sSup s ≤ (sSup (converse '' s))ᵒ := by
