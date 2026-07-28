@@ -5,3 +5,6 @@ import LeanTra.Structure.OperationalDecomposition
 import LeanTra.Structure.Derived
 import LeanTra.Confluence.Abstract
 import LeanTra.Confluence.Orthogonal
+import LeanTra.Instances.FirstOrder.Terms
+import LeanTra.Instances.FirstOrder.Relations
+import LeanTra.Instances.FirstOrder.SRA
