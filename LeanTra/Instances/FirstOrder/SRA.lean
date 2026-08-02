@@ -12,7 +12,7 @@ public import LeanTra.Structure.SRA
 
 Phase C of the LICS'26 term-model construction: defines the three
 `SRA`-specific data — the variable co-equivalence `Δη` (`varDiag`), the
-strict compatible refinement `ẽ·` (`scr`), and relation substitution
+strict compatible refinement `tilde ·` (`scr`), and relation substitution
 `·[·]` (`subst`) — on the carrier `SynRel S` built in Phase B,
 discharges all sixteen `SRA` axioms, packages the result as a `SRA`
 typeclass instance, and settles the (D-C7) box/composition question
@@ -192,7 +192,7 @@ def varDiag : SynRel S := {
     exact ⟨f x, by rw [ht]; rfl, by rw [hs]; rfl⟩
 }
 
-/-- Strict compatible refinement `ẽφ`: two terms are `scr φ`-related
+/-- Strict compatible refinement `tilde φ`: two terms are `scr φ`-related
 when they are built from the same outermost operator whose immediate
 sub-terms are pairwise `φ`-related. Renaming closure passes through
 each sub-term via `φ.ren_closed`. -/
@@ -312,7 +312,7 @@ theorem varDiag_le_mul_self : (varDiag : SynRel S) ≤ varDiag * varDiag := by
   obtain ⟨x, ht, hs⟩ := h
   exact ⟨Tm.var x, ⟨x, ht, rfl⟩, ⟨x, rfl, hs⟩⟩
 
-/-- Variables and compound terms are disjoint: `Δη ; ẽφ` collapses to
+/-- Variables and compound terms are disjoint: `Δη ; tilde φ` collapses to
 `⊥`. Proof: the `varDiag` intermediate forces `u = Tm.var x`, while the
 `scr` intermediate forces `u = Tm.node g ts` — impossible by
 `Tm.noConfusion`. -/
@@ -398,7 +398,7 @@ theorem scr_mul (φ ψ : SynRel S) : scr (φ * ψ) = scr φ * scr ψ := by
     exact ⟨ws i, hi1 i, hi2 i⟩
 
 /-- Fixed-point law: every term is either a variable or a node.
-Algebraically, `Δη ⊔ ẽ1 = 1`. -/
+Algebraically, `Δη ⊔ tilde 1 = 1`. -/
 theorem varDiag_sup_scr_one_eq : (varDiag ⊔ scr 1 : SynRel S) = 1 := by
   ext Γ t s
   constructor
@@ -414,7 +414,7 @@ theorem varDiag_sup_scr_one_eq : (varDiag ⊔ scr 1 : SynRel S) = 1 := by
     | var x => exact Or.inl ⟨x, rfl, rfl⟩
     | node g ts _ => exact Or.inr ⟨g, ts, ts, rfl, rfl, fun _ => rfl⟩
 
-/-- Structural induction: `Δη ⊔ ẽφ ≤ φ → 1 ≤ φ`. Proof is literal
+/-- Structural induction: `Δη ⊔ tilde φ ≤ φ → 1 ≤ φ`. Proof is literal
 `induction t`. -/
 theorem one_le_of_scr_sup_le {φ : SynRel S}
     (h : varDiag ⊔ scr φ ≤ φ) : 1 ≤ φ := by
@@ -491,6 +491,72 @@ theorem subst_mul_le (φ φ' ψ ψ' : SynRel S) :
   · exact ⟨Γ, t, w, τ, μ, rfl, rfl, hφ, hψ⟩
   · exact ⟨Γ, w, s, μ, σ, rfl, rfl, hφ', hψ'⟩
 
+/-! ## The `box` law — (D-C7).
+
+`box a := subst a ⊥`: relates `u v : Tm S Δ` exactly when both are
+weakenings of an `a`-related pair over an *empty* source context. The
+key lemma `box_iff` normalises the empty-context witness to
+`Tm S Empty`, at which point `box_mul` follows from injectivity of
+weakening (`Tm.ren_injective` on the vacuously injective `Empty.elim`)
+— the two decompositions of the shared middle term `z` are forced to
+agree. See (D-C7) for the modelling reading. -/
+
+/-- Closed-form characterisation of `subst a ⊥`: it relates `u` and `v`
+iff they are the weakenings (`Tm.close Δ`) of an `a`-related pair of
+closed terms. The `→` direction repackages an arbitrary empty-context
+witness as an `Empty`-context witness via renaming closure and
+`Tm.subst_empty`; the `←` direction is direct with
+`Γ := Empty`, `τ := σ := Tm.var ∘ Empty.elim`. -/
+theorem box_iff (a : SynRel S) {Δ} {u v : Tm S Δ} :
+    (subst a ⊥ : SynRel S).rel Δ u v ↔
+      ∃ (t s : Tm S Empty),
+        u = Tm.close Δ t ∧ v = Tm.close Δ s ∧ a.rel Empty t s := by
+  constructor
+  · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, ha, hbot⟩
+    -- hbot : ∀ x : Γ, False (through instBot)
+    haveI : IsEmpty Γ := ⟨fun x => hbot x⟩
+    let e : Γ → Empty := fun x => (hbot x).elim
+    refine ⟨t.ren e, s.ren e, ?_, ?_, a.ren_closed e ha⟩
+    · change t.subst τ = (t.ren e).ren Empty.elim
+      rw [Tm.ren_ren]
+      exact Tm.subst_empty t _ _
+    · change s.subst σ = (s.ren e).ren Empty.elim
+      rw [Tm.ren_ren]
+      exact Tm.subst_empty s _ _
+  · rintro ⟨t, s, rfl, rfl, ha⟩
+    exact ⟨Empty, t, s, Tm.var ∘ Empty.elim, Tm.var ∘ Empty.elim,
+           rfl, rfl, ha, fun e => e.elim⟩
+
+/-- The box/composition law: `box (φ * ψ) = box φ * box ψ` in this
+model — (D-C7). The oplax direction (`≤`) is `box_mul_le` in
+`Structure/Derived.lean`; here we also prove `≥`, which forces
+identifying the two empty-context decompositions of the shared middle
+term `z` via `Tm.ren_injective`. Not derivable from the SRA axioms in
+general (see the module docstring); this is a term-model witness that
+the paper's asserted equality is legitimate as a *model* fact. -/
+theorem box_mul (φ ψ : SynRel S) :
+    (subst (φ * ψ) ⊥ : SynRel S) = subst φ ⊥ * subst ψ ⊥ := by
+  ext Δ u v
+  rw [box_iff]
+  constructor
+  · rintro ⟨t, s, rfl, rfl, w, hφ, hψ⟩
+    refine ⟨Tm.close Δ w, ?_, ?_⟩
+    · exact (box_iff φ).mpr ⟨t, w, rfl, rfl, hφ⟩
+    · exact (box_iff ψ).mpr ⟨w, s, rfl, rfl, hψ⟩
+  · rintro ⟨z, hφz, hψz⟩
+    rw [box_iff] at hφz hψz
+    obtain ⟨t₁, s₁, rfl, hz₁, hφ⟩ := hφz
+    obtain ⟨t₂, s₂, hz₂, rfl, hψ⟩ := hψz
+    have hinj : Function.Injective
+        (fun t : Tm S Empty => t.ren (Empty.elim : Empty → Δ)) :=
+      Tm.ren_injective _ (fun (e : Empty) _ _ => e.elim)
+    have hst : s₁.ren (Empty.elim : Empty → Δ)
+             = t₂.ren (Empty.elim : Empty → Δ) :=
+      hz₁.symm.trans hz₂
+    have h_eq : s₁ = t₂ := hinj hst
+    subst h_eq
+    exact ⟨t₁, s₂, rfl, rfl, s₁, hφ, hψ⟩
+
 end SynRel
 
 /-! ## The `SRA` typeclass instance.
@@ -559,72 +625,6 @@ theorem box_top_ne_bot (f : S.op) (h : S.arity f = 0) :
      rfl, rfl, trivial, fun e => e.elim⟩
   rw [hbad] at hb
   exact hb
-
-/-! ## The `box` law — (D-C7).
-
-`box a := subst a ⊥`: relates `u v : Tm S Δ` exactly when both are
-weakenings of an `a`-related pair over an *empty* source context. The
-key lemma `box_iff` normalises the empty-context witness to
-`Tm S Empty`, at which point `box_mul` follows from injectivity of
-weakening (`Tm.ren_injective` on the vacuously injective `Empty.elim`)
-— the two decompositions of the shared middle term `z` are forced to
-agree. See (D-C7) for the modelling reading. -/
-
-/-- Closed-form characterisation of `subst a ⊥`: it relates `u` and `v`
-iff they are the weakenings (`Tm.close Δ`) of an `a`-related pair of
-closed terms. The `→` direction repackages an arbitrary empty-context
-witness as an `Empty`-context witness via renaming closure and
-`Tm.subst_empty`; the `←` direction is direct with
-`Γ := Empty`, `τ := σ := Tm.var ∘ Empty.elim`. -/
-theorem box_iff (a : SynRel S) {Δ} {u v : Tm S Δ} :
-    (subst a ⊥ : SynRel S).rel Δ u v ↔
-      ∃ (t s : Tm S Empty),
-        u = Tm.close Δ t ∧ v = Tm.close Δ s ∧ a.rel Empty t s := by
-  constructor
-  · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, ha, hbot⟩
-    -- hbot : ∀ x : Γ, False (through instBot)
-    haveI : IsEmpty Γ := ⟨fun x => hbot x⟩
-    let e : Γ → Empty := fun x => (hbot x).elim
-    refine ⟨t.ren e, s.ren e, ?_, ?_, a.ren_closed e ha⟩
-    · change t.subst τ = (t.ren e).ren Empty.elim
-      rw [Tm.ren_ren]
-      exact Tm.subst_empty t _ _
-    · change s.subst σ = (s.ren e).ren Empty.elim
-      rw [Tm.ren_ren]
-      exact Tm.subst_empty s _ _
-  · rintro ⟨t, s, rfl, rfl, ha⟩
-    exact ⟨Empty, t, s, Tm.var ∘ Empty.elim, Tm.var ∘ Empty.elim,
-           rfl, rfl, ha, fun e => e.elim⟩
-
-/-- The box/composition law: `box (φ * ψ) = box φ * box ψ` in this
-model — (D-C7). The oplax direction (`≤`) is `box_mul_le` in
-`Structure/Derived.lean`; here we also prove `≥`, which forces
-identifying the two empty-context decompositions of the shared middle
-term `z` via `Tm.ren_injective`. Not derivable from the SRA axioms in
-general (see the module docstring); this is a term-model witness that
-the paper's asserted equality is legitimate as a *model* fact. -/
-theorem box_mul (φ ψ : SynRel S) :
-    (subst (φ * ψ) ⊥ : SynRel S) = subst φ ⊥ * subst ψ ⊥ := by
-  ext Δ u v
-  rw [box_iff]
-  constructor
-  · rintro ⟨t, s, rfl, rfl, w, hφ, hψ⟩
-    refine ⟨Tm.close Δ w, ?_, ?_⟩
-    · exact (box_iff φ).mpr ⟨t, w, rfl, rfl, hφ⟩
-    · exact (box_iff ψ).mpr ⟨w, s, rfl, rfl, hψ⟩
-  · rintro ⟨z, hφz, hψz⟩
-    rw [box_iff] at hφz hψz
-    obtain ⟨t₁, s₁, rfl, hz₁, hφ⟩ := hφz
-    obtain ⟨t₂, s₂, hz₂, rfl, hψ⟩ := hψz
-    have hinj : Function.Injective
-        (fun t : Tm S Empty => t.ren (Empty.elim : Empty → Δ)) :=
-      Tm.ren_injective _ (fun (e : Empty) _ _ => e.elim)
-    have hst : s₁.ren (Empty.elim : Empty → Δ)
-             = t₂.ren (Empty.elim : Empty → Δ) :=
-      hz₁.symm.trans hz₂
-    have h_eq : s₁ = t₂ := hinj hst
-    subst h_eq
-    exact ⟨t₁, s₂, rfl, rfl, s₁, hφ, hψ⟩
 
 end SynRel
 

@@ -15,7 +15,7 @@ term relation algebra — a family of relations on `Tm S ·`, one per
 context, indexed uniformly and closed under renaming — together with the
 whole involutive-quantale structure (order, complete lattice, monoid,
 `IsQuantale`, `IsInvolutiveQuantale`). The three `SRA`-specific data
-(`Δη`, `ẽ·`, `·[·]`) belong to Phase C and are not touched here.
+(`Δη`, `tilde ·`, `·[·]`) belong to Phase C and are not touched here.
 
 ## Contents
 

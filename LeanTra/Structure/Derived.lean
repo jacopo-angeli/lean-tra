@@ -19,7 +19,7 @@ Grown across four passes, whose scope is reflected in the Contents list below.
   minimised: `varDiag_le_one`, `scr_one_le`, `subst_mono_left`, plus the full
   two-argument `subst_mono` combining the recovered left monotonicity with
   the axiom `subst_mono_right`.
-* Basic laws of the derived operation `·̂`: monotonicity, restatement of the
+* Basic laws of the derived operation `hat ·`: monotonicity, restatement of the
   fixed-point axiom (`cr_one`, `one_le_of_cr_le`), multiplicativity
   `cr a * cr b = cr (a * b)`, and converse `(cr a)ᵒ = cr (aᵒ)`.
 * Two immediate consequences of `subst_sSup_left`: `subst ⊥ b = ⊥` and
@@ -67,7 +67,7 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 theorem varDiag_le_one : (SRA.varDiag : α) ≤ 1 :=
   le_sup_left.trans_eq SRA.varDiag_sup_scr_one_eq
 
-/-- `ẽ 1 ≤ 1`: the strict compatible refinement is oplax on the unit. -/
+/-- `tilde 1 ≤ 1`: the strict compatible refinement is oplax on the unit. -/
 theorem scr_one_le : SRA.scr (1 : α) ≤ 1 :=
   le_sup_right.trans_eq SRA.varDiag_sup_scr_one_eq
 
@@ -100,21 +100,21 @@ theorem varDiag_converse : (SRA.varDiag : α)ᵒ = SRA.varDiag := by
 
 /-! ### Basic laws of compatible refinement -/
 
-/-- `·̂` is monotone. -/
+/-- `hat ·` is monotone. -/
 theorem cr_mono ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b :=
   sup_le_sup_left (SRA.scr_mono h) _
 
-/-- Fixed-point law for `·̂`: `1̂ = 1`. -/
+/-- Fixed-point law for `hat ·`: `hat 1 = 1`. -/
 @[simp]
 theorem cr_one : cr (1 : α) = 1 := SRA.varDiag_sup_scr_one_eq
 
-/-- Structural induction: `1` is the least pre-fixed point of `·̂`. -/
+/-- Structural induction: `1` is the least pre-fixed point of `hat ·`. -/
 theorem one_le_of_cr_le ⦃a : α⦄ (h : cr a ≤ a) : 1 ≤ a :=
   SRA.one_le_of_scr_sup_le h
 
 /-! ### Orthogonality on the right -/
 
-/-- Symmetric orthogonality: `ẽa * Δη ≤ ⊥`, derived from the axiomatic
+/-- Symmetric orthogonality: `tilde a * Δη ≤ ⊥`, derived from the axiomatic
 left-orthogonality via converse. -/
 theorem scr_mul_varDiag_le_bot (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
   rw [← IsInvolutiveQuantale.converse_le_converse_iff,
@@ -123,7 +123,7 @@ theorem scr_mul_varDiag_le_bot (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
       ← SRA.scr_converse, varDiag_converse]
   exact SRA.varDiag_mul_scr_le_bot _
 
-/-! ### Multiplicativity of Δη and `·̂` -/
+/-! ### Multiplicativity of Δη and `hat ·` -/
 
 /-- `Δη * Δη = Δη`: the variable co-equivalence is idempotent under
 composition. -/
@@ -134,7 +134,7 @@ theorem varDiag_mul_self : (SRA.varDiag : α) * SRA.varDiag = SRA.varDiag := by
       ≤ 1 * SRA.varDiag := mul_le_mul' varDiag_le_one le_rfl
     _ = SRA.varDiag := one_mul _
 
-/-- `·̂` distributes over composition: `â * b̂ = (a * b)̂`. -/
+/-- `hat ·` distributes over composition: `hat a * hat b = hat (a * b)`. -/
 theorem cr_mul (a b : α) : cr a * cr b = cr (a * b) := by
   unfold cr
   rw [Quantale.sup_mul_distrib, Quantale.mul_sup_distrib,
@@ -150,7 +150,7 @@ theorem cr_mul (a b : α) : cr a * cr b = cr (a * b) := by
     · rw [SRA.scr_mul]
       exact le_sup_of_le_right (le_sup_of_le_right le_rfl)
 
-/-- `·̂` commutes with converse: `(â)ᵒ = (aᵒ)̂`. -/
+/-- `hat ·` commutes with converse: `(hat a)ᵒ = hat (aᵒ)`. -/
 @[simp]
 theorem cr_converse (a : α) : (cr a)ᵒ = cr (aᵒ) := by
   unfold cr
@@ -215,7 +215,7 @@ theorem howe_mono ⦃a b : α⦄ (h : a ≤ b) : howe a ≤ howe b := by
 
 /-- One direction of uniqueness: any two solutions of `x = cr x * a` are
 mutually below each other. Argument via the left residual `⇨ₗ` and structural
-induction on `·̂`. -/
+induction on `hat ·`. -/
 private theorem howe_solution_le {a b c : α}
     (hb : b = cr b * a) (hc : c = cr c * a) : b ≤ c := by
   rw [show b = 1 * b from (one_mul b).symm]
@@ -392,7 +392,4 @@ substitution residual. -/
 scoped[SRA] infixr:60 " » " => SRA.substResid
 
 @[inherit_doc SRA.howe]
--- Precedence pitfall (same as `ˆ`): `ẽaᴴ` parses as `ẽ(aᴴ)` since postfix
--- `ᴴ` (max) binds before prefix `ẽ` (also max). For the reading `(ẽa)ᴴ`,
--- always write the explicit parens.
 scoped[SRA] postfix:max "ᴴ" => SRA.howe

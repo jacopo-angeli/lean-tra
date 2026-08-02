@@ -14,23 +14,23 @@ formalised here over the involutive-quantale base (`IsInvolutiveQuantale`)
 rather than over allegories, the two being equivalent in the one-object case.
 
 A `SRA` extends the involutive unital quantale with three data — the variable
-co-equivalence `Δη`, the strict compatible refinement `ẽ·` (a weakly unital
+co-equivalence `Δη`, the strict compatible refinement `tilde ·` (a weakly unital
 morphism), and relation substitution `·[·]` (an oplax bimorphism) — subject to
-the axioms recalled below. The derived operation `·̂ := Δη ⊔ ẽ·` (compatible
+the axioms recalled below. The derived operation `hat · := Δη ⊔ tilde ·` (compatible
 refinement) is a `def`, not a field.
 
 ## Axioms (fields of the class)
 
 * `Δη` is a co-equivalence: symmetric, co-transitive, co-reflexive.
-* `ẽ·` weakly unital: monotone, exact on composition and converse, oplax on the
-  unit (`ẽ Δ ≤ Δ`).
-* `Δη` and `ẽ·` orthogonal (`Δη ; ẽa ≤ ⊥`).
-* `Δ` is the least fixed point of `·̂` (fixed-point law + structural induction).
+* `tilde ·` weakly unital: monotone, exact on composition and converse, oplax on the
+  unit (`tilde Δ ≤ Δ`).
+* `Δη` and `tilde ·` orthogonal (`Δη ; tilde a ≤ ⊥`).
+* `Δ` is the least fixed point of `hat ·` (fixed-point law + structural induction).
 * `·[·]` oplax bimorphism, strict on converse, join-preserving in the first
   argument.
 * `(·, Δη, ·[·])` a monoid — recorded as `Prop` fields, NOT as a second `Monoid`
   instance (which would clash with the composition monoid).
-* `·[·]` distributes over `ẽ·` (`ẽa[b] ≤ ẽ(a[b])`).
+* `·[·]` distributes over `tilde ·` (`tilde a[b] ≤ tilde (a[b])`).
 
 Laws Gavazzo lists but that are derivable — e.g. closedness `·[b] ⊣ b » ·` from
 join-preservation, `Δᵒ = Δ` and join-preservation of `·ᵒ` from the base — are
@@ -51,7 +51,7 @@ open scoped IsInvolutiveQuantale
 /-- A `SRA` (Syntax Relation Algebra) over an involutive unital quantale `α`.
 Extends the base (`Monoid` + `CompleteLattice` + `IsQuantale` +
 `IsInvolutiveQuantale`) with the variable co-equivalence `Δη`, the strict
-compatible refinement `ẽ·`, and relation substitution `·[·]`, together with
+compatible refinement `tilde ·`, and relation substitution `·[·]`, together with
 their defining axioms.
 
 This is the involutive-quantale presentation of the term relation algebra of
@@ -62,7 +62,7 @@ class SRA (α : Type u)
   /-- The variable co-equivalence `Δη`: the relation that holds between two
   terms exactly when they are the same variable. -/
   varDiag : α
-  /-- Strict compatible refinement `ẽ·`: relates two terms built from the same
+  /-- Strict compatible refinement `tilde ·`: relates two terms built from the same
   outermost operator whose immediate sub-terms are pairwise related. -/
   scr : α → α
   /-- Relation substitution `·[·]`: `a[b]` relates two terms obtained from
@@ -74,17 +74,17 @@ class SRA (α : Type u)
   /-- `Δη` is co-transitive: two variables related through an intermediate
   variable are related directly. -/
   protected varDiag_le_mul_self : varDiag ≤ varDiag * varDiag
-  /-- `ẽ·` is monotone: refining the argument refines its strict compatible
+  /-- `tilde ·` is monotone: refining the argument refines its strict compatible
   refinement. -/
   protected scr_mono ⦃a b : α⦄ : a ≤ b → scr a ≤ scr b
-  /-- `ẽ·` preserves composition: relating two terms via a composite of
+  /-- `tilde ·` preserves composition: relating two terms via a composite of
   sub-term relations is the same as composing their strict refinements. -/
   protected scr_mul (a b : α) : scr (a * b) = scr a * scr b
-  /-- `ẽ·` preserves converse: turning the sub-term relation around commutes
+  /-- `tilde ·` preserves converse: turning the sub-term relation around commutes
   with taking the strict compatible refinement. -/
   protected scr_converse (a : α) : scr (aᵒ) = (scr a)ᵒ
   /-- Variables and compound terms are disjoint: a variable is never a term
-  built from an outermost operator, so `Δη` and `ẽ·` cannot both hold. -/
+  built from an outermost operator, so `Δη` and `tilde ·` cannot both hold. -/
   protected varDiag_mul_scr_le_bot (a : α) : varDiag * scr a ≤ ⊥
   /-- Substitution is monotone in the second argument: refining the
   substituent refines the result. Left-argument monotonicity follows from
@@ -115,14 +115,14 @@ class SRA (α : Type u)
   strict compatible refinement refines the strict refinement of the
   substitution. -/
   protected subst_scr_le (a b : α) : subst (scr a) b ≤ scr (subst a b)
-  /-- Fixed-point law for `·̂`: the identity is a fixed point of compatible
+  /-- Fixed-point law for `hat ·`: the identity is a fixed point of compatible
   refinement, i.e. any term equals itself either as a variable or by having
-  pairwise equal sub-terms. Inlined as `Δη ⊔ ẽ 1 = 1` since `·̂` is defined
+  pairwise equal sub-terms. Inlined as `Δη ⊔ tilde 1 = 1` since `hat ·` is defined
   after the class. -/
   protected varDiag_sup_scr_one_eq : varDiag ⊔ scr 1 = 1
-  /-- Structural induction: the identity is the *least* fixed point of `·̂`,
+  /-- Structural induction: the identity is the *least* fixed point of `hat ·`,
   so any relation stable under compatible refinement contains the identity.
-  Inlined as `Δη ⊔ ẽa ≤ a → 1 ≤ a` since `·̂` is defined after the class. -/
+  Inlined as `Δη ⊔ tilde a ≤ a → 1 ≤ a` since `hat ·` is defined after the class. -/
   protected one_le_of_scr_sup_le ⦃a : α⦄ : varDiag ⊔ scr a ≤ a → 1 ≤ a
 
 namespace SRA
@@ -131,7 +131,7 @@ variable {α : Type u}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
 variable [SRA α]
 
-/-- Compatible refinement `·̂ := Δη ⊔ ẽ·`. Derived operation, not a field of
+/-- Compatible refinement `hat · := Δη ⊔ tilde ·`. Derived operation, not a field of
 `SRA`: two terms are compatibly refined by `a` when they are either the same
 variable or built from the same operator with `a`-related sub-terms. -/
 def cr (a : α) : α := varDiag ⊔ scr a
@@ -146,14 +146,6 @@ with `open scoped SRA`. -/
 @[inherit_doc SRA.varDiag]
 scoped[SRA] notation "Δη" => SRA.varDiag
 
-@[inherit_doc SRA.scr]
-scoped[SRA] prefix:max "ẽ" => SRA.scr
-
 @[inherit_doc SRA.subst]
 scoped[SRA] notation:max a "[" b "]" => SRA.subst a b
 
-@[inherit_doc SRA.cr]
--- Precedence pitfall: `ẽaˆ` parses as `ẽ(aˆ)` since postfix `ˆ` (max) binds
--- before prefix `ẽ` (also max). For the reading `(ẽa)ˆ`, always write the
--- explicit parens.
-scoped[SRA] postfix:max "ˆ" => SRA.cr

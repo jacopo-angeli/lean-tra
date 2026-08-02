@@ -37,13 +37,22 @@ at once:
 ## Structure
 
 ```
-LeanTRA/
-└── Structure/
-    ├── InvolutiveQuantale.lean       -- involutive unital quantale (the base)
-    ├── SRA.lean                      -- Syntax Relation Algebra: Δη, ẽ·, ·[·]
-    ├── Derived.lean                  -- derived laws, ·ᴴ, □/♦, cohesion
-    ├── OperationalDecomposition.lean -- intro/elim, a⇓, GIP/GCP
-    └── Model/                        -- non-degenerate models (consistency)
+LeanTra/
+├── Basic.lean
+├── Structure/
+│   ├── InvolutiveQuantale.lean       -- involutive unital quantale (the base)
+│   ├── SRA.lean                      -- Syntax Relation Algebra: Δη, tilde ·, ·[·]
+│   ├── Derived.lean                  -- derived laws, ·ᴴ, □/♦, cohesion
+│   └── OperationalDecomposition.lean -- intro/elim, a⇓, GIP/GCP (stub)
+├── Confluence/
+│   ├── Abstract.lean                 -- Kleene ·∗, Diamond, Confluent, strip
+│   └── Orthogonal.lean               -- parRed, IsOrthogonal, confluent_parRed
+└── Instances/
+    └── FirstOrder/
+        ├── Terms.lean                -- Signature, Tm, substitution, renaming
+        ├── Relations.lean            -- SynRel S: lattice/monoid/quantale/involution
+        ├── SRA.lean                  -- the sixteen SRA axioms + instSRA + (D-C7)
+        └── Confluence.lean           -- confluent_parRed on the term model
 ```
 
 The two typeclasses are `SRA` and `OperationalDecomposition` (the latter
@@ -51,13 +60,13 @@ extends the former); everything else is definitions and theorems over them.
 
 ## Status
 
-- [ ] Involutive quantale base
-- [ ] SRA axiomatisation
-- [ ] Non-degenerate model
-- [ ] Derived laws
+- [x] Involutive quantale base
+- [x] SRA axiomatisation
+- [x] Derived laws
+- [x] Non-degenerate model
+- [x] Confluence
 - [ ] Operational decomposition
 - [ ] Determinism
-- [ ] Confluence
 - [ ] Congruence
 - [ ] Bridge theorem
 
@@ -80,7 +89,7 @@ The build is intended to pass with no warnings and no `sorry`.
   lemmas, not assumed. Each declaration's docstring says whether it is an
   axiom, a definition, or a derived result.
 - Consistency of the axiomatisation is checked by an explicit non-degenerate
-  model (`Structure/Model/`), not assumed.
+  model (`Instances/FirstOrder/`), not assumed.
 
 ## References
 

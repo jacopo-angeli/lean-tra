@@ -8,3 +8,4 @@ import LeanTra.Confluence.Orthogonal
 import LeanTra.Instances.FirstOrder.Terms
 import LeanTra.Instances.FirstOrder.Relations
 import LeanTra.Instances.FirstOrder.SRA
+import LeanTra.Instances.FirstOrder.Confluence

@@ -89,7 +89,7 @@ to Lean syntax made in this file.
   □ modality (`□a := a[⊥]`): substitution acts trivially on the image of
   weakening from the empty context, which is what will let the □ modality
   factor through closed terms in Phase C.
-* `Tm.subst_node` is the equation the SRA law `ẽa[b] ≤ (a[b])~` will
+* `Tm.subst_node` is the equation the SRA law `tilde a[b] ≤ (a[b])~` will
   ultimately unfold to at the syntactic level in Phase C.
 * `Tm.subst_ren`, `Tm.ren_subst`, `Tm.ren_ren` are exactly the shape
   needed in Phase B, where candidate relations on terms must be verified
@@ -189,7 +189,7 @@ theorem subst_var (x : Γ) (τ : Γ → Tm S Δ) : (var x).subst τ = τ x := rf
 /-- L7: substitution commutes with the `node` constructor.
 Definitionally true; recorded as a named `simp` lemma because Phase C
 will cite it as the syntactic content behind the SRA law
-`ẽa[b] ≤ (a[b])~`. -/
+`tilde a[b] ≤ (a[b])~`. -/
 @[simp]
 theorem subst_node (f : S.op) (ts : Fin (S.arity f) → Tm S Γ)
     (τ : Γ → Tm S Δ) :
@@ -220,7 +220,7 @@ theorem subst_id (t : Tm S Γ) : t.subst Subst.id = t := by
   induction t with
   | var x => rfl
   | node f ts ih =>
-    show node f (fun i => (ts i).subst Subst.id) = node f ts
+    change node f (fun i => (ts i).subst Subst.id) = node f ts
     apply congrArg (node f)
     funext i
     exact ih i
@@ -233,7 +233,7 @@ theorem subst_comp (t : Tm S Γ) (τ : Γ → Tm S Δ) (θ : Δ → Tm S E) :
   induction t with
   | var x => rfl
   | node f ts ih =>
-    show node f (fun i => ((ts i).subst τ).subst θ)
+    change node f (fun i => ((ts i).subst τ).subst θ)
         = node f (fun i => (ts i).subst (Subst.comp τ θ))
     apply congrArg (node f)
     funext i
@@ -283,7 +283,7 @@ theorem ren_ren (t : Tm S Γ) (f : Γ → Δ) (g : Δ → E) :
 /-- The identity renaming is the identity. -/
 theorem ren_id (t : Tm S Γ) : t.ren _root_.id = t := by
   unfold ren
-  show t.subst (fun x => Tm.var x) = t
+  change t.subst (fun x => Tm.var x) = t
   exact subst_id t
 
 /-- On an empty context, substitution is invariant in its substitution
@@ -348,7 +348,7 @@ morphisms Γ → Tm S Δ), and these three laws witness its axioms. -/
 theorem comp_assoc (τ : Γ → Tm S Δ) (θ : Δ → Tm S E) (κ : E → Tm S Z) :
     comp (comp τ θ) κ = comp τ (comp θ κ) := by
   funext x
-  show ((τ x).subst θ).subst κ = (τ x).subst (comp θ κ)
+  change ((τ x).subst θ).subst κ = (τ x).subst (comp θ κ)
   exact Tm.subst_comp (τ x) θ κ
 
 /-- L5a: `Subst.id` is a left unit for `Subst.comp`. -/
@@ -359,7 +359,7 @@ theorem id_comp (τ : Γ → Tm S Δ) : comp Subst.id τ = τ := by
 /-- L5b: `Subst.id` is a right unit for `Subst.comp`. -/
 theorem comp_id (τ : Γ → Tm S Δ) : comp τ Subst.id = τ := by
   funext x
-  show (τ x).subst Subst.id = τ x
+  change (τ x).subst Subst.id = τ x
   exact Tm.subst_id (τ x)
 
 end Subst
