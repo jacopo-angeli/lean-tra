@@ -6,7 +6,7 @@ records the intended shape of the extension of `SRA` needed for operational
 semantics.
 
 The plan is to layer on top of a `SRA` a splitting of the strict compatible
-refinement `ẽ·` into an *introduction* part `·` and an *elimination* part
+refinement `tilde ·` into an *introduction* part `·` and an *elimination* part
 `⟨·, ·⟩`, distinguishing constructors from destructors and, within
 destructors, major (eager) from minor (lazy) arguments. Determinism and
 congruence will live above this class; confluence will not, staying at the
@@ -16,7 +16,7 @@ congruence will live above this class; confluence will not, staying at the
 
 `OperationalDecomposition` will extend `SRA` with:
 
-* an intro/elim split recovering `ẽ·`, i.e. `ẽa = intro a ⊔ elim a a`;
+* an intro/elim split recovering `tilde ·`, i.e. `tilde a = intro a ⊔ elim a a`;
 * weak unitality and mutual orthogonality of `intro` and `elim`
   (constructors and destructors disjoint);
 * distributivity of `·[b]` over `intro` and `elim`;

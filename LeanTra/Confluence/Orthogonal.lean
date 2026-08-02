@@ -40,9 +40,9 @@ on top of the abstract rewriting infrastructure in
   * `subst_one_sup_subst_one_absorbs` — corollary of S24 giving the
     hypothesis H15 the substitutivity pass needs: the reflexive
     substitution closure is closed under `·[1]`.
-  * `SRA.cr_subst_le` — S27, `(aˆ)[b] ≤ b ⊔ (a[b])ˆ`.
+  * `SRA.cr_subst_le` — S27, `(hat a)[b] ≤ b ⊔ hat (a[b])`.
   * `SRA.subst_one_le_of_cr_le` — S36, compatibility implies Leibniz:
-    if `aˆ ≤ a` then `1[a] ≤ a`.
+    if `hat a ≤ a` then `1[a] ≤ a`.
 * **H15 — substitutivity of parallel reduction, for reductions:**
   `parRed_subst_le (h : IsReduction a) : a⇛[a⇛] ≤ a⇛`. Independent of
   the diamond argument (`diamond_parRed` routes through `nesting`),
@@ -55,7 +55,7 @@ on top of the abstract rewriting infrastructure in
   level up.
   Gavazzo LICS'23 Rem. 5 / LICS'26 Def. 17 both assume `Δη * a = ⊥`
   precisely so this circularity does not arise. The hypothesis enters
-  via `factor_scr_of_isReduction` (`a = ẽ 1 * a`) and its lifted form
+  via `factor_scr_of_isReduction` (`a = tilde 1 * a`) and its lifted form
   `varDiag_mul_subst_one_eq_bot` (`Δη * a[1] = ⊥`), which is what
   lets the `Δη * a[1]` summand of the Howe induction step vanish.
 * **Converse of parRed** (`parRed_converse`) and **nesting**
@@ -83,10 +83,10 @@ on top of the abstract rewriting infrastructure in
    * `(1, 1)`: `cr_parRed_le` and its converse `cr_parRed_converse_le`.
    * `(1, a[1])`: `varDiag_mul_subst_one_eq_bot` (L1) kills the
      `Δη`-branch; `scr_parRed_converse_mul_le` (M7) and
-     `co_nesting` (M5) close the `ẽ`-branch.
+     `co_nesting` (M5) close the `tilde`-branch.
    * `(aᵒ[1], 1)`: `subst_one_mul_varDiag_eq_bot` (M2, the converse
      of L1) kills the `Δη`-branch; `horth.2` and `nesting` close the
-     `ẽ`-branch, with the last step through
+     `tilde`-branch, with the last step through
      `subst_one_mul_cr_parRed_converse_le` (M8, the converse of M6).
    * `(aᵒ[1], a[1])` — **the critical corner**, closed by chaining
      `horth.2 + nesting + M7 + M5 + horth.1`. This is the corner
@@ -159,7 +159,7 @@ identity. The `≥` direction is direct — `Δη ≤ 1` and `subst` is monotone
 the first argument, so `1 = Δη[1] ≤ 1[1]`. The `≤` direction moves the goal
 through the substitution/residual adjunction (`subst_le_iff`) to `1 ≤ 1 » 1`,
 which follows by structural induction (`one_le_of_cr_le`) — the pre-fixed-
-point obligation `(1 » 1)ˆ ≤ 1 » 1` unpacks via `subst_sup_left`,
+point obligation `hat (1 » 1) ≤ 1 » 1` unpacks via `subst_sup_left`,
 `subst_varDiag_left`, `subst_scr_le`, and `scr_one_le`. -/
 theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
   refine le_antisymm ?_ ?_
@@ -192,11 +192,11 @@ theorem subst_one_sup_subst_one_absorbs (a : α) :
     _ = 1 ⊔ SRA.subst a 1 := by
         rw [subst_one_one, SRA.subst_assoc, subst_one_one]
 
-/-- **S27.** `(aˆ)[b] ≤ b ⊔ (a[b])ˆ`: substituting into a compatible
+/-- **S27.** `(hat a)[b] ≤ b ⊔ hat (a[b])`: substituting into a compatible
 refinement is bounded by either "hitting a variable and returning `b`" or
-"refining the substitution". Direct calculation: unfold `ˆ`, apply
+"refining the substitution". Direct calculation: unfold `hat`, apply
 `subst_sup_left`, then `subst_varDiag_left` on the `Δη` summand (giving the
-extra `b`) and `subst_scr_le` on the `ẽ·` summand. -/
+extra `b`) and `subst_scr_le` on the `tilde ·` summand. -/
 theorem cr_subst_le (a b : α) :
     SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
   unfold SRA.cr
@@ -204,9 +204,9 @@ theorem cr_subst_le (a b : α) :
   exact sup_le_sup_left ((SRA.subst_scr_le _ _).trans le_sup_right) b
 
 /-- **S36 (compatibility implies Leibniz).** If `a` is closed under
-compatible refinement (`aˆ ≤ a`), then it is also closed under
+compatible refinement (`hat a ≤ a`), then it is also closed under
 substituting the identity: `1[a] ≤ a`. Move the goal to
-`1 ≤ a » a` via the adjunction; the pre-fixed-point obligation `(a » a)ˆ ≤
+`1 ≤ a » a` via the adjunction; the pre-fixed-point obligation `hat (a » a) ≤
 a » a` collapses through `cr_subst_le` (S27) and the hypothesis. -/
 theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
     SRA.subst 1 a ≤ a := by
@@ -279,7 +279,7 @@ theorem opHowe_eq_of_fix {a b : α} (hb : b = a * SRA.cr b) : b = opHowe a :=
 /-- Converse of Howe is op-Howe of converse: `(aᴴ)ᵒ = (aᵒ)§`. Take `·ᵒ` of
 `howe_fix a` to exhibit `(aᴴ)ᵒ` as a solution of the op-Howe equation for
 `aᵒ` (using `mul_converse` to swap the factors and `cr_converse` to move
-`·ᵒ` under `ˆ`), then conclude by `opHowe_eq_of_fix`. Same architecture as
+`·ᵒ` under `hat`), then conclude by `opHowe_eq_of_fix`. Same architecture as
 `star_converse` in `Confluence/Abstract.lean` — never proved directly
 against the lfp; always routed through uniqueness. -/
 theorem howe_converse (a : α) : (SRA.howe a)ᵒ = opHowe (aᵒ) := by
@@ -298,9 +298,6 @@ the paper: `·ᴴ` for the standard Howe recursor `x ↦ cr x * a`, `·§` for
 its mirror `x ↦ a * cr x`. -/
 
 @[inherit_doc SRA.opHowe]
--- Precedence pitfall (same as `ˆ`, `ᴴ`): `ẽa§` parses as `ẽ(a§)` since
--- postfix `§` (max) binds before prefix `ẽ` (also max). For the reading
--- `(ẽa)§`, always write the explicit parens.
 scoped[SRA] postfix:max "§" => SRA.opHowe
 
 /-! ## Confluence definitions -/
@@ -326,7 +323,7 @@ recursor* — parallel reduction there is the least fixed point of
 `x = cr x * a` variant, which is our `howe`. LICS'26 instead moves
 reflexivity into the *argument* of the plain recursor:
 `a⇛ := (Δ ∨ a[Δ])ᴴ`. We follow LICS'26; both presentations agree once
-`Δη ⊔ ẽ 1 = 1` (an SRA axiom) is used to align the base cases. -/
+`Δη ⊔ tilde 1 = 1` (an SRA axiom) is used to align the base cases. -/
 def parRed (a : α) : α := SRA.howe (1 ⊔ SRA.subst a 1)
 
 /-! ### Elementary properties of `parRed`
@@ -346,7 +343,7 @@ named lemma to keep the calculations below in a uniform style
 theorem one_le_parRed_arg (a : α) : (1 : α) ≤ 1 ⊔ SRA.subst a 1 :=
   le_sup_left
 
-/-- **Compatibility of parallel reduction.** `(a⇛)ˆ ≤ a⇛`: refining
+/-- **Compatibility of parallel reduction.** `hat (a⇛) ≤ a⇛`: refining
 `parRed a` structurally does not escape it. Direct calculation:
 `cr (howe r) = cr (howe r) * 1 ≤ cr (howe r) * (1 ⊔ a[1]) = howe r` by
 `mul_one`, `mul_le_mul_right` with `one_le_parRed_arg`, and `howe_fix`.
@@ -412,9 +409,9 @@ which the hypothesis is consumed; the main theorem `parRed_subst_le`
 then goes through by the plain Howe induction. -/
 
 /-- **L0 — left factorisation via the reduction hypothesis.** For a
-reduction `a`, the identity factors on the left as `a = ẽ 1 * a`. Proof:
+reduction `a`, the identity factors on the left as `a = tilde 1 * a`. Proof:
 write
-`1 = Δη ⊔ ẽ 1` (SRA axiom `varDiag_sup_scr_one_eq`), distribute over
+`1 = Δη ⊔ tilde 1` (SRA axiom `varDiag_sup_scr_one_eq`), distribute over
 the product (`Quantale.sup_mul_distrib`), and use the reduction
 hypothesis `Δη * a = ⊥` to eliminate the variable branch. Threaded into
 `varDiag_mul_subst_one_eq_bot` below. -/
@@ -435,8 +432,8 @@ a compound-LHS rule into a variable-LHS one. This is the precise point
 where `IsReduction` breaks the circularity that stalled the
 substitutivity pass (see the H15 entry in the Contents block).
 
-Route: from L0 (`factor_scr_of_isReduction`, `a = ẽ 1 * a`) we lift to
-`a[1] ≤ ẽ 1 * a[1]` via `subst_mul_le`, `subst_scr_le`, and S24
+Route: from L0 (`factor_scr_of_isReduction`, `a = tilde 1 * a`) we lift to
+`a[1] ≤ tilde 1 * a[1]` via `subst_mul_le`, `subst_scr_le`, and S24
 (`subst_one_one`). Sandwich with `SRA.varDiag_mul_scr_le_bot` (variables
 and compounds are disjoint) and `Quantale.bot_mul`. -/
 theorem varDiag_mul_subst_one_eq_bot {a : α} (h : IsReduction a) :
@@ -474,11 +471,11 @@ Proof outline. Adjunction / Howe induction / adjunction reduce the goal
 to `(cr X * r)[rᴴ] ≤ rᴴ` where `X := rᴴ » rᴴ`, `r := 1 ⊔ a[1]`.
 Distribute `cr X * r` and kill the `Δη * a[1]` summand via
 `varDiag_mul_subst_one_eq_bot`; the LHS collapses to
-`Δη ⊔ ẽ X ⊔ ẽ X * a[1]`. `subst_sup_left` splits into three branches:
-`Δη[rᴴ] = rᴴ`; `(ẽ X)[rᴴ]` refines to `ẽ rᴴ ≤ cr rᴴ ≤ rᴴ` via
+`Δη ⊔ tilde X ⊔ tilde X * a[1]`. `subst_sup_left` splits into three branches:
+`Δη[rᴴ] = rᴴ`; `(tilde X)[rᴴ]` refines to `tilde rᴴ ≤ cr rᴴ ≤ rᴴ` via
 `subst_scr_le`, the residual adjunction, `cr_parRed_le`; the mixed
-branch `(ẽ X * a[1])[rᴴ]` factors through `rᴴ = rᴴ * 1`, uses
-`subst_assoc` + S24 on the right, the same `ẽ X` collapse on the left,
+branch `(tilde X * a[1])[rᴴ]` factors through `rᴴ = rᴴ * 1`, uses
+`subst_assoc` + S24 on the right, the same `tilde X` collapse on the left,
 and closes with `howe_fix`. -/
 theorem parRed_subst_le {a : α} (h : IsReduction a) :
     SRA.subst (parRed a) (parRed a) ≤ parRed a := by
@@ -497,14 +494,14 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
   refine sup_le (sup_le ?_ ?_) ?_
   -- S1: Δη[rᴴ] = rᴴ ≤ rᴴ.
   · exact le_of_eq (SRA.subst_varDiag_left _)
-  -- S2: (ẽ X)[rᴴ] ≤ rᴴ.
+  -- S2: (tilde X)[rᴴ] ≤ rᴴ.
   · calc SRA.subst (SRA.scr (parRed a » parRed a)) (parRed a)
         ≤ SRA.scr (SRA.subst (parRed a » parRed a) (parRed a)) :=
           SRA.subst_scr_le _ _
       _ ≤ SRA.scr (parRed a) := SRA.scr_mono (SRA.subst_le_iff.mpr le_rfl)
       _ ≤ SRA.cr (parRed a) := le_sup_right
       _ ≤ parRed a := cr_parRed_le a
-  -- S3: (ẽ X * a[1])[rᴴ] ≤ rᴴ.
+  -- S3: (tilde X * a[1])[rᴴ] ≤ rᴴ.
   · calc SRA.subst (SRA.scr (parRed a » parRed a) * SRA.subst a 1)
             (parRed a)
         = SRA.subst (SRA.scr (parRed a » parRed a) * SRA.subst a 1)
@@ -592,7 +589,7 @@ theorem subst_one_mul_varDiag_eq_bot {a : α} (h : IsReduction a) :
       SRA.varDiag_converse, IsInvolutiveQuantale.converse_bot] at this
   exact this
 
-/-- **M3.** `(a⇛)ᵒ` is compatibility-closed: `((a⇛)ᵒ)ˆ ≤ (a⇛)ᵒ`.
+/-- **M3.** `(a⇛)ᵒ` is compatibility-closed: `hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`.
 Converse of `cr_parRed_le` via `cr_converse`. -/
 theorem cr_parRed_converse_le (a : α) : SRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
   rw [← SRA.cr_converse]
@@ -615,7 +612,7 @@ theorem co_nesting (a : α) :
     _ ≤ SRA.subst a 1 * (parRed a)ᵒ :=
         mul_le_mul_right (subst_one_parRed_converse_le a) _
 
-/-- **M6.** `(a⇛)ˆ * a[1] ≤ a⇛`. The S3 sub-bound of `parRed_subst_le`,
+/-- **M6.** `hat (a⇛) * a[1] ≤ a⇛`. The S3 sub-bound of `parRed_subst_le`,
 extracted: weaken `a[1]` to `1 ⊔ a[1]` and close by `howe_fix`. -/
 theorem cr_mul_subst_le_parRed (a : α) :
     SRA.cr (parRed a) * SRA.subst a 1 ≤ parRed a :=
@@ -624,9 +621,9 @@ theorem cr_mul_subst_le_parRed (a : α) :
         mul_le_mul_right le_sup_right _
     _ = parRed a := (SRA.howe_fix _).symm
 
-/-- **M8.** Converse of M6: `aᵒ[1] * ((a⇛)ᵒ)ˆ ≤ (a⇛)ᵒ`. First
-appeared in the `ẽ` form `aᵒ[1] * (ẽ(a⇛))ᵒ ≤ (a⇛)ᵒ` while proving
-`parRed_subst_le`; generalised here to `ˆ` in place of `ẽ` (still
+/-- **M8.** Converse of M6: `aᵒ[1] * hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`. First
+appeared in the `tilde` form `aᵒ[1] * (tilde (a⇛))ᵒ ≤ (a⇛)ᵒ` while proving
+`parRed_subst_le`; generalised here to `hat` in place of `tilde` (still
 holds because `Δη ≤ (a⇛)ᵒ`), which is the form the diamond argument
 needs. -/
 theorem subst_one_mul_cr_parRed_converse_le (a : α) :
@@ -642,7 +639,7 @@ overlaps in two senses, capturing determinism-modulo-variable-renaming:
 
 1. `(a[1])ᵒ * a[1] ≤ 1` — two `a`-rewrites of the same term differ only
    by variable renaming.
-2. `(a[1])ᵒ * ẽ(a⇛) ≤ aᵒ[a⇛]` — a base-instance backwards step followed
+2. `(a[1])ᵒ * tilde (a⇛) ≤ aᵒ[a⇛]` — a base-instance backwards step followed
    by a strict compatible refinement of parallel reduction can be
    swapped for a substituted converse.
 
@@ -652,11 +649,11 @@ reduction); it is Theorem 6 of the same paper that restates it for
 transcribe here, with `SF` replaced by our `parRed`.
 
 Reading of the second conjunct. The LICS'26 typography of Thm. 21 is
-ambiguous between the strict compatible refinement `ẽ` and the full
-one `ˆ`. We read it as strict, confirmed by cross-checking LICS'23
-Thm. 6, which spells the same conjunct as `a[∆]◦ ; ã^SF ≤ a◦[a^SF]`
+ambiguous between the strict compatible refinement `tilde` and the full
+one `hat`. We read it as strict, confirmed by cross-checking LICS'23
+Thm. 6, which spells the same conjunct as `a[∆]◦ ; tilde (a^SF) ≤ a◦[a^SF]`
 (the tilde on `a^SF` is the strict variant). The strict reading also
-gives the *weaker* hypothesis (`ẽ ≤ ˆ`), and hence the *stronger*
+gives the *weaker* hypothesis (`tilde ≤ hat`), and hence the *stronger*
 theorem.
 
 `diamond_parRed` carries `(h : IsReduction a)` alongside
@@ -669,7 +666,7 @@ def IsOrthogonal (a : α) : Prop :=
 
 /-! ### Diamond and confluence -/
 
-/-- **M7.** Converse form of `horth.2`: `ẽ((a⇛)ᵒ) * a[1] ≤ a[(a⇛)ᵒ]`.
+/-- **M7.** Converse form of `horth.2`: `tilde ((a⇛)ᵒ) * a[1] ≤ a[(a⇛)ᵒ]`.
 Take the converse of `horth.2` — using `mul_converse`, M1, `subst_converse`,
 and `scr_converse` to move each factor across `·ᵒ`. -/
 theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
@@ -702,9 +699,9 @@ the classical parallel-moves case analysis:
 
 * `(1, 1)`: `cr_parRed_le` × `cr_parRed_converse_le` (M3).
 * `(1, a[1])`: the `Δη`-summand of `cr((a⇛)ᵒ)` dies by
-  `varDiag_mul_subst_one_eq_bot` (L1); the `ẽ`-summand goes through
+  `varDiag_mul_subst_one_eq_bot` (L1); the `tilde`-summand goes through
   M7 → M5 (`co_nesting`); close with M6.
-* `(aᵒ[1], 1)`: `Δη` dies by M2; `ẽ` goes through `horth.2` (via M1)
+* `(aᵒ[1], 1)`: `Δη` dies by M2; `tilde` goes through `horth.2` (via M1)
   → `nesting` → M8.
 * `(aᵒ[1], a[1])` — **the critical corner**: `horth.2` → `nesting`
   → M7 → M5 → `horth.1` (via M1) collapses the sandwich
