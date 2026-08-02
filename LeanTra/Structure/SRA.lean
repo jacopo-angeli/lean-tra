@@ -36,6 +36,30 @@ Laws Gavazzo lists but that are derivable — e.g. closedness `·[b] ⊣ b » ·
 join-preservation, `Δᵒ = Δ` and join-preservation of `·ᵒ` from the base — are
 NOT fields; they are (or will be) proved in `Derived.lean`.
 
+## Source symbol ↔ Lean name
+
+The code is deliberately name-based: paper symbols are used in the thesis text
+only, not in the sources. Two of the source's diacritics — a widetilde over the
+argument and an overline that is drawn as a rule and vanishes from text
+extraction — proved unreliable to transcribe, so all SRA operations are
+referred to by their identifiers.
+
+| Source symbol | Lean name              |
+|---------------|------------------------|
+| `Δη`          | `SRA.varDiag`          |
+| tilde         | `SRA.scr`              |
+| hat           | `SRA.cr`               |
+| `a[b]`        | `SRA.subst a b`        |
+| `·ᴴ`          | `SRA.howe`             |
+| `·§`          | `SRA.opHowe`           |
+| `b » c`       | `SRA.substResid b c`   |
+| `□a`          | `SRA.box a` (`:= SRA.subst a ⊥`) |
+| `♦a`          | `SRA.dia a` (`:= SRA.substResid ⊥ a`) |
+
+Only the base-level involutive-quantale notations (`·ᵒ` for converse, `⇨ₗ` /
+`⇨ᵣ` for the composition residuals, `·∗` for the Kleene star) remain scoped;
+they are unambiguous and belong to Mathlib-style prose.
+
 ## References
 
 * Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.*
@@ -137,15 +161,3 @@ variable or built from the same operator with `a`-related sub-terms. -/
 def cr (a : α) : α := varDiag ⊔ scr a
 
 end SRA
-
-/-! ## Notation
-
-Scoped Unicode notation for the primitive and derived SRA operations. Open
-with `open scoped SRA`. -/
-
-@[inherit_doc SRA.varDiag]
-scoped[SRA] notation "Δη" => SRA.varDiag
-
-@[inherit_doc SRA.subst]
-scoped[SRA] notation:max a "[" b "]" => SRA.subst a b
-

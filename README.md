@@ -48,6 +48,7 @@ LeanTra/
 │   ├── Abstract.lean                 -- Kleene ·∗, Diamond, Confluent, strip
 │   └── Orthogonal.lean               -- parRed, IsOrthogonal, confluent_parRed
 └── Instances/
+    ├── Toy.lean                      -- two-element separating model (box_lfp counterexample)
     └── FirstOrder/
         ├── Terms.lean                -- Signature, Tm, substitution, renaming
         ├── Relations.lean            -- SynRel S: lattice/monoid/quantale/involution
