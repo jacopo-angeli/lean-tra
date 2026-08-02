@@ -383,13 +383,3 @@ theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
 
 end SRA
 
-/-! ## Notation
-
-Scoped postfix `ᴴ` for the Howe extension, and infix `»` for the
-substitution residual. -/
-
-@[inherit_doc SRA.substResid]
-scoped[SRA] infixr:60 " » " => SRA.substResid
-
-@[inherit_doc SRA.howe]
-scoped[SRA] postfix:max "ᴴ" => SRA.howe

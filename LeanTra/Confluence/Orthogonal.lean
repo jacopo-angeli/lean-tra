@@ -157,9 +157,9 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 /-- **S24.** `1[1] = 1`: substituting the identity into the identity is the
 identity. The `≥` direction is direct — `Δη ≤ 1` and `subst` is monotone in
 the first argument, so `1 = Δη[1] ≤ 1[1]`. The `≤` direction moves the goal
-through the substitution/residual adjunction (`subst_le_iff`) to `1 ≤ 1 » 1`,
+through the substitution/residual adjunction (`subst_le_iff`) to `1 ≤ SRA.substResid 1 1`,
 which follows by structural induction (`one_le_of_cr_le`) — the pre-fixed-
-point obligation `hat (1 » 1) ≤ 1 » 1` unpacks via `subst_sup_left`,
+point obligation `hat (SRA.substResid 1 1) ≤ SRA.substResid 1 1` unpacks via `subst_sup_left`,
 `subst_varDiag_left`, `subst_scr_le`, and `scr_one_le`. -/
 theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
   refine le_antisymm ?_ ?_
@@ -168,8 +168,8 @@ theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
     refine sup_le ?_ ?_
     · exact subst_le_iff.mp (by rw [SRA.subst_varDiag_left])
     · refine subst_le_iff.mp ?_
-      calc SRA.subst (SRA.scr ((1 : α) » 1)) 1
-          ≤ SRA.scr (SRA.subst ((1 : α) » 1) 1) := SRA.subst_scr_le _ _
+      calc SRA.subst (SRA.scr (SRA.substResid (1 : α) 1)) 1
+          ≤ SRA.scr (SRA.subst (SRA.substResid (1 : α) 1) 1) := SRA.subst_scr_le _ _
         _ ≤ SRA.scr 1 := SRA.scr_mono (subst_le_iff.mpr le_rfl)
         _ ≤ 1 := scr_one_le
   · calc (1 : α)
@@ -206,15 +206,15 @@ theorem cr_subst_le (a b : α) :
 /-- **S36 (compatibility implies Leibniz).** If `a` is closed under
 compatible refinement (`hat a ≤ a`), then it is also closed under
 substituting the identity: `1[a] ≤ a`. Move the goal to
-`1 ≤ a » a` via the adjunction; the pre-fixed-point obligation `hat (a » a) ≤
-a » a` collapses through `cr_subst_le` (S27) and the hypothesis. -/
+`1 ≤ SRA.substResid a a` via the adjunction; the pre-fixed-point obligation `hat (SRA.substResid a a) ≤
+SRA.substResid a a` collapses through `cr_subst_le` (S27) and the hypothesis. -/
 theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
     SRA.subst 1 a ≤ a := by
   refine subst_le_iff.mpr ?_
   refine one_le_of_cr_le ?_
   refine subst_le_iff.mp ?_
-  calc SRA.subst (SRA.cr (a » a)) a
-      ≤ a ⊔ SRA.cr (SRA.subst (a » a) a) := cr_subst_le _ _
+  calc SRA.subst (SRA.cr (SRA.substResid a a)) a
+      ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) := cr_subst_le _ _
     _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_mono (subst_le_iff.mpr le_rfl)) a
     _ ≤ a ⊔ a := sup_le_sup_left h a
     _ = a := sup_idem a
@@ -290,15 +290,6 @@ theorem howe_converse (a : α) : (SRA.howe a)ᵒ = opHowe (aᵒ) := by
     _ = aᵒ * SRA.cr ((SRA.howe a)ᵒ) := by rw [cr_converse]
 
 end SRA
-
-/-! ## Notation
-
-Scoped postfix `§` for the op-Howe extension. Symbolic conventions follow
-the paper: `·ᴴ` for the standard Howe recursor `x ↦ cr x * a`, `·§` for
-its mirror `x ↦ a * cr x`. -/
-
-@[inherit_doc SRA.opHowe]
-scoped[SRA] postfix:max "§" => SRA.opHowe
 
 /-! ## Confluence definitions -/
 
@@ -468,7 +459,7 @@ the same substitutivity question one level up). Both papers assume it
 `varDiag_mul_subst_one_eq_bot`.
 
 Proof outline. Adjunction / Howe induction / adjunction reduce the goal
-to `(cr X * r)[rᴴ] ≤ rᴴ` where `X := rᴴ » rᴴ`, `r := 1 ⊔ a[1]`.
+to `(cr X * r)[rᴴ] ≤ rᴴ` where `X := SRA.substResid rᴴ rᴴ`, `r := 1 ⊔ a[1]`.
 Distribute `cr X * r` and kill the `Δη * a[1]` summand via
 `varDiag_mul_subst_one_eq_bot`; the LHS collapses to
 `Δη ⊔ tilde X ⊔ tilde X * a[1]`. `subst_sup_left` splits into three branches:
@@ -483,9 +474,9 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
   refine SRA.howe_le_of_cr_mul_le ?_
   refine SRA.subst_le_iff.mp ?_
   have hrw :
-      SRA.cr (parRed a » parRed a) * (1 ⊔ SRA.subst a 1)
-        = SRA.varDiag ⊔ SRA.scr (parRed a » parRed a)
-            ⊔ SRA.scr (parRed a » parRed a) * SRA.subst a 1 := by
+      SRA.cr (SRA.substResid (parRed a) (parRed a)) * (1 ⊔ SRA.subst a 1)
+        = SRA.varDiag ⊔ SRA.scr (SRA.substResid (parRed a) (parRed a))
+            ⊔ SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1 := by
     unfold SRA.cr
     rw [Quantale.sup_mul_distrib, Quantale.mul_sup_distrib,
         Quantale.mul_sup_distrib, mul_one, mul_one,
@@ -495,27 +486,27 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
   -- S1: Δη[rᴴ] = rᴴ ≤ rᴴ.
   · exact le_of_eq (SRA.subst_varDiag_left _)
   -- S2: (tilde X)[rᴴ] ≤ rᴴ.
-  · calc SRA.subst (SRA.scr (parRed a » parRed a)) (parRed a)
-        ≤ SRA.scr (SRA.subst (parRed a » parRed a) (parRed a)) :=
+  · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
+        ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
           SRA.subst_scr_le _ _
       _ ≤ SRA.scr (parRed a) := SRA.scr_mono (SRA.subst_le_iff.mpr le_rfl)
       _ ≤ SRA.cr (parRed a) := le_sup_right
       _ ≤ parRed a := cr_parRed_le a
   -- S3: (tilde X * a[1])[rᴴ] ≤ rᴴ.
-  · calc SRA.subst (SRA.scr (parRed a » parRed a) * SRA.subst a 1)
+  · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1)
             (parRed a)
-        = SRA.subst (SRA.scr (parRed a » parRed a) * SRA.subst a 1)
+        = SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1)
             (parRed a * 1) := by rw [mul_one]
-      _ ≤ SRA.subst (SRA.scr (parRed a » parRed a)) (parRed a)
+      _ ≤ SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
             * SRA.subst (SRA.subst a 1) 1 :=
             SRA.subst_mul_le _ _ _ _
-      _ = SRA.subst (SRA.scr (parRed a » parRed a)) (parRed a)
+      _ = SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
             * SRA.subst a 1 := by
             rw [SRA.subst_assoc, SRA.subst_one_one]
       _ ≤ SRA.cr (parRed a) * SRA.subst a 1 := by
           refine mul_le_mul_left ?_ _
-          calc SRA.subst (SRA.scr (parRed a » parRed a)) (parRed a)
-              ≤ SRA.scr (SRA.subst (parRed a » parRed a) (parRed a)) :=
+          calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
+              ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
                 SRA.subst_scr_le _ _
             _ ≤ SRA.scr (parRed a) :=
                 SRA.scr_mono (SRA.subst_le_iff.mpr le_rfl)
