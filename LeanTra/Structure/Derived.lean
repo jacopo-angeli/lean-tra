@@ -33,18 +33,34 @@ Grown across four passes, whose scope is reflected in the Contents list below.
 * Closedness: `substResid b c := sSup {a | subst a b ≤ c}` — the right
   adjoint of `·[b]` from the Adjoint Functor Theorem, and the adjunction
   `subst_le_iff : subst a b ≤ c ↔ a ≤ substResid b c`. Notation `b » c`.
-* Modalities `box a := a[⊥]` and `dia a := ⊥ » a` (the source's `♦a := a » ⊥`
-  is a confirmed typo — the right adjoint of `□` is `⊥ » ·`), together with
-  the laws
-  that derive from the current axioms: `box_le`, `box_converse`, `box_mono`,
-  `box_subst`, `dia_mono`, the adjunction `box_le_iff : □a ≤ b ↔ a ≤ ♦b`,
-  and the oplax `box_mul_le`. The equality `box_mul : □(a * b) = □a * □b`
-  does NOT derive here — only the `≤` direction — see comment.
+* Modalities on the *primitive* `SRA.box`. The advisor's axioms
+  (`SRA.box_le`, `SRA.box_box`, `SRA.box_mono`, the two absorption laws,
+  `SRA.box_mul_box_le`, `SRA.box_varDiag_eq_bot`, `SRA.box_subst_le`,
+  plus the two co-equivalence conditions on `□1`) are used directly by
+  their `SRA.`-qualified names — no aliases.
+
+  DERIVED from those axioms alone:
+    - the diamond `dia a := sSup {x | box x ≤ a}` as the pointwise
+      right-adjoint candidate;
+    - `dia_mono`;
+    - the easy half of the adjunction, `le_dia_of_box_le`.
+
+  CONDITIONAL on `hjoin`, the hypothesis that `□` preserves arbitrary
+  joins (`∀ s, □(sSup s) = sSup (□ '' s)`) — a fact not derivable from
+  the current axioms, threaded as an explicit argument:
+    - the full adjunction `box_le_iff`;
+    - the transfer lemma `box_lfp` (the paper's Lemma 16).
+
+  LOST relative to the pre-migration file:
+    - `box_subst` was an equality; only the `≤` half survives, as the
+      class field `SRA.box_subst_le`;
+    - `box_mul_le` had direction `□(a * b) ≤ □a * □b`; the new lax axiom
+      `SRA.box_mul_box_le` has the opposite direction `□a * □b ≤ □(a * b)`.
+  Neither loss has a consumer in the current codebase.
+
 * Closed relations: `IsClosed a := a ≤ box a`, characterisation
   `isClosed_iff`, and the fact that `box a` and `⊥` are always closed.
-* Transfer to fixed points: `IsClosedFun F := ∀ x, box (F x) ≤ F (box x)`
-  for a monotone `F`, and `box_lfp : box F.lfp = (boxComp F).lfp` — `box`
-  commutes with least fixed points of closed functions.
+  All unconditional.
 
 ## References
 
@@ -266,77 +282,82 @@ theorem subst_le_iff {a b c : α} : SRA.subst a b ≤ c ↔ a ≤ substResid b c
 
 /-! ### Modalities
 
-Box `□a := a[⊥]` and diamond `♦a := ⊥ » a`. The definition of `♦` reads off
-the adjunction `·[b] ⊣ b » ·` at `b = ⊥`: the right adjoint of `□ = ·[⊥]` is
-`⊥ » ·`. -/
+`□` is a *primitive* field of `SRA` (see the design note in
+`Structure/SRA.lean`) with exactly the axioms the advisor supplied. The
+source's structural corollaries — the identity `□a = e * a * e`, symmetry
+`(□a)ᵒ = □(aᵒ)`, join-preservation `□(sSup s) = sSup (□ '' s)` — are NOT
+derivable from those axioms and are NOT re-derived here. In particular,
+the identity fails in the context-indexed term model formalised in
+`Instances/FirstOrder` (see the counterexample in `Structure/SRA.lean`'s
+design note), and so does the join-preservation law that would follow
+from it.
 
-/-- Box modality: `□a := a[⊥]`. -/
-def box (a : α) : α := SRA.subst a ⊥
+What this section develops from the axioms alone:
 
-/-- Diamond modality: `♦a := ⊥ » a`. The source defines `♦a := a » ⊥` — a
-typo confirmed by the author. The right adjoint of `□ = ·[⊥]` is `⊥ » ·`,
-read off `·[b] ⊣ b » ·` at `b = ⊥`; that is why `box_le_iff` below is a
-one-line instance of `subst_le_iff`. -/
-def dia (a : α) : α := substResid ⊥ a
+* the diamond `dia a := sSup {x | box x ≤ a}` as the pointwise right
+  adjoint candidate, together with monotonicity `dia_mono`;
+* the easy half of the adjunction `le_dia_of_box_le`, which is a one-line
+  `le_sSup`.
 
-/-- Closed relations refine their argument: `□a ≤ a`. -/
-theorem box_le (a : α) : box a ≤ a := by
-  unfold box
-  calc SRA.subst a ⊥
-      ≤ SRA.subst a SRA.varDiag := SRA.subst_mono_right bot_le
-    _ = a := SRA.subst_varDiag_right a
+What it develops *conditional* on `□` preserving arbitrary joins — a
+hypothesis threaded through as an explicit argument, since it is not an
+axiom of `SRA`:
 
-/-- `□` commutes with converse: `(□a)ᵒ = □(aᵒ)`. -/
-theorem box_converse (a : α) : (box a)ᵒ = box (aᵒ) := by
-  unfold box
-  rw [SRA.subst_converse, IsInvolutiveQuantale.converse_bot]
+* the full adjunction `box_le_iff` (both directions);
+* the fixed-point transfer lemma `box_lfp` (the paper's Lemma 16).
 
-/-- `□` is monotone. -/
-theorem box_mono ⦃a a' : α⦄ (h : a ≤ a') : box a ≤ box a' :=
-  subst_mono_left h
+Both would be immediate consequences of the source identity `□a = e * a * e`
+once that identity is available in a stronger set-up; here we make the
+dependence explicit rather than assume it. -/
 
-/-- Substitution is idempotent on closed relations: `(□a)[b] = □a`. -/
-theorem box_subst (a b : α) : SRA.subst (box a) b = box a := by
-  unfold box
-  rw [SRA.subst_assoc, subst_bot_left]
+/-! #### Diamond as the right adjoint candidate -/
 
-/-- `□` is idempotent: `□(□a) = □a`. Direct corollary of `box_subst` at
-`b := ⊥`. -/
-theorem box_box (a : α) : box (box a) = box a := box_subst a ⊥
-
-/-- `□` collapses the variable co-equivalence: `□Δη = ⊥`. Direct corollary
-of `subst_varDiag_left` at `a := ⊥`. -/
-theorem box_varDiag : box (SRA.varDiag : α) = ⊥ := SRA.subst_varDiag_left ⊥
+/-- Diamond `♦a`: the pointwise right-adjoint candidate for `□`,
+`sSup {x | □x ≤ a}`. Same construction pattern as `substResid`. Whether
+this actually *is* the right adjoint depends on `□` preserving arbitrary
+joins — a fact not derivable from the current axioms; see
+`box_le_iff` below, which takes join-preservation as a hypothesis. -/
+def dia (a : α) : α := sSup {x | SRA.box x ≤ a}
 
 /-- `♦` is monotone. -/
 theorem dia_mono ⦃a a' : α⦄ (h : a ≤ a') : dia a ≤ dia a' :=
   sSup_le_sSup fun _ hx => le_trans hx h
 
-/-- Adjunction: `□ ⊣ ♦`. Direct instance of `subst_le_iff` at `b = ⊥`. -/
-theorem box_le_iff {a b : α} : box a ≤ b ↔ a ≤ dia b := subst_le_iff
+/-- Easy half of the `□ ⊣ ♦` adjunction: `□a ≤ b → a ≤ ♦b`. One line —
+`a` is in the defining set of `♦b`, so `a ≤ sSup {…}`. Unconditional. -/
+theorem le_dia_of_box_le {a b : α} (h : SRA.box a ≤ b) : a ≤ dia b :=
+  le_sSup h
 
-/-- Oplax multiplicativity: `□(a * b) ≤ □a * □b`. -/
-theorem box_mul_le (a b : α) : box (a * b) ≤ box a * box b := by
-  have h : SRA.subst (a * b) (⊥ * ⊥) ≤ SRA.subst a ⊥ * SRA.subst b ⊥ :=
-    SRA.subst_mul_le a b ⊥ ⊥
-  rwa [Quantale.bot_mul] at h
-
--- The equality `box_mul : □(a * b) = □a * □b` — asserted by the source —
--- is NOT derivable from the current axioms. Only the oplax direction above
--- follows from `subst_mul_le`; the reverse would need a lax-bimorphism
--- axiom on substitution that we do not have.
+/-- The full `□ ⊣ ♦` adjunction. Hypothesis-carrying: the backward
+direction pushes `□` through the defining supremum of `♦b` and thus
+depends on `□` preserving arbitrary joins (`hjoin`). This is the
+statement the advisor's derivation `□a = e * a * e` would yield
+unconditionally once available; here we carry `hjoin` as an explicit
+argument because it is not derivable from the current axioms — see the
+design note in `Structure/SRA.lean`. -/
+theorem box_le_iff
+    (hjoin : ∀ s : Set α, SRA.box (sSup s) = sSup (SRA.box '' s))
+    {a b : α} : SRA.box a ≤ b ↔ a ≤ dia b := by
+  refine ⟨le_dia_of_box_le, fun h => ?_⟩
+  calc SRA.box a
+      ≤ SRA.box (dia b) := SRA.box_mono h
+    _ = sSup (SRA.box '' {x | SRA.box x ≤ b}) := hjoin _
+    _ ≤ b := by
+        refine sSup_le ?_
+        rintro _ ⟨x, hx, rfl⟩
+        exact hx
 
 /-! ### Closed relations -/
 
 /-- Closedness: a relation `a` is closed when it refines its own `box`. -/
-def IsClosed (a : α) : Prop := a ≤ box a
+def IsClosed (a : α) : Prop := a ≤ SRA.box a
 
 /-- `a` is closed iff `□a = a`. -/
-theorem isClosed_iff {a : α} : IsClosed a ↔ box a = a :=
-  ⟨fun h => le_antisymm (box_le a) h, fun h => h.ge⟩
+theorem isClosed_iff {a : α} : IsClosed a ↔ SRA.box a = a :=
+  ⟨fun h => le_antisymm (SRA.box_le a) h, fun h => h.ge⟩
 
 /-- `□a` is always closed. -/
-theorem box_isClosed (a : α) : IsClosed (box a) := (box_box a).ge
+theorem box_isClosed (a : α) : IsClosed (SRA.box a) := (SRA.box_box a).ge
 
 /-- `⊥` is closed. -/
 theorem isClosed_bot : IsClosed (⊥ : α) := bot_le
@@ -344,37 +365,53 @@ theorem isClosed_bot : IsClosed (⊥ : α) := bot_le
 /-! ### Closed monotone functions and the transfer lemma -/
 
 /-- A monotone `F` is closed when `□ ∘ F ≤ F ∘ □` pointwise. -/
-def IsClosedFun (F : α →o α) : Prop := ∀ x, box (F x) ≤ F (box x)
+def IsClosedFun (F : α →o α) : Prop := ∀ x, SRA.box (F x) ≤ F (SRA.box x)
 
 /-- Composition `box ∘ F` bundled as an `OrderHom`. -/
 def boxComp (F : α →o α) : α →o α where
-  toFun x := box (F x)
-  monotone' _ _ h := box_mono (F.mono h)
+  toFun x := SRA.box (F x)
+  monotone' _ _ h := SRA.box_mono (F.mono h)
 
-/-- Transfer lemma: for a closed monotone `F`, `□` commutes with the least
-fixed point — `□(μF) = μ(□∘F)`. -/
-theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
-    box F.lfp = (boxComp F).lfp := by
+/-- Transfer lemma (the paper's Lemma 16): for a closed monotone `F`, `□`
+commutes with the least fixed point — `□(μF) = μ(□∘F)`. Proof rides on
+`box_box`, `box_mono`, `box_le` and the adjunction `box_le_iff`;
+threading the same `hjoin` hypothesis through, since the adjunction needs
+`□` to preserve arbitrary joins and that fact is not derivable from the
+current axioms — see the design note in `Structure/SRA.lean`. This is
+the statement the advisor's derivation would yield unconditionally once
+`box_eq` (and hence `hjoin`) is available. -/
+theorem box_lfp
+    (hjoin : ∀ s : Set α, SRA.box (sSup s) = sSup (SRA.box '' s))
+    {F : α →o α} (hF : IsClosedFun F) :
+    SRA.box F.lfp = (boxComp F).lfp := by
   refine le_antisymm ?_ ?_
-  · refine box_le_iff.mpr ?_
+  · refine (box_le_iff hjoin).mpr ?_
     refine F.lfp_le ?_
-    refine box_le_iff.mp ?_
-    calc box (F (dia (boxComp F).lfp))
-        = box (box (F (dia (boxComp F).lfp))) := (box_box _).symm
-      _ ≤ box (F (box (dia (boxComp F).lfp))) := box_mono (hF _)
-      _ ≤ box (F (boxComp F).lfp) :=
-          box_mono (F.mono (box_le_iff.mpr le_rfl))
+    refine (box_le_iff hjoin).mp ?_
+    calc SRA.box (F (dia (boxComp F).lfp))
+        = SRA.box (SRA.box (F (dia (boxComp F).lfp))) := (SRA.box_box _).symm
+      _ ≤ SRA.box (F (SRA.box (dia (boxComp F).lfp))) := SRA.box_mono (hF _)
+      _ ≤ SRA.box (F (boxComp F).lfp) :=
+          SRA.box_mono (F.mono ((box_le_iff hjoin).mpr le_rfl))
       _ = (boxComp F).lfp := (boxComp F).map_lfp
   · refine (boxComp F).lfp_le ?_
-    change box (F (box F.lfp)) ≤ box F.lfp
-    calc box (F (box F.lfp))
-        ≤ box (F F.lfp) := box_mono (F.mono (box_le _))
-      _ = box F.lfp := by rw [F.map_lfp]
+    change SRA.box (F (SRA.box F.lfp)) ≤ SRA.box F.lfp
+    calc SRA.box (F (SRA.box F.lfp))
+        ≤ SRA.box (F F.lfp) := SRA.box_mono (F.mono (SRA.box_le _))
+      _ = SRA.box F.lfp := by rw [F.map_lfp]
+
+-- Sanity: every surviving result depends on only the standard axioms
+-- (`propext`, `Classical.choice`, `Quot.sound`) — no `sorryAx`.
+#print axioms SRA.isClosed_bot
+#print axioms SRA.box_isClosed
+#print axioms SRA.le_dia_of_box_le
+#print axioms SRA.box_le_iff
+#print axioms SRA.box_lfp
 
 -- The corollary `IsClosed F.lfp` under `IsClosedFun F` is NOT derivable.
--- Counterexample in the `Toy` SRA (`α := Prop`, `subst a b := a ∧ b`, so
--- `box a = ⊥` on every `a`): take `F := ⟨fun _ => ⊤, _⟩`, constant top.
--- Then `IsClosedFun F` holds vacuously (`box (F x) = ⊥ ≤ ⊤ = F (box x)`),
+-- Counterexample in the `Toy` SRA (`α := Prop`, `box _ := ⊥` in the new
+-- axiomatisation): take `F := ⟨fun _ => ⊤, _⟩`, constant top. Then
+-- `IsClosedFun F` holds vacuously (`box (F x) = ⊥ ≤ ⊤ = F (box x)`),
 -- and `F.lfp = ⊤`, but `box F.lfp = ⊥`, so `F.lfp ≤ box F.lfp` fails.
 -- The missing hypothesis is either the reverse naturality
 -- `F (box x) ≤ box (F x)` (giving equality `box ∘ F = F ∘ box`, so `F`
@@ -382,4 +419,3 @@ theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
 -- (`IsClosed x → IsClosed (F x)`) — the lax naturality alone is not enough.
 
 end SRA
-

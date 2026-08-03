@@ -10,13 +10,16 @@ public import LeanTra.Structure.SRA
 /-!
 # The three SRA operations on syntax relations — Phase C
 
-Phase C of the LICS'26 term-model construction: defines the three
+Phase C of the LICS'26 term-model construction: defines the four
 `SRA`-specific data — the variable co-equivalence `Δη` (`varDiag`), the
-strict compatible refinement `tilde ·` (`scr`), and relation substitution
-`·[·]` (`subst`) — on the carrier `SynRel S` built in Phase B,
-discharges all sixteen `SRA` axioms, packages the result as a `SRA`
-typeclass instance, and settles the (D-C7) box/composition question
-the source leaves open at the axiom level.
+strict compatible refinement `tilde ·` (`scr`), relation substitution
+`·[·]` (`subst`), and the closure modality `□` (`box`, kept in the model
+as its original definition `subst · ⊥`) — on the carrier `SynRel S`
+built in Phase B, discharges all `SRA` axioms (the sixteen shared with
+earlier drafts plus the seven `box` axioms of the advisor's
+re-axiomatisation), packages the result as a `SRA` typeclass instance,
+and settles the (D-C7) box/composition question the source leaves open
+at the axiom level.
 
 ## Contents
 
@@ -528,12 +531,15 @@ theorem box_iff (a : SynRel S) {Δ} {u v : Tm S Δ} :
            rfl, rfl, ha, fun e => e.elim⟩
 
 /-- The box/composition law: `box (φ * ψ) = box φ * box ψ` in this
-model — (D-C7). The oplax direction (`≤`) is `box_mul_le` in
-`Structure/Derived.lean`; here we also prove `≥`, which forces
-identifying the two empty-context decompositions of the shared middle
-term `z` via `Tm.ren_injective`. Not derivable from the SRA axioms in
-general (see the module docstring); this is a term-model witness that
-the paper's asserted equality is legitimate as a *model* fact. -/
+model — (D-C7). Since the advisor's re-axiomatisation of `SRA.box` gives
+only the lax half `SRA.box_mul_box_le : □a * □b ≤ □(a * b)` and NO
+direction at all in the reverse sense, this equality is now purely a
+model witness: the abstract theory does not see it. It is still used
+below to discharge the two absorption axioms
+`box_mul_box_eq_box_mul_{left,right}` on this instance. The equality
+holds because both sides collapse to the same normal form — an
+empty-context decomposition — via `Tm.ren_injective` applied to the
+vacuously injective `Empty.elim`. -/
 theorem box_mul (φ ψ : SynRel S) :
     (subst (φ * ψ) ⊥ : SynRel S) = subst φ ⊥ * subst ψ ⊥ := by
   ext Δ u v
@@ -557,11 +563,73 @@ theorem box_mul (φ ψ : SynRel S) :
     subst h_eq
     exact ⟨t₁, s₂, rfl, rfl, s₁, hφ, hψ⟩
 
+/-! ## Discharging the new `box` axioms.
+
+The advisor's re-axiomatisation makes `box` a primitive field of `SRA`
+subject to seven axioms and two co-equivalence conditions on `e := box 1`.
+In the term model we retain the defining reduction `box := subst · ⊥`, so
+every new axiom collapses to a consequence of the substitution laws already
+established above — crucially, of the model-only equality `box_mul` — even
+though the abstract theory no longer sees that equality. The lemmas below
+package each `SRA` field so `instSRA` can forward them by name. -/
+
+/-- Substitution annihilates `⊥` on the left. Same one-line derivation as
+in `Structure/Derived.lean`; repeated here because that file's version is
+below the `SRA` instance we are building. -/
+theorem subst_bot_left (b : SynRel S) : SynRel.subst (⊥ : SynRel S) b = ⊥ := by
+  have h := SynRel.subst_sSup_left (∅ : Set (SynRel S)) b
+  simp only [Set.image_empty, sSup_empty] at h
+  exact h
+
+/-- Left-argument monotonicity of substitution. Same reason as above. -/
+theorem subst_mono_left {a a' b : SynRel S} (h : a ≤ a') :
+    SynRel.subst a b ≤ SynRel.subst a' b := by
+  have key : SynRel.subst (sSup ({a, a'} : Set (SynRel S))) b
+      = sSup ((fun x => SynRel.subst x b) '' ({a, a'} : Set (SynRel S))) :=
+    SynRel.subst_sSup_left _ _
+  rw [sSup_pair, Set.image_pair, sSup_pair, sup_eq_right.mpr h] at key
+  have hle : SynRel.subst a b ≤ SynRel.subst a b ⊔ SynRel.subst a' b := le_sup_left
+  rw [← key] at hle
+  exact hle
+
+/-- (Ax 1) `box a ≤ a`: closed relations refine their argument. -/
+theorem box_le (a : SynRel S) : SynRel.subst a ⊥ ≤ a := by
+  calc SynRel.subst a ⊥
+      ≤ SynRel.subst a SynRel.varDiag := SynRel.subst_mono_right bot_le
+    _ = a := SynRel.subst_varDiag_right a
+
+/-- (Ax 2) `box (box a) = box a`: idempotence, from
+`subst_assoc + subst_bot_left`. -/
+theorem box_box (a : SynRel S) :
+    SynRel.subst (SynRel.subst a ⊥) ⊥ = SynRel.subst a ⊥ := by
+  rw [SynRel.subst_assoc, subst_bot_left]
+
+/-- (Ax 4a) Left absorption `box a * box b = box (box a * b)`. Uses the
+model-level equality `box_mul` to expand the RHS, then `box_box` collapses
+the redundant inner `box`. -/
+theorem box_mul_box_eq_box_mul_left_of (a b : SynRel S) :
+    SynRel.subst a ⊥ * SynRel.subst b ⊥
+      = SynRel.subst (SynRel.subst a ⊥ * b) ⊥ := by
+  rw [box_mul, box_box]
+
+/-- (Ax 4b) Right absorption `box a * box b = box (a * box b)`. Symmetric. -/
+theorem box_mul_box_eq_box_mul_right_of (a b : SynRel S) :
+    SynRel.subst a ⊥ * SynRel.subst b ⊥
+      = SynRel.subst (a * SynRel.subst b ⊥) ⊥ := by
+  rw [box_mul, box_box]
+
+/-- (Ax 7) `(box a)[b] ≤ box a`: substitution is idempotent on closed
+relations; in the model the equality holds, but the `SRA` field asks only
+for `≤`. -/
+theorem box_subst_le (a b : SynRel S) :
+    SynRel.subst (SynRel.subst a ⊥) b ≤ SynRel.subst a ⊥ := by
+  rw [SynRel.subst_assoc, subst_bot_left]
+
 end SynRel
 
 /-! ## The `SRA` typeclass instance.
 
-All sixteen axioms are proved above; the instance simply forwards each
+All twenty-three axioms are proved above; the instance simply forwards each
 field. -/
 
 /-- The syntax relations on first-order `S`-terms form a `SRA`. -/
@@ -585,6 +653,15 @@ instance instSRA : SRA (SynRel S) where
   subst_scr_le := SynRel.subst_scr_le
   varDiag_sup_scr_one_eq := SynRel.varDiag_sup_scr_one_eq
   one_le_of_scr_sup_le := fun _ h => SynRel.one_le_of_scr_sup_le h
+  box := fun R => SynRel.subst R ⊥
+  box_le := SynRel.box_le
+  box_box := SynRel.box_box
+  box_mono := fun _ _ h => SynRel.subst_mono_left h
+  box_mul_box_eq_box_mul_left := SynRel.box_mul_box_eq_box_mul_left_of
+  box_mul_box_eq_box_mul_right := SynRel.box_mul_box_eq_box_mul_right_of
+  box_mul_box_le := fun a b => (SynRel.box_mul a b).ge
+  box_varDiag_eq_bot := SynRel.subst_varDiag_left ⊥
+  box_subst_le := SynRel.box_subst_le
 
 namespace SynRel
 

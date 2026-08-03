@@ -52,7 +52,7 @@ On any two-element carrier `{⊥, ⊤}` with the standard quantale structure
   Prop's complete Boolean algebra).
 * `aᵒ := a` (identity converse — `*` is commutative, so contravariance is
   vacuous).
-* `varDiag := True`, `scr _ := False`, `subst a b := a ∧ b`.
+* `varDiag := True`, `scr _ := False`, `subst a b := a ∧ b`, `box _ := False`.
 -/
 @[expose] public section
 
@@ -133,6 +133,17 @@ instance instSRA : SRA Toy where
   varDiag_sup_scr_one_eq :=
     propext ⟨fun _ => trivial, fun _ => Or.inl trivial⟩
   one_le_of_scr_sup_le _ h := fun _ => h (Or.inl trivial)
+  box _ := False
+  box_le _ := False.elim
+  box_box _ := rfl
+  box_mono _ _ _ := le_refl _
+  box_mul_box_eq_box_mul_left _ _ :=
+    propext ⟨fun ⟨h, _⟩ => h.elim, fun h => h.elim⟩
+  box_mul_box_eq_box_mul_right _ _ :=
+    propext ⟨fun ⟨h, _⟩ => h.elim, fun h => h.elim⟩
+  box_mul_box_le _ _ := fun ⟨h, _⟩ => h.elim
+  box_varDiag_eq_bot := rfl
+  box_subst_le _ _ := fun ⟨h, _⟩ => h.elim
 
 /-! ## Non-degeneracy -/
 
