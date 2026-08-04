@@ -206,8 +206,9 @@ theorem cr_subst_le (a b : α) :
 /-- **S36 (compatibility implies Leibniz).** If `a` is closed under
 compatible refinement (`hat a ≤ a`), then it is also closed under
 substituting the identity: `1[a] ≤ a`. Move the goal to
-`1 ≤ SRA.substResid a a` via the adjunction; the pre-fixed-point obligation `hat (SRA.substResid a a) ≤
-SRA.substResid a a` collapses through `cr_subst_le` (S27) and the hypothesis. -/
+`1 ≤ SRA.substResid a a` via the adjunction; the pre-fixed-point obligation
+`hat (SRA.substResid a a) ≤ SRA.substResid a a` collapses through
+`cr_subst_le` (S27) and the hypothesis. -/
 theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
     SRA.subst 1 a ≤ a := by
   refine subst_le_iff.mpr ?_
@@ -804,8 +805,7 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
 /-- **Confluence of parallel reduction.** Immediate `Diamond.confluent`
 of `diamond_parRed`; `Confluent (parRed a)`, i.e. `Diamond ((parRed a)∗)`. -/
 theorem confluent_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
-    Confluent (parRed a) :=
-  (diamond_parRed h horth).confluent
+    Confluent (parRed a) := (diamond_parRed h horth).confluent
 
 end LeanTra.Confluence
 

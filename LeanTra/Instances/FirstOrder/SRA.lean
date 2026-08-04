@@ -6,6 +6,7 @@ module
 
 public import LeanTra.Instances.FirstOrder.Relations
 public import LeanTra.Structure.SRA
+public import LeanTra.Structure.Derived
 
 /-!
 # The three SRA operations on syntax relations — Phase C
@@ -13,13 +14,14 @@ public import LeanTra.Structure.SRA
 Phase C of the LICS'26 term-model construction: defines the four
 `SRA`-specific data — the variable co-equivalence `Δη` (`varDiag`), the
 strict compatible refinement `tilde ·` (`scr`), relation substitution
-`·[·]` (`subst`), and the closure modality `□` (`box`, kept in the model
-as its original definition `subst · ⊥`) — on the carrier `SynRel S`
-built in Phase B, discharges all `SRA` axioms (the sixteen shared with
-earlier drafts plus the seven `box` axioms of the advisor's
-re-axiomatisation), packages the result as a `SRA` typeclass instance,
-and settles the (D-C7) box/composition question the source leaves open
-at the axiom level.
+`·[·]` (`subst`), and the closure constant `j` (identity on closed
+terms) — on the carrier `SynRel S` built in Phase B, discharges all
+`SRA` axioms (the fifteen for the first three data plus the four for
+`j`), and packages the result as a `SRA` typeclass instance. The
+derived modality `box := j * · * j` is *not* the same operation as
+`subst · ⊥`; the earlier `subst · ⊥` normal-form theorems
+(`substBot_iff`, `substBot_mul`) are retained here as facts about
+`subst · ⊥` per se — see the block-level docstring inside the file.
 
 ## Contents
 
@@ -41,13 +43,15 @@ at the axiom level.
   substitution — via a dependent-sum merge (see (D-C5)); and
   `subst_mul_le` — oplaxness of substitution on composition — with the
   strictness note (D-C6).
+* `j`, `j_rel`, `j_le_one`, `j_converse_le`, `j_le_mul_self`,
+  `j_mul_varDiag_le_bot` — the closure constant and its four axioms.
+* `substBot_iff` and `substBot_mul` — legacy `subst · ⊥` normal-form
+  theorems, kept as documentation of the earlier `box := subst · ⊥`
+  reading. NOT the interpretation of the current derived `box`.
 * `instSRA` — the `SRA (SynRel S)` typeclass instance.
 * Non-degeneracy: `scr_top_ne_bot` (needs a symbol) and `box_top_ne_bot`
   (needs a nullary symbol), certifying that the two SRA-specific
   operations do not collapse on this model — see (N1)/(N2).
-* `box_iff` and `box_mul` — the closed-form characterisation of `box`
-  and the equality `box (φ * ψ) = box φ * box ψ`, verified here in the
-  term model; see (D-C7).
 
 ## Design decisions
 
@@ -140,30 +144,16 @@ LHS pins the composite `(φ * φ')` inside one Γ and the pointwise
 composite `(ψ * ψ')` at one shared middle term `μ x` per variable, so
 it is strictly more restrictive.
 
-### (D-C7) `box (φ * ψ) = box φ * box ψ` — the LICS'26 §3.2.1 question
+### (D-C7) The `substBot_mul` equality — legacy note
 
-LICS'26 §3.2.1 asserts the *equality* `□(a * b) = □a * □b`, but the
-axioms only give the oplax half `□(a * b) ≤ □a * □b` (proved in
-`Structure/Derived.lean`). The reverse direction cannot be derived —
-it depends on a syntactic fact about the model.
-
-This file proves the equality holds in the term model. The argument:
-`(subst a ⊥).rel Δ u v` unfolds to a decomposition into a
-`Tm S Γ`-pair over an *empty* source context — the last clause
-`∀ x : Γ, ⊥.rel Δ (τ x) (σ x)` forces `Γ` uninhabited. So `box a`
-relates two terms of `Tm S Δ` exactly when they are the weakenings of
-an `a`-related pair of *closed* terms (`box_iff`). Once in that
-normal form, `z = s₁.close Δ = t₂.close Δ` forces `s₁ = t₂` by
-injectivity of weakening (`Tm.ren_injective` applied to the vacuously
-injective `Empty.elim`), and the middle term of the composite reads
-off immediately.
-
-Verdict: equality holds in this model. Consequence for the source: the
-law is a legitimate model fact but is **not** derivable from the SRA
-axioms, so it must be **assumed** as an extra field (or an extra
-structural property of the base algebra) if one wants it available in
-the abstract theory. The oplax half `box_mul_le` is what generalises;
-the tight half is a term-model witness.
+LICS'26 §3.2.1 originally read `□a := a[⊥]`, and this file's
+`substBot_iff` / `substBot_mul` witness the equality
+`(a * b)[⊥] = a[⊥] * b[⊥]` in the term model — an equality that is not
+derivable from the abstract axioms. Under the current presentation,
+`□ := j * · * j` is not the same operation as `· [⊥]`, so this equality
+no longer speaks to the `SRA` `box_mul_box_le` axiom. The two
+theorems are retained as facts about `subst · ⊥` per se; see the
+block-level docstring at their definition.
 
 ## References
 
@@ -494,29 +484,102 @@ theorem subst_mul_le (φ φ' ψ ψ' : SynRel S) :
   · exact ⟨Γ, t, w, τ, μ, rfl, rfl, hφ, hψ⟩
   · exact ⟨Γ, w, s, μ, σ, rfl, rfl, hφ', hψ'⟩
 
-/-! ## The `box` law — (D-C7).
+/-! ## The closure constant `j` and its axioms.
 
-`box a := subst a ⊥`: relates `u v : Tm S Δ` exactly when both are
-weakenings of an `a`-related pair over an *empty* source context. The
-key lemma `box_iff` normalises the empty-context witness to
-`Tm S Empty`, at which point `box_mul` follows from injectivity of
-weakening (`Tm.ren_injective` on the vacuously injective `Empty.elim`)
-— the two decompositions of the shared middle term `z` are forced to
-agree. See (D-C7) for the modelling reading. -/
+Under the advisor's revised presentation, `box` is no longer a primitive
+`SRA` field but the *derived* operation `box a := j * a * j`, with `j` the
+closure constant (see `Structure/SRA.lean`). Here we take `j` to be the
+identity restricted to closed terms — the pair `(t, t)` where `t` is a
+weakening of some `t₀ : Tm S Empty` — and discharge the four `j`
+axioms.
+
+Under this reading, `box a` (unfolded) becomes "the pairs of `a` whose
+two endpoints are closed weakenings", which is strictly *different* from
+`subst a ⊥`. The two agree on many relations (e.g. `a = ⊥`, `a = 1`) but
+not on all: the `SynRel a Γ t s := Nonempty Γ` witness in
+`Structure/Derived.lean`'s design note is `subst a ⊥ = ⊥` yet
+`box a Unit = Unit-closed pairs`. Consequently the old
+`box_iff` / `box_mul` characterisation is *about `subst · ⊥`, not about
+the new `box`*; the two theorems are kept below under the names
+`substBot_iff` / `substBot_mul` and their docstrings updated. -/
+
+/-- The closure constant `j`: identity restricted to closed terms. Two
+terms are `j`-related when they are equal AND weakenings of a closed
+term. Renaming closure holds because a closed term stays closed under
+renaming (`Tm.ren_close`). -/
+def j : SynRel S := {
+  rel := fun Γ t s => t = s ∧ ∃ t₀ : Tm S Empty, t = Tm.close Γ t₀
+  ren_closed := by
+    intro Γ Δ f t s h
+    obtain ⟨hts, t₀, ht⟩ := h
+    refine ⟨by rw [hts], t₀, ?_⟩
+    rw [ht, Tm.ren_close]
+}
+
+/-- `j` at the level of `.rel`. -/
+@[simp] theorem j_rel {Γ} {t s : Tm S Γ} :
+    (j : SynRel S).rel Γ t s ↔
+      t = s ∧ ∃ t₀ : Tm S Empty, t = Tm.close Γ t₀ :=
+  Iff.rfl
+
+/-- `j ≤ 1`: co-reflexive. The equality conjunct in `j` is exactly `1`. -/
+theorem j_le_one : (j : SynRel S) ≤ 1 := by
+  intro Γ t s h
+  exact h.1
+
+/-- `jᵒ ≤ j`: symmetric. From `s = t` we get `t = s`, and the
+closed-witness transports. -/
+theorem j_converse_le : (j : SynRel S)ᵒ ≤ j := by
+  intro Γ t s h
+  obtain ⟨hst, t₀, hs⟩ := h
+  exact ⟨hst.symm, t₀, hst.symm.trans hs⟩
+
+/-- `j ≤ j * j`: co-transitive. Take the middle term to be `t` itself. -/
+theorem j_le_mul_self : (j : SynRel S) ≤ j * j := by
+  intro Γ t s h
+  refine ⟨t, ⟨rfl, ?_⟩, h⟩
+  obtain ⟨_, t₀, ht⟩ := h
+  exact ⟨t₀, ht⟩
+
+/-- `j * varDiag ≤ ⊥`: closed and variable are disjoint. The `varDiag`
+witness forces the shared middle to be `Tm.var x`, while the `j` witness
+forces it to be a weakened closed term — but a variable in an arbitrary
+context is not the image of any closed term under `Empty.elim` (a closed
+`Tm.var y` requires `y : Empty`, impossible; a closed `Tm.node` renames
+to a `Tm.node`, not a `Tm.var`). -/
+theorem j_mul_varDiag_le_bot : (j : SynRel S) * varDiag ≤ ⊥ := by
+  intro Γ t v h
+  obtain ⟨u, ⟨htu, t₀, hcls⟩, ⟨x, huvar, _⟩⟩ := h
+  subst htu
+  subst huvar
+  -- hcls : Tm.var x = Tm.close Γ t₀
+  cases t₀ with
+  | var y => exact y.elim
+  | node g ts => cases hcls
+
+/-! ## The `subst · ⊥` characterisation — legacy reading of `□`.
+
+The two theorems in this block, `substBot_iff` and `substBot_mul`, are
+the closed-form of `subst · ⊥` that used to discharge the axioms of the
+primitive-`□` presentation (`□ := subst · ⊥`). Under the current
+presentation `□ := j * · * j`, this is *not* the interpretation of `□`,
+so these theorems no longer feed the `SRA` instance. They are retained
+because they document the earlier reading and remain useful facts about
+`subst · ⊥` per se. -/
 
 /-- Closed-form characterisation of `subst a ⊥`: it relates `u` and `v`
 iff they are the weakenings (`Tm.close Δ`) of an `a`-related pair of
 closed terms. The `→` direction repackages an arbitrary empty-context
 witness as an `Empty`-context witness via renaming closure and
 `Tm.subst_empty`; the `←` direction is direct with
-`Γ := Empty`, `τ := σ := Tm.var ∘ Empty.elim`. -/
-theorem box_iff (a : SynRel S) {Δ} {u v : Tm S Δ} :
+`Γ := Empty`, `τ := σ := Tm.var ∘ Empty.elim`. Was `box_iff` when
+`box := subst · ⊥`. -/
+theorem substBot_iff (a : SynRel S) {Δ} {u v : Tm S Δ} :
     (subst a ⊥ : SynRel S).rel Δ u v ↔
       ∃ (t s : Tm S Empty),
         u = Tm.close Δ t ∧ v = Tm.close Δ s ∧ a.rel Empty t s := by
   constructor
   · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, ha, hbot⟩
-    -- hbot : ∀ x : Γ, False (through instBot)
     haveI : IsEmpty Γ := ⟨fun x => hbot x⟩
     let e : Γ → Empty := fun x => (hbot x).elim
     refine ⟨t.ren e, s.ren e, ?_, ?_, a.ren_closed e ha⟩
@@ -530,27 +593,21 @@ theorem box_iff (a : SynRel S) {Δ} {u v : Tm S Δ} :
     exact ⟨Empty, t, s, Tm.var ∘ Empty.elim, Tm.var ∘ Empty.elim,
            rfl, rfl, ha, fun e => e.elim⟩
 
-/-- The box/composition law: `box (φ * ψ) = box φ * box ψ` in this
-model — (D-C7). Since the advisor's re-axiomatisation of `SRA.box` gives
-only the lax half `SRA.box_mul_box_le : □a * □b ≤ □(a * b)` and NO
-direction at all in the reverse sense, this equality is now purely a
-model witness: the abstract theory does not see it. It is still used
-below to discharge the two absorption axioms
-`box_mul_box_eq_box_mul_{left,right}` on this instance. The equality
-holds because both sides collapse to the same normal form — an
-empty-context decomposition — via `Tm.ren_injective` applied to the
-vacuously injective `Empty.elim`. -/
-theorem box_mul (φ ψ : SynRel S) :
+/-- The `subst · ⊥` composition law: `subst (φ * ψ) ⊥ = subst φ ⊥ * subst ψ ⊥`.
+Was `box_mul` when `box := subst · ⊥`. The equality holds because both sides
+collapse to the same normal form — an empty-context decomposition — via
+`Tm.ren_injective` applied to the vacuously injective `Empty.elim`. -/
+theorem substBot_mul (φ ψ : SynRel S) :
     (subst (φ * ψ) ⊥ : SynRel S) = subst φ ⊥ * subst ψ ⊥ := by
   ext Δ u v
-  rw [box_iff]
+  rw [substBot_iff]
   constructor
   · rintro ⟨t, s, rfl, rfl, w, hφ, hψ⟩
     refine ⟨Tm.close Δ w, ?_, ?_⟩
-    · exact (box_iff φ).mpr ⟨t, w, rfl, rfl, hφ⟩
-    · exact (box_iff ψ).mpr ⟨w, s, rfl, rfl, hψ⟩
+    · exact (substBot_iff φ).mpr ⟨t, w, rfl, rfl, hφ⟩
+    · exact (substBot_iff ψ).mpr ⟨w, s, rfl, rfl, hψ⟩
   · rintro ⟨z, hφz, hψz⟩
-    rw [box_iff] at hφz hψz
+    rw [substBot_iff] at hφz hψz
     obtain ⟨t₁, s₁, rfl, hz₁, hφ⟩ := hφz
     obtain ⟨t₂, s₂, hz₂, rfl, hψ⟩ := hψz
     have hinj : Function.Injective
@@ -563,74 +620,13 @@ theorem box_mul (φ ψ : SynRel S) :
     subst h_eq
     exact ⟨t₁, s₂, rfl, rfl, s₁, hφ, hψ⟩
 
-/-! ## Discharging the new `box` axioms.
-
-The advisor's re-axiomatisation makes `box` a primitive field of `SRA`
-subject to seven axioms and two co-equivalence conditions on `e := box 1`.
-In the term model we retain the defining reduction `box := subst · ⊥`, so
-every new axiom collapses to a consequence of the substitution laws already
-established above — crucially, of the model-only equality `box_mul` — even
-though the abstract theory no longer sees that equality. The lemmas below
-package each `SRA` field so `instSRA` can forward them by name. -/
-
-/-- Substitution annihilates `⊥` on the left. Same one-line derivation as
-in `Structure/Derived.lean`; repeated here because that file's version is
-below the `SRA` instance we are building. -/
-theorem subst_bot_left (b : SynRel S) : SynRel.subst (⊥ : SynRel S) b = ⊥ := by
-  have h := SynRel.subst_sSup_left (∅ : Set (SynRel S)) b
-  simp only [Set.image_empty, sSup_empty] at h
-  exact h
-
-/-- Left-argument monotonicity of substitution. Same reason as above. -/
-theorem subst_mono_left {a a' b : SynRel S} (h : a ≤ a') :
-    SynRel.subst a b ≤ SynRel.subst a' b := by
-  have key : SynRel.subst (sSup ({a, a'} : Set (SynRel S))) b
-      = sSup ((fun x => SynRel.subst x b) '' ({a, a'} : Set (SynRel S))) :=
-    SynRel.subst_sSup_left _ _
-  rw [sSup_pair, Set.image_pair, sSup_pair, sup_eq_right.mpr h] at key
-  have hle : SynRel.subst a b ≤ SynRel.subst a b ⊔ SynRel.subst a' b := le_sup_left
-  rw [← key] at hle
-  exact hle
-
-/-- (Ax 1) `box a ≤ a`: closed relations refine their argument. -/
-theorem box_le (a : SynRel S) : SynRel.subst a ⊥ ≤ a := by
-  calc SynRel.subst a ⊥
-      ≤ SynRel.subst a SynRel.varDiag := SynRel.subst_mono_right bot_le
-    _ = a := SynRel.subst_varDiag_right a
-
-/-- (Ax 2) `box (box a) = box a`: idempotence, from
-`subst_assoc + subst_bot_left`. -/
-theorem box_box (a : SynRel S) :
-    SynRel.subst (SynRel.subst a ⊥) ⊥ = SynRel.subst a ⊥ := by
-  rw [SynRel.subst_assoc, subst_bot_left]
-
-/-- (Ax 4a) Left absorption `box a * box b = box (box a * b)`. Uses the
-model-level equality `box_mul` to expand the RHS, then `box_box` collapses
-the redundant inner `box`. -/
-theorem box_mul_box_eq_box_mul_left_of (a b : SynRel S) :
-    SynRel.subst a ⊥ * SynRel.subst b ⊥
-      = SynRel.subst (SynRel.subst a ⊥ * b) ⊥ := by
-  rw [box_mul, box_box]
-
-/-- (Ax 4b) Right absorption `box a * box b = box (a * box b)`. Symmetric. -/
-theorem box_mul_box_eq_box_mul_right_of (a b : SynRel S) :
-    SynRel.subst a ⊥ * SynRel.subst b ⊥
-      = SynRel.subst (a * SynRel.subst b ⊥) ⊥ := by
-  rw [box_mul, box_box]
-
-/-- (Ax 7) `(box a)[b] ≤ box a`: substitution is idempotent on closed
-relations; in the model the equality holds, but the `SRA` field asks only
-for `≤`. -/
-theorem box_subst_le (a b : SynRel S) :
-    SynRel.subst (SynRel.subst a ⊥) b ≤ SynRel.subst a ⊥ := by
-  rw [SynRel.subst_assoc, subst_bot_left]
-
 end SynRel
 
 /-! ## The `SRA` typeclass instance.
 
-All twenty-three axioms are proved above; the instance simply forwards each
-field. -/
+All nineteen axioms — the fifteen for `Δη`, `scr`, `subst` plus the four
+for the closure constant `j` — are proved above; the instance simply
+forwards each field. -/
 
 /-- The syntax relations on first-order `S`-terms form a `SRA`. -/
 instance instSRA : SRA (SynRel S) where
@@ -653,15 +649,11 @@ instance instSRA : SRA (SynRel S) where
   subst_scr_le := SynRel.subst_scr_le
   varDiag_sup_scr_one_eq := SynRel.varDiag_sup_scr_one_eq
   one_le_of_scr_sup_le := fun _ h => SynRel.one_le_of_scr_sup_le h
-  box := fun R => SynRel.subst R ⊥
-  box_le := SynRel.box_le
-  box_box := SynRel.box_box
-  box_mono := fun _ _ h => SynRel.subst_mono_left h
-  box_mul_box_eq_box_mul_left := SynRel.box_mul_box_eq_box_mul_left_of
-  box_mul_box_eq_box_mul_right := SynRel.box_mul_box_eq_box_mul_right_of
-  box_mul_box_le := fun a b => (SynRel.box_mul a b).ge
-  box_varDiag_eq_bot := SynRel.subst_varDiag_left ⊥
-  box_subst_le := SynRel.box_subst_le
+  j := SynRel.j
+  j_le_one := SynRel.j_le_one
+  j_converse_le := SynRel.j_converse_le
+  j_le_mul_self := SynRel.j_le_mul_self
+  j_mul_varDiag_le_bot := SynRel.j_mul_varDiag_le_bot
 
 namespace SynRel
 
@@ -703,6 +695,102 @@ theorem box_top_ne_bot (f : S.op) (h : S.arity f = 0) :
   rw [hbad] at hb
   exact hb
 
+/-! ## Experiment 3(c) — `T[j]` is closed in the term model.
+
+Model verification of `SRA.SubstJClosed` (see `Structure/Derived.lean`):
+for every `a : SynRel S`, `subst a j` is closed. The argument: the
+pointwise clause `∀ x, j.rel Θ (τ x) (σ x)` in the definition of
+`subst · j` forces `τ = σ` and every `τ x` a weakened closed term.
+Substituting closed terms into every variable of a term yields another
+weakened closed term (a `Tm.ren_subst` argument through
+`Empty.elim`), so both endpoints `u = t.subst τ` and `v = s.subst σ`
+of the resulting pair are themselves weakened closed terms — exactly
+the shape needed for membership in `SRA.box (subst a j) =
+j * (subst a j) * j` with middle witnesses `u` and `v`. -/
+
+/-- The advisor's third suggestion, verified for `SynRel S`:
+`IsClosed (subst a j)` for every `a`. Proof witnesses: each `x : Γ`
+supplies (via the pointwise `j`-clause) a closed term `τ' x : Tm S Empty`
+with `τ x = Tm.close Θ (τ' x)`; then
+`u = t.subst τ = Tm.close Θ (t.subst τ')` by `Tm.ren_subst`, and
+similarly for `v` using `τ = σ`. Choice enters via
+`Classical.axiomOfChoice` to package the per-variable `τ' x`.
+
+Together with the abstract `SRA.SubstJClosed` predicate, this
+theorem is the model-side half of the "candidate axiom" record: the
+axiom holds where it matters. -/
+theorem substJClosed (a : SynRel S) : SRA.IsClosed (SynRel.subst a j) := by
+  change SynRel.subst a j ≤ SRA.box (SynRel.subst a j)
+  intro Θ u v hsubst
+  have hsub := hsubst
+  obtain ⟨Γ, t, s, τ, σ, rfl, rfl, _, hj⟩ := hsub
+  -- `hsubst : (subst a j).rel Θ (t.subst τ) (s.subst σ)` (unchanged; the
+  -- destructuring was on the copy `hsub`).
+  have hτσ : ∀ x, τ x = σ x := fun x => (hj x).1
+  have hτ_cls : ∀ x, ∃ t₀ : Tm S Empty, τ x = Tm.close Θ t₀ :=
+    fun x => (hj x).2
+  obtain ⟨τ', hτ'eq⟩ := Classical.axiomOfChoice hτ_cls
+  -- τ' : Γ → Tm S Empty, hτ'eq : ∀ x, τ x = Tm.close Θ (τ' x)
+  have hu_cls : (t.subst τ : Tm S Θ) = Tm.close Θ (t.subst τ') := by
+    change t.subst τ = (t.subst τ').ren Empty.elim
+    rw [Tm.ren_subst]
+    congr 1
+    funext x
+    exact hτ'eq x
+  have hv_cls : (s.subst σ : Tm S Θ) = Tm.close Θ (s.subst τ') := by
+    change s.subst σ = (s.subst τ').ren Empty.elim
+    rw [Tm.ren_subst]
+    congr 1
+    funext x
+    rw [← hτσ x]
+    exact hτ'eq x
+  -- Goal: (SRA.box (subst a j)).rel Θ (t.subst τ) (s.subst σ)
+  --   = ((j * (subst a j)) * j).rel Θ (t.subst τ) (s.subst σ)
+  -- Witnesses: outer middle `s.subst σ`, inner middle `t.subst τ`.
+  refine ⟨s.subst σ, ⟨t.subst τ,
+          ⟨rfl, t.subst τ', hu_cls⟩,
+          hsubst⟩,
+          ⟨rfl, s.subst τ', hv_cls⟩⟩
+
+/-! ## Experiment 3′(b) — `j[T] = j` in the term model.
+
+Model verification of `SRA.SubstJEqJ` (see `Structure/Derived.lean`):
+for every `T : SynRel S`, `SynRel.subst j T = j`.
+
+Argument. The `⊆` direction destructures a `subst j T`-witness
+`⟨Γ, t, s, τ, σ, _, _, hj, _⟩` where `hj : j.rel Γ t s` forces `t = s`
+and `t = Tm.close Γ t₀` for some closed `t₀`; then
+`Tm.subst_close` collapses both endpoints `t.subst τ` and `t.subst σ`
+to the same weakened closed term `Tm.close Θ t₀`, giving the
+`j`-witness. The `⊇` direction takes source context `Γ := Empty` and
+`τ := σ := Tm.var ∘ Empty.elim`, making the pointwise `T`-clause
+vacuous — this route works for **every** `T`, including `T = ⊥`, which
+is precisely why the earlier `j[T] = ⊥` proposal collapsed. -/
+
+/-- The advisor's corrected `j[T] = j` (see `SRA.SubstJEqJ`), verified
+for every `T` in the term model `SynRel S`. Uses `Tm.subst_close` (`⊆`)
+and the empty source context together with `Tm.ren_id` (`⊇`). -/
+theorem substJEqJ (T : SynRel S) : SynRel.subst j T = j := by
+  ext Θ u v
+  constructor
+  · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, ⟨hts, t₀, ht⟩, _hT⟩
+    subst hts
+    refine ⟨?_, t₀, ?_⟩
+    · rw [ht, Tm.subst_close, Tm.subst_close]
+    · rw [ht, Tm.subst_close]
+  · rintro ⟨huv, t₀, hu⟩
+    subst huv
+    refine ⟨Empty, t₀, t₀,
+            (Tm.var ∘ Empty.elim : Empty → Tm S Θ),
+            (Tm.var ∘ Empty.elim : Empty → Tm S Θ), ?_, ?_,
+            ⟨rfl, t₀, ?_⟩, fun x => x.elim⟩
+    · rw [hu]; rfl
+    · rw [hu]; rfl
+    · change t₀ = t₀.ren (Empty.elim : Empty → Empty)
+      rw [show (Empty.elim : Empty → Empty) = _root_.id from
+            funext (fun e => e.elim)]
+      exact (Tm.ren_id t₀).symm
+
 end SynRel
 
 end LeanTra.Instances.FirstOrder
@@ -712,4 +800,6 @@ end LeanTra.Instances.FirstOrder
 #print axioms LeanTra.Instances.FirstOrder.SynRel.subst_assoc
 #print axioms LeanTra.Instances.FirstOrder.SynRel.subst_mul_le
 #print axioms LeanTra.Instances.FirstOrder.instSRA
-#print axioms LeanTra.Instances.FirstOrder.SynRel.box_mul
+#print axioms LeanTra.Instances.FirstOrder.SynRel.substBot_mul
+#print axioms LeanTra.Instances.FirstOrder.SynRel.substJClosed
+#print axioms LeanTra.Instances.FirstOrder.SynRel.substJEqJ
