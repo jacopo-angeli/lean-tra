@@ -16,8 +16,10 @@ rather than over allegories, the two being equivalent in the one-object case.
 A `SRA` extends the involutive unital quantale with four data — the variable
 co-equivalence `Δη`, the strict compatible refinement `tilde ·` (a weakly unital
 morphism), relation substitution `·[·]` (an oplax bimorphism), and the closure
-modality `□` — subject to the axioms recalled below. The derived operation
-`hat · := Δη ⊔ tilde ·` (compatible refinement) is a `def`, not a field.
+constant `j` (co-reflexive, symmetric, co-transitive) — subject to the axioms
+recalled below. Two derived operations are `def`s, not fields: the compatible
+refinement `hat · := Δη ⊔ tilde ·`, and the closure modality
+`□ a := j * a * j`.
 
 ## Axioms (fields of the class)
 
@@ -31,53 +33,34 @@ modality `□` — subject to the axioms recalled below. The derived operation
 * `(·, Δη, ·[·])` a monoid — recorded as `Prop` fields, NOT as a second `Monoid`
   instance (which would clash with the composition monoid).
 * `·[·]` distributes over `tilde ·` (`tilde a[b] ≤ tilde (a[b])`).
-* `□` a deflationary idempotent monotone modality, with two absorption laws
-  `□a * □b = □(□a * b) = □(a * □b)`, the lax multiplicativity
-  `□a * □b ≤ □(a * b)`, collapse on variables `□Δη = ⊥`, and closure under
-  substitution `(□a)[b] ≤ □a`. No co-equivalence conditions on `□1` are
-  assumed — the advisor's axiom set does not include them.
+* `j` is a *closure constant*: co-reflexive (`j ≤ 1`), symmetric (`jᵒ ≤ j`),
+  and co-transitive (`j ≤ j * j`) — the three co-equivalence axioms already
+  used for `Δη`, applied to `j` instead. Orthogonal to `Δη` on the right
+  (`j * Δη ≤ ⊥`), which is the closure-versus-variable disjointness needed to
+  discharge `□ Δη = ⊥` for the derived `□`.
 
-## Design note — `□` as a primitive
+## Design note — `□` as `j * · * j`
 
-LICS'26 §3.2.1 defines `□a := a[⊥]` and lists among its laws both the
-strict multiplicativity `□(ϕ;ψ) = □ϕ;□ψ` and the identity
-`□Δ ; ϕ ; □Δ ⊆ □ϕ` (the `e * a * e` decomposition). Both hold in the
-*unscoped* term model, where `□R = R ∩ (closed × closed)` — the two
-sides of each law simply compare pairs of closed terms. Both **fail**
-in the *context-indexed* model of Example 3(2) — the model formalised
-in `Instances/FirstOrder` — where `·[⊥]` no longer means "restrict to
-closed endpoints" but "goes through the empty context".
+Earlier drafts made `□` a primitive field of `SRA`, with the advisor-supplied
+axioms `box_le`, `box_box`, `box_mono`, `box_mul_box_eq_box_mul_{left,right}`,
+`box_mul_box_le`, `box_varDiag_eq_bot`, `box_subst_le`. In the present
+revision the advisor's own proposal is followed instead: `j` is taken as a
+sub-1 closure constant with just three co-equivalence axioms (plus one
+orthogonality to `Δη`), and `□ a` is *defined* as `j * a * j`. All the box
+laws listed above then become theorems (see `Structure/Derived.lean`), so the
+class drops from `4 (data) + 15 (Δη, scr, subst) + 8 (box)` fields down to
+`4 (data) + 15 + 4 (j)`.
 
-Concrete counterexample to `□a = e * a * e` in the context-indexed
-model. Take a signature with a constant symbol `c` and define
-`R Γ t s := Nonempty Γ ∧ t = c ∧ s = c`. `R` is renaming-closed (there
-is no map from an inhabited context into `Empty`, so the closure
-hypothesis is vacuous on the branch that changes `Γ` to `∅`; on the
-other branches `t = s = c` transports), hence a bona-fide `SynRel`.
-But `R(∅) = ∅`, so `□R = R ∩ (·[⊥]) = ⊥`, whereas `e = □1` contains
-the pair `(c, c)` in every non-empty context, and `e * R * e` still
-carries `(c, c)` — so `e * R * e ≠ ⊥ = □R`. The advisor-supplied
-composition axiom `□a * □b = □(a * □b)` similarly fails in the
-context-indexed model.
+The single old box axiom that does **not** derive under `□ := j * · * j` is
+`box_subst_le : subst (box a) b ≤ box a`. As `Structure/Derived.lean`
+documents, no condition on `j` alone yields it through the oplax
+`subst_mul_le`; and the intended context-indexed term model
+(`Instances/FirstOrder`, with `j` the identity on closed terms) exhibits a
+concrete `SynRel a` and a substituent `b` for which the inequality fails. So
+`box_subst_le` is dropped from the class rather than re-axiomatised.
 
-`□` is therefore taken as a *primitive* field with exactly the axioms
-the advisor supplied: `box_le`, `box_box`, `box_mono`,
-`box_mul_box_eq_box_mul_{left,right}`, `box_mul_box_le`,
-`box_varDiag_eq_bot`, `box_subst_le`. Only the lax half
-`□a * □b ≤ □(a * b)` of the composition law is assumed; the reverse
-`□(a * b) ≤ □a * □b` is not, and does not hold in the context-indexed
-model. No co-equivalence conditions on `□1` are assumed — earlier drafts
-carried `(□1)ᵒ ≤ □1` and `□1 ≤ □1 * □1` mirroring `Δη`, but they were
-only used by the derivation of `□a = e * a * e`, which the current
-axioms do not support (see the counterexample above); with that
-derivation removed, no downstream lemma needs them either. Co-reflexivity
-`□1 ≤ 1` is still available for free from `box_le` at `a := 1`.
-
-Several of the `□` fields have no consumer in `Derived.lean`:
-`box_mul_box_eq_box_mul_left`, `box_mul_box_eq_box_mul_right`,
-`box_mul_box_le`, `box_varDiag_eq_bot`, and `box_subst_le` are the
-advisor's axiomatisation of `□` and are expected to be consumed in the
-operational-semantics chapter, not here.
+`box_varDiag_eq_bot` survives, discharged from `j_mul_varDiag_le_bot` and
+`Quantale.bot_mul`.
 
 Laws Gavazzo lists but that are derivable — e.g. closedness `·[b] ⊣ b » ·` from
 join-preservation, `Δᵒ = Δ` and join-preservation of `·ᵒ` from the base — are
@@ -100,7 +83,8 @@ referred to by their identifiers.
 | `·ᴴ`          | `SRA.howe`                                |
 | `·§`          | `SRA.opHowe`                              |
 | `b » c`       | `SRA.substResid b c`                      |
-| `□a`          | `SRA.box a` (primitive field)             |
+| `j` (`□Δ`)    | `SRA.j` (primitive field)                 |
+| `□a`          | `SRA.box a` (`:= SRA.j * a * SRA.j`)      |
 | `♦a`          | `SRA.dia a` (right adjoint of `SRA.box`)  |
 
 Only the base-level involutive-quantale notations (`·ᵒ` for converse, `⇨ₗ` /
@@ -123,7 +107,8 @@ open scoped IsInvolutiveQuantale
 Extends the base (`Monoid` + `CompleteLattice` + `IsQuantale` +
 `IsInvolutiveQuantale`) with the variable co-equivalence `Δη`, the strict
 compatible refinement `tilde ·`, relation substitution `·[·]`, and the closure
-modality `□`, together with their defining axioms.
+constant `j`, together with their defining axioms. The closure modality `□`
+is derived as `j * · * j` (see `Structure/Derived.lean`).
 
 This is the involutive-quantale presentation of the term relation algebra of
 the paper cited in the module `References` block, whose base is there given
@@ -197,43 +182,28 @@ class SRA (α : Type u)
   protected one_le_of_scr_sup_le ⦃a : α⦄ : varDiag ⊔ scr a ≤ a → 1 ≤ a
 
 
-  /-- The closure modality `□`: `□a` is the largest closed sub-relation of
-  `a` (informally, the part of `a` that only relates closed terms). Taken
-  as primitive because the source's definition `□a := a[⊥]` picks out
-  "endpoints are closed terms" only in the unscoped term model; in the
-  context-indexed model of Example 3(2) (the one formalised in
-  `Instances/FirstOrder`) it means "goes through the empty context", which
-  is strictly stronger — see the module docstring's design note for the
-  counterexample. -/
-  box : α → α
-  /-- `□` is deflationary: `□a ≤ a`. -/
-  protected box_le (a : α) : box a ≤ a
-  /-- `□` is idempotent: `□(□a) = □a`. -/
-  protected box_box (a : α) : box (box a) = box a
-  /-- `□` is monotone. -/
-  protected box_mono ⦃a b : α⦄ : a ≤ b → box a ≤ box b
-  /-- Left absorption for `□`: a composite `□a * □b` factors through a
-  *single* application of `□` on the left, with the left factor un-boxed
-  underneath. Together with `box_mul_box_eq_box_mul_right` this pins down the
-  interaction of `□` with `*`. -/
-  protected box_mul_box_eq_box_mul_left (a b : α) : box a * box b = box (box a * b)
-  /-- Right absorption for `□`: symmetrically, the composite factors through
-  a single `□` with the right factor un-boxed underneath. -/
-  protected box_mul_box_eq_box_mul_right (a b : α) : box a * box b = box (a * box b)
-  /-- Lax multiplicativity of `□`: `□a * □b ≤ □(a * b)`. Only this direction
-  is assumed; the reverse `□(a * b) ≤ □a * □b` does NOT hold abstractly
-  (the term-model witness in `Instances/FirstOrder/SRA.lean` shows the
-  equality *does* hold in the intended model, but it is a model fact, not
-  an algebraic law). -/
-  protected box_mul_box_le (a b : α) : box a * box b ≤ box (a * b)
-  /-- `□` collapses the variable co-equivalence: `□Δη = ⊥`. Only closed
-  sub-relations of the pure-variable relation are the empty one. -/
-  protected box_varDiag_eq_bot : box (varDiag : α) = ⊥
-  /-- `□a` is closed under substitution: `(□a)[b] ≤ □a`. Since substitution
-  is left-strict at `Δη`, only the `≤` direction is assumed abstractly — the
-  reverse would need a full-fledged closure principle for substitution that
-  the base algebra does not supply. -/
-  protected box_subst_le (a b : α) : subst (box a) b ≤ box a
+  /-- The closure constant `j`: informally the identity restricted to closed
+  terms, from which `□a := j * a * j` reads off "the pairs of `a` whose two
+  endpoints are closed". Given as a bare element rather than an operation,
+  since the whole modal structure is generated by its three co-equivalence
+  axioms below plus orthogonality to `Δη`. -/
+  j : α
+  /-- `j` is co-reflexive: `j ≤ 1`. Mirrors `varDiag_le_one` — but `varDiag`
+  is not co-reflexive by axiom, only in the `Δη ⊔ tilde ·` decomposition; here
+  `j ≤ 1` is a genuine axiom. -/
+  protected j_le_one : j ≤ 1
+  /-- `j` is symmetric: `jᵒ ≤ j`. The full equality `jᵒ = j` is derived in
+  `Structure/Derived.lean` by the same one-line involution argument as
+  `varDiag_converse`. -/
+  protected j_converse_le : jᵒ ≤ j
+  /-- `j` is co-transitive: `j ≤ j * j`. Together with the co-reflexivity
+  `j ≤ 1` it forces the reverse `j * j ≤ j` (since `j * j ≤ 1 * j = j`), so
+  the equality `j * j = j` holds — see `Structure/Derived.lean`. -/
+  protected j_le_mul_self : j ≤ j * j
+  /-- `j` and `Δη` are orthogonal on the right: `j * Δη ≤ ⊥`. Mirrors the
+  existing `varDiag_mul_scr_le_bot`. Its role is to discharge the derived
+  `box_varDiag_eq_bot : box Δη = ⊥`, via `j * Δη * j ≤ ⊥ * j = ⊥`. -/
+  protected j_mul_varDiag_le_bot : j * varDiag ≤ ⊥
 
 namespace SRA
 
@@ -245,5 +215,11 @@ variable [SRA α]
 `SRA`: two terms are compatibly refined by `a` when they are either the same
 variable or built from the same operator with `a`-related sub-terms. -/
 def cr (a : α) : α := varDiag ⊔ scr a
+
+/-- The closure modality `□ a := j * a * j`. Derived operation, not a field of
+`SRA` in the current presentation (previously primitive; see the module
+docstring's design note). Reads as "the pairs of `a` whose two endpoints are
+closed", with `j` the closure constant. -/
+def box (a : α) : α := SRA.j * a * SRA.j
 
 end SRA
