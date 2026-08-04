@@ -60,16 +60,20 @@ Composition quantifies the intermediate term *inside* a single context:
 
   (φ * ψ) Γ t v  ↔  ∃ u : Tm S Γ, φ Γ t u ∧ ψ Γ u v
 
-not over all terms of all contexts. The per-context choice is forced by
-the `SRA` axiom `box_mul_le : □(R * S) ≤ □R * □S` (a theorem, not an
-axiom, of `SRA`). Take `R` relating a closed term to some open term and
-`S` its converse: under a global intermediate, `R * S` relates the
-closed term to itself via the open intermediate, so `□(R * S)` is
-non-trivial, while neither `□R` nor `□S` is (each factor has a
-non-closed endpoint). Under the per-context intermediate, the
-intermediate is forced to live in the same context as the endpoints, so
-if the endpoints are closed the intermediate is too, and the law holds.
-Thus the "global intermediate" flat variant is not a model of `SRA`.
+not over all terms of all contexts. With contexts-as-types (D1) this
+per-context restriction is essentially forced by typing: `φ Γ t u`
+requires `u : Tm S Γ`, so an intermediate at a different context does
+not type-check without a change-of-context operation on the
+composition itself. A "global" flat variant would build that change
+of context into the intermediate, and is not the model we take here.
+
+Note. An earlier version of this note cited `□(R * S) ≤ □R * □S` as
+an `SRA` theorem justifying per-context composition — that direction
+is in fact REFUTED in the term model
+(`LeanTra.Instances.FirstOrder.SynRel.not_box_mul_le_mul_box`) and no
+longer a valid citation. Only the lax half
+`box_mul_box_le : □R * □S ≤ □(R * S)` survives; see the
+"Status — open items" section of `Structure/Derived.lean`.
 
 ### (D-B3) Pointwise `sSup` / `sInf`
 

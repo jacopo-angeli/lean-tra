@@ -17,19 +17,19 @@ below), so the axioms do not merely hold in a trivial one-element algebra.
 ## What this model does and does not check
 
 The model discharges all `SRA` axioms lawfully, but with `scr := const ⊥` the
-axioms governing `ẽ·` are trivial: `scr_mono` is `⊥ ≤ ⊥`, `scr_mul` is `⊥ =
+axioms governing `tilde ·` are trivial: `scr_mono` is `⊥ ≤ ⊥`, `scr_mul` is `⊥ =
 ⊥ * ⊥`, `scr_converse` reduces to `rfl`, and orthogonality `varDiag * scr a ≤
 ⊥` holds precisely because `scr a = ⊥`. So this model *does not exercise*
-the `ẽ·` axioms; it only witnesses that they do not contradict the rest.
+the `tilde ·` axioms; it only witnesses that they do not contradict the rest.
 
 That limitation is not an accident of the presentation — it is forced (see
-next section). Any genuine test of the `ẽ·` axioms requires a carrier with
+next section). Any genuine test of the `tilde ·` axioms requires a carrier with
 more than two elements.
 
 ## What this model actually is
 
 The term algebra of the empty signature over one variable: a single term `x`,
-`Δη = Δ`, no compound terms, so `ẽ·` and `·[·]` collapse to the trivial
+`Δη = Δ`, no compound terms, so `tilde ·` and `·[·]` collapse to the trivial
 values above.
 
 ## Why the data is forced on a two-element carrier
@@ -41,7 +41,7 @@ On any two-element carrier `{⊥, ⊤}` with the standard quantale structure
   b`. If `varDiag = ⊥`, then `b = ⊥` for every `b`, collapsing the algebra.
   Hence `varDiag = ⊤ = 1`.
 * Then orthogonality `varDiag * scr a ≤ ⊥` becomes `scr a ≤ ⊥`, forcing
-  `scr = const ⊥` — so no two-element model can test `ẽ·` non-trivially.
+  `scr = const ⊥` — so no two-element model can test `tilde ·` non-trivially.
 * Fixed-point `varDiag ⊔ scr 1 = 1` is `⊤ ⊔ ⊥ = ⊤`. ✓
 * Structural induction `varDiag ⊔ scr a ≤ a → 1 ≤ a` is `⊤ ≤ a → ⊤ ≤ a`. ✓
 

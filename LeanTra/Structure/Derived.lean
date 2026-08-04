@@ -55,6 +55,38 @@ Grown across four passes, whose scope is reflected in the Contents list below.
   `isClosed_iff`, and the fact that `box a` and `⊥` are always closed.
   All unconditional.
 
+## Status — open items
+
+A running list of substitution- and modality-side questions that
+survived the advisor's iteration but have NOT been folded into the
+class or the derived layer. Full prose per item lives in
+`docs/modality-experiments.md`.
+
+* `SubstJClosed` — `∀ a, IsClosed (subst a j)` (`T[j]` closed).
+  Candidate predicate (`SRA.SubstJClosed`, this file); true in the
+  context-indexed term model
+  (`LeanTra.Instances.FirstOrder.SynRel.substJClosed`); not derivable
+  from the current axioms; no consumer yet.
+* `SubstJEqJ` — `∀ T, subst j T = j` (`j[T] = j`). Candidate predicate
+  (`SRA.SubstJEqJ`, this file); true in the term model
+  (`LeanTra.Instances.FirstOrder.SynRel.substJEqJ`); not derivable; no
+  consumer yet. The advisor's earlier `∀ T, subst j T = ⊥` proposal
+  was refuted (it forces `j = ⊥`; see
+  `SRA.j_eq_bot_of_subst_j_eq_bot`).
+* `(box a)[b] ≤ box a` — dropped from the class. False in the
+  context-indexed term model; obstruction and counterexample recorded
+  in the "Investigation: the dropped axiom `box_subst_le`" block below.
+* `R ⊓ S ≤ R * S` for co-equivalences — OPEN. The easy direction
+  `R * S ≤ R ⊓ S` is `SRA.mul_le_meet_of_coreflexive` in this file;
+  the reverse is not proved. No separating model has been found, so
+  the status is "not proved", not "not derivable".
+* `box (a * b) ≤ box a * box b` — REFUTED
+  (`LeanTra.Instances.FirstOrder.SynRel.not_box_mul_le_mul_box`).
+  LICS'26 §3.2.1 asserts the equality `□(ϕ;ψ) = □ϕ;□ψ`; under the
+  derived `box := j * · * j` only the lax half `SRA.box_mul_box_le`
+  survives. This is expected to block the direct application of
+  `SRA.box_lfp` to the operational-semantics evaluation recursor.
+
 ## References
 
 * Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.*
@@ -70,7 +102,7 @@ variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
   [SRA α]
 
-/-! ### Laws recovered from removed axioms -/
+/-! ### Derived ex-axioms -/
 
 /-- `Δη ≤ 1`: the variable co-equivalence is co-reflexive. -/
 theorem varDiag_le_one : (SRA.varDiag : α) ≤ 1 :=
@@ -530,24 +562,15 @@ theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
 
 /-! ## Experiments — advisor's substitution-side suggestions
 
-Three investigative results on the substitution side of `SRA`. NONE of
-the three is added to the class: Experiment 1 confirms the class's
-current field is the weaker of two candidate orthogonality forms;
-Experiment 2 shows an advisor-suggested `subst j T = ⊥` axiom collapses
-the theory; Experiment 3 records `∀ a, IsClosed (subst a j)` as a
-candidate axiom with a positive term-model verification but no route
-from the current axioms. -/
+Investigative results whose PROSE lives in `docs/modality-experiments.md`.
+Below, each experiment is a one-line pointer plus whatever Lean
+declarations it produced. NONE of the candidate predicates is added to
+the `SRA` class. -/
 
-/-! ### Experiment 1 — meet form of the varDiag/j orthogonality
+/-! ### Experiment 1 — meet form of the varDiag/j orthogonality.
+See `docs/modality-experiments.md#experiment-1`. -/
 
-The class currently carries the multiplicative form
-`SRA.j_mul_varDiag_le_bot : j * varDiag ≤ ⊥`. The advisor's proposal
-was the meet form `varDiag ⊓ j ≤ ⊥`. Below we relate them. -/
-
-/-- `j * varDiag ≤ varDiag ⊓ j`. Both components are one-liners from
-the co-reflexivity axioms `j_le_one` and `varDiag_le_one`. Consequence
-(next lemma): the meet form is at least as strong as the multiplicative
-form. -/
+/-- `j * varDiag ≤ varDiag ⊓ j` from the two co-reflexivity axioms. -/
 theorem j_mul_varDiag_le_meet :
     SRA.j * (SRA.varDiag : α) ≤ SRA.varDiag ⊓ SRA.j := by
   refine le_inf ?_ ?_
@@ -558,148 +581,55 @@ theorem j_mul_varDiag_le_meet :
         ≤ SRA.j * 1 := mul_le_mul' le_rfl varDiag_le_one
       _ = SRA.j := mul_one _
 
-/-- The meet form implies the multiplicative form: `varDiag ⊓ j ≤ ⊥ →
-j * varDiag ≤ ⊥`, via `j_mul_varDiag_le_meet`. -/
+/-- Meet form implies multiplicative form: `varDiag ⊓ j ≤ ⊥` gives
+`j * varDiag ≤ ⊥`. -/
 theorem j_mul_varDiag_le_bot_of_meet
     (h : (SRA.varDiag : α) ⊓ SRA.j ≤ ⊥) :
     SRA.j * (SRA.varDiag : α) ≤ ⊥ :=
   j_mul_varDiag_le_meet.trans h
 
-/-! The converse implication `j * varDiag ≤ ⊥ → varDiag ⊓ j ≤ ⊥` does
-NOT close from the current axioms. The natural route is
+/-! ### Experiment 2 — `subst j T = ⊥` collapses the theory.
+See `docs/modality-experiments.md#experiment-2`. -/
 
-    varDiag ⊓ j  ≤  (varDiag ⊓ j) * (varDiag ⊓ j)  ≤  j * varDiag  ≤  ⊥,
-
-where the last step is the mult-form hypothesis and the middle step is
-projection twice via `mul_le_mul'` (`varDiag ⊓ j ≤ j` on the left,
-`varDiag ⊓ j ≤ varDiag` on the right). The first step is
-co-transitivity of the meet
-`varDiag ⊓ j ≤ (varDiag ⊓ j) * (varDiag ⊓ j)`. The class supplies
-`varDiag_le_mul_self` and `j_le_mul_self` in isolation, but neither
-lifts through `⊓` — co-transitivity is not preserved by binary meets in
-a general quantale (the counterexample is any `x` with `x ≤ x * x`
-failing, e.g. `x = a ⊓ b` where `a`, `b` are individually co-transitive
-but their meet is not).
-
-**Recommendation.** Keep `SRA.j_mul_varDiag_le_bot` (the current field):
-it is the weaker, more permissive assumption. Switching to the meet
-form would strengthen the class without gaining a downstream lemma. -/
-
-/-! ### Experiment 2 — `subst j T = ⊥` collapses the theory. -/
-
-/-- The advisor's alternative suggestion `∀ T, subst j T = ⊥` forces
-`j = ⊥`, whence `box a = j * a * j = ⊥` for every `a` — the whole modal
-structure collapses. Two lines: instantiate at `T := varDiag` and apply
-`subst_varDiag_right : subst a varDiag = a`. Recorded as a
-hypothesis-carrying theorem — the hypothesis is NOT added as a class
-axiom. -/
+/-- If `∀ T, subst j T = ⊥` then `j = ⊥`: instantiate at
+`T := varDiag` and apply `subst_varDiag_right`. Hypothesis-carrying
+theorem, NOT a class axiom. -/
 theorem j_eq_bot_of_subst_j_eq_bot
     (h : ∀ T : α, SRA.subst SRA.j T = ⊥) : (SRA.j : α) = ⊥ := by
   have := h SRA.varDiag
   rwa [SRA.subst_varDiag_right] at this
 
-/-! ### Experiment 3 — `T[j]` closed.
-
-Advisor's third suggestion: for every `a`, `subst a j` is a closed
-relation, `IsClosed (subst a j)`. We state it as a bare `def`, note
-that no route from the current axioms discharges it, argue in the
-docstring that it cannot rescue the dropped `box_subst_le` (the latter
-is false in the intended model whereas `SubstJClosed` is true there —
-see `SynRel.substJClosed` in `Instances/FirstOrder/SRA.lean`), and
-leave it here as a candidate axiom with recorded model justification. -/
+/-! ### Experiment 3 — `T[j]` closed (`SubstJClosed`).
+See `docs/modality-experiments.md#experiment-3`; term-model verification
+in `LeanTra.Instances.FirstOrder.SynRel.substJClosed`. -/
 
 /-- Candidate axiom: "substitution by `j` yields a closed relation."
-Stated as a top-level `def`, NOT added to the `SRA` class. -/
+Top-level `def`, NOT a class field. Not derivable from the current
+axioms; true in the term model. -/
 def SubstJClosed (α : Type*) [Monoid α] [CompleteLattice α]
     [IsQuantale α] [IsInvolutiveQuantale α] [SRA α] : Prop :=
   ∀ a : α, SRA.IsClosed (SRA.subst a SRA.j)
 
-/-! **Why `SubstJClosed` is not derivable from the current axioms.**
-The `SRA` fields governing `subst`
-(`subst_mono_right`, `subst_mul_le`, `subst_converse`,
-`subst_sSup_left`, `subst_varDiag_left`, `subst_varDiag_right`,
-`subst_assoc`, `subst_scr_le`) do not mention `j`. The `j` fields
-(`j_le_one`, `j_converse_le`, `j_le_mul_self`, `j_mul_varDiag_le_bot`)
-constrain `j` in isolation, on the *multiplicative* side. To conclude
-`subst a j ≤ j * (subst a j) * j` one needs a bridge between the
-substitution operator and `j` on the input side — a fact the current
-axioms simply do not carry.
+/-! ### Experiment 3′ — `j[T] = j` (`SubstJEqJ`, advisor's corrected form).
+See `docs/modality-experiments.md#experiment-3-1`; term-model
+verification in `LeanTra.Instances.FirstOrder.SynRel.substJEqJ`. -/
 
-**Why `SubstJClosed` cannot rescue the dropped `box_subst_le`.**
-The dropped law `subst (box a) b ≤ box a` was shown earlier to be
-FALSE in the context-indexed term model of `Instances/FirstOrder`
-(counterexample: `a.rel Γ t s := Nonempty Γ`, `Θ := Empty`,
-`b := ⊤`). Below, `SynRel.substJClosed` shows `SubstJClosed` is TRUE
-in that same model. A putative derivation
-`SubstJClosed → box_subst_le` would then instantiate at the model to
-give `True → False = False`; but a derivation is a theorem, and
-theorems hold in every model of their hypotheses. Contradiction.
-There is no such derivation, and no point searching. -/
-
-/-! ### Experiment 3′ — `j[T] = j` (advisor's corrected form). -/
-
-/-- Candidate axiom: substitution by `j` in the first argument is
-absorbing on `j`, i.e., `∀ T, j[T] = j`. Stated as a top-level `def`
-alongside `SubstJClosed`; NOT added to the `SRA` class.
-
-This is the advisor's corrected replacement for the earlier
-`∀ T, j[T] = ⊥` proposal (refuted by `j_eq_bot_of_subst_j_eq_bot`:
-that form collapses `j` to `⊥`). The corrected form is *not* similarly
-refuted — it is consistent with the current axioms and holds in the
-intended context-indexed term model.
-
-**Model justification (see `SynRel.substJEqJ` in
-`Instances/FirstOrder/SRA.lean`).** In that model, `j` is the identity
-on weakened closed terms. The `⊆` direction uses `Tm.subst_close`:
-substitution acts trivially on a weakened closed term, so both endpoints
-`t.subst τ`, `s.subst σ` of a `subst j T`-witness collapse to the same
-weakened closed term. The `⊇` direction is even simpler and — crucially
-— holds for **every** `T`, including `T = ⊥`: take source context
-`Γ := Empty`, whence the pointwise clause `∀ x : Empty, T.rel Δ (τ x)
-(σ x)` is vacuous. It is precisely this vacuous-source-context route
-that made the earlier `j[T] = ⊥` form collapse (`j ≤ j[⊥]` still holds
-via `Γ := Empty`, forcing `j ≤ ⊥` under the old proposal). -/
+/-- Candidate axiom: `∀ T, j[T] = j`. Advisor's corrected replacement
+for the earlier `∀ T, j[T] = ⊥` (refuted by
+`j_eq_bot_of_subst_j_eq_bot`). Top-level `def`, NOT a class field. Not
+derivable; true in the term model. -/
 def SubstJEqJ (α : Type*) [Monoid α] [CompleteLattice α]
     [IsQuantale α] [IsInvolutiveQuantale α] [SRA α] : Prop :=
   ∀ T : α, SRA.subst SRA.j T = SRA.j
 
-/-! **Why `SubstJEqJ` is not derivable from the current axioms.** Same
-structural obstruction as `SubstJClosed`: the `subst` fields
-(`subst_mono_right`, `subst_mul_le`, `subst_converse`,
-`subst_sSup_left`, `subst_varDiag_left`, `subst_varDiag_right`,
-`subst_assoc`, `subst_scr_le`) do not mention `j`, and the `j` fields
-constrain `j` only on the *multiplicative* side. The only equation the
-current axioms give for `SRA.subst j T` is at the single point
-`T := varDiag`, via `subst_varDiag_right : subst j varDiag = j`. No
-combination pins `subst j T` for a second value of `T`, let alone for
-all `T`.
-
-**Consumption in the current development.** Nothing in `Structure/`,
-`Confluence/`, or `Instances/` currently consumes `SubstJEqJ`. It is
-recorded here as a *candidate* — a hypothesis future work may or may
-not need — with the term-model justification above; it is not fed to
-the `SRA` class, and there is no downstream lemma stated in terms of
-it yet. -/
-
 /-! ### Experiment 4 — meet vs. composition of co-equivalences.
-
-In the allegory of relations, any two coreflexives `R, S ≤ 1` satisfy
-`R ⊓ S = R * S`. The standard proof uses the modular law
-`(P * Q) ⊓ R ≤ P * (Q ⊓ Pᵒ * R)`:
-    `R ⊓ S = (R * 1) ⊓ S ≤ R * (1 ⊓ Rᵒ * S) ≤ R * S`.
-The bare involutive quantale here has no modular law. Below we take the
-six co-equivalence hypotheses as explicit arguments and record which
-half closes.
-
-The `R * S ≤ R ⊓ S` direction closes from co-reflexivity alone
-(`R ≤ 1`, `S ≤ 1`); the other direction is left as an
-`example` that we do NOT expect to close — the residual is documented
-below. -/
+See `docs/modality-experiments.md#experiment-4`. Only the easy
+half `R * S ≤ R ⊓ S` closes below; the converse `R ⊓ S ≤ R * S` is
+open (not proved — no separating model). -/
 
 omit [IsInvolutiveQuantale α] [SRA α] in
-/-- Half 1 of the meet-vs-composition question, unconditional in the
-symmetry and co-transitivity hypotheses: for coreflexives `R, S ≤ 1`,
-`R * S ≤ R ⊓ S`. `R * S ≤ R * 1 = R` and `R * S ≤ 1 * S = S`. -/
+/-- Easy half of the coreflexive meet-vs-composition question:
+`R * S ≤ R ⊓ S` from `R, S ≤ 1` alone. -/
 theorem mul_le_meet_of_coreflexive {R S : α} (hR1 : R ≤ 1) (hS1 : S ≤ 1) :
     R * S ≤ R ⊓ S := by
   refine le_inf ?_ ?_
@@ -708,55 +638,10 @@ theorem mul_le_meet_of_coreflexive {R S : α} (hR1 : R ≤ 1) (hS1 : S ≤ 1) :
   · calc R * S ≤ 1 * S := mul_le_mul' hR1 le_rfl
       _ = S := one_mul _
 
-/-! Attempted converse: `R ⊓ S ≤ R * S` for co-equivalences
-`R, S ≤ 1` with `Rᵒ ≤ R`, `Sᵒ ≤ S`, `R ≤ R * R`, `S ≤ S * S`.
-
-Available consequences of the six hypotheses:
-* `R = Rᵒ` and `S = Sᵒ` (one-line involutivity argument, cf.
-  `varDiag_converse`);
-* `R * R = R` and `S * S = S` (co-transitivity `R ≤ R * R` combined with
-  `R * R ≤ 1 * R = R` from co-reflexivity).
-
-Attempts and where each stalls:
-
-1.  `R ⊓ S ≤ R = R * R = R * (something)` — needs the "something" to sit
-    below `S`, which the hypotheses do not deliver.
-2.  Multiply on the left by `R`:
-      `R * (R ⊓ S) ≤ R * R ⊓ R * S = R ⊓ R * S`
-    would require distributivity of `*` over `⊓`, and composition in a
-    general quantale distributes over `sSup` (joins), NOT over `sInf`
-    (meets). So the middle equality does not close, and `R * (R ⊓ S)`
-    is only sandwiched between `R * S` (below) and `R` (below) — no
-    route up to `R ⊓ S`.
-3.  Co-transitivity applied to the meet — `R ⊓ S ≤ (R ⊓ S) * (R ⊓ S)`
-    would close from `mul_le_mul'` and inf-projections, but this
-    lemma requires co-transitivity of `R ⊓ S` itself. As Experiment 1
-    already documents (`j_mul_varDiag_le_bot_of_meet` block), binary
-    meets do not preserve co-transitivity in a general quantale.
-4.  Symmetry rewrite `R ⊓ S = Rᵒ ⊓ Sᵒ`: transposes the problem to
-    `Rᵒ ⊓ Sᵒ ≤ Rᵒ * Sᵒ = (S * R)ᵒ`, i.e., `(R ⊓ S)ᵒ ≤ (S * R)ᵒ`, which
-    is `R ⊓ S ≤ S * R` — a symmetric rewrite of the same open goal.
-
-Unused hypotheses in the attempts above: **all six** are used to
-derive `R = Rᵒ`, `R * R = R`, and their `S`-analogues, but no
-combination of the derived facts closes the residual — the exact goal
-we cannot discharge is
-
-    `R ⊓ S ≤ R * S`
-
-with all six hypotheses on the context. The obstruction is the missing
-modular law; the bare involutive quantale is genuinely too weak.
-
-Recorded as commented `example` rather than a `theorem` (to avoid a
-`sorry`) so that a future reader can pick up where we stopped:
-
-```
-example {R S : α}
-    (hR1 : R ≤ 1) (hRc : Rᵒ ≤ R) (hRt : R ≤ R * R)
-    (hS1 : S ≤ 1) (hSc : Sᵒ ≤ S) (hSt : S ≤ S * S) :
-    R ⊓ S ≤ R * S := by
-  sorry
-```
--/
+/-! ### Experiment 5 — `box (a * b) ≤ box a * box b`?
+See `docs/modality-experiments.md#experiment-5`. Refuted in the term
+model by `LeanTra.Instances.FirstOrder.SynRel.not_box_mul_le_mul_box`;
+only the lax half `box_mul_box_le` (above) survives under
+`box := j * · * j`. -/
 
 end SRA
