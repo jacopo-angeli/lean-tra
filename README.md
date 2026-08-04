@@ -41,19 +41,21 @@ LeanTra/
 ├── Basic.lean
 ├── Structure/
 │   ├── InvolutiveQuantale.lean       -- involutive unital quantale (the base)
-│   ├── SRA.lean                      -- Syntax Relation Algebra: Δη, tilde ·, ·[·]
-│   ├── Derived.lean                  -- derived laws, ·ᴴ, □/♦, cohesion
+│   ├── SRA.lean                      -- Syntax Relation Algebra: Δη, tilde ·, ·[·], j
+│   ├── Derived.lean                  -- derived laws, ·ᴴ, □/♦, closedness, box_lfp, experiments
 │   └── OperationalDecomposition.lean -- intro/elim, a⇓, GIP/GCP (stub)
 ├── Confluence/
 │   ├── Abstract.lean                 -- Kleene ·∗, Diamond, Confluent, strip
 │   └── Orthogonal.lean               -- parRed, IsOrthogonal, confluent_parRed
-└── Instances/
-    ├── Toy.lean                      -- two-element separating model (box_lfp counterexample)
-    └── FirstOrder/
-        ├── Terms.lean                -- Signature, Tm, substitution, renaming
-        ├── Relations.lean            -- SynRel S: lattice/monoid/quantale/involution
-        ├── SRA.lean                  -- the sixteen SRA axioms + instSRA + (D-C7)
-        └── Confluence.lean           -- confluent_parRed on the term model
+├── Instances/
+│   ├── Toy.lean                      -- two-element consistency model on `Prop`
+│   └── FirstOrder/
+│       ├── Terms.lean                -- Signature, Tm, substitution, renaming
+│       ├── Relations.lean            -- SynRel S: lattice/monoid/quantale/involution
+│       ├── SRA.lean                  -- SRA axioms + instSRA + (D-C7) + experiment witnesses
+│       └── Confluence.lean           -- confluent_parRed on the term model
+docs/
+└── modality-experiments.md           -- prose for the open items listed in Structure/Derived.lean
 ```
 
 The two typeclasses are `SRA` and `OperationalDecomposition` (the latter
@@ -64,12 +66,19 @@ extends the former); everything else is definitions and theorems over them.
 - [x] Involutive quantale base
 - [x] SRA axiomatisation
 - [x] Derived laws
+- [x] Modality layer (`box := j * · * j`, `dia`, `box_lfp`)
 - [x] Non-degenerate model
 - [x] Confluence
 - [ ] Operational decomposition
 - [ ] Determinism
 - [ ] Congruence
 - [ ] Bridge theorem
+
+Open items on the modality side (candidate predicates that hold in the
+term model but do not derive from the current axioms, plus one refuted
+paper claim) are listed in the "Status — open items" section of
+`LeanTra/Structure/Derived.lean`; full prose in
+[`docs/modality-experiments.md`](docs/modality-experiments.md).
 
 ## Building
 

@@ -85,10 +85,13 @@ to Lean syntax made in this file.
 
 ## Forward pointers
 
-* `Tm.close` and `Tm.subst_close` are the syntactic content of the paper's
-  □ modality (`□a := a[⊥]`): substitution acts trivially on the image of
-  weakening from the empty context, which is what will let the □ modality
-  factor through closed terms in Phase C.
+* `Tm.close` and `Tm.subst_close` are the syntactic content behind the
+  closure constant `SRA.j` used in Phase C (the identity on weakened
+  closed terms): substitution acts trivially on the image of weakening
+  from the empty context, so `j` stays renaming-closed and the derived
+  `box := j * · * j` factors through closed terms. (The paper's
+  original reading `□a := a[⊥]` survives in Phase C only as the legacy
+  facts `substBot_iff` / `substBot_mul` about `subst · ⊥` per se.)
 * `Tm.subst_node` is the equation the SRA law `tilde a[b] ≤ (a[b])~` will
   ultimately unfold to at the syntactic level in Phase C.
 * `Tm.subst_ren`, `Tm.ren_subst`, `Tm.ren_ren` are exactly the shape
@@ -288,8 +291,8 @@ theorem ren_id (t : Tm S Γ) : t.ren _root_.id = t := by
 
 /-- On an empty context, substitution is invariant in its substitution
 argument: `t : Tm S Γ` with `Γ` uninhabited has no `var` leaves, so the
-substitution is never consulted. Needed in Phase C for the `box`
-normal-form lemma. -/
+substitution is never consulted. Needed in Phase C for the
+`substBot_iff` normal-form lemma. -/
 theorem subst_empty [IsEmpty Γ] (t : Tm S Γ) (τ₁ τ₂ : Γ → Tm S Δ) :
     t.subst τ₁ = t.subst τ₂ := by
   induction t with
@@ -364,13 +367,14 @@ theorem comp_id (τ : Γ → Tm S Δ) : comp τ Subst.id = τ := by
 
 end Subst
 
-/-! ## Closed terms and the □-modality's syntactic content.
+/-! ## Closed terms and the closure constant's syntactic content.
 
 `ClosedTm S = Tm S Empty`: terms with no free variables. Every closed
 term embeds into an arbitrary context by the unique function `Empty → Γ`;
 substitution then acts trivially on the image of this embedding, which is
-the syntactic fact that will let the □ modality (`□a := a[⊥]`) in Phase C
-factor through closed terms. -/
+the syntactic fact that will let the closure constant `SRA.j` in Phase C
+be interpreted as the identity on weakened closed terms (so that the
+derived `box := j * · * j` factors through closed terms). -/
 
 /-- Closed `S`-terms — the empty-context fibre of `Tm`. -/
 abbrev ClosedTm (S : Signature) := Tm S Empty

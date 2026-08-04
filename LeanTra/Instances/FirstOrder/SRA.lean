@@ -9,7 +9,7 @@ public import LeanTra.Structure.SRA
 public import LeanTra.Structure.Derived
 
 /-!
-# The three SRA operations on syntax relations — Phase C
+# The three SRA operations on syntax relations
 
 Phase C of the LICS'26 term-model construction: defines the four
 `SRA`-specific data — the variable co-equivalence `Δη` (`varDiag`), the
@@ -148,12 +148,27 @@ it is strictly more restrictive.
 
 LICS'26 §3.2.1 originally read `□a := a[⊥]`, and this file's
 `substBot_iff` / `substBot_mul` witness the equality
-`(a * b)[⊥] = a[⊥] * b[⊥]` in the term model — an equality that is not
-derivable from the abstract axioms. Under the current presentation,
-`□ := j * · * j` is not the same operation as `· [⊥]`, so this equality
-no longer speaks to the `SRA` `box_mul_box_le` axiom. The two
-theorems are retained as facts about `subst · ⊥` per se; see the
-block-level docstring at their definition.
+`(a * b)[⊥] = a[⊥] * b[⊥]` in the term model — an equality that is
+not derivable from the abstract `SRA` axioms. Under the current
+presentation, `□ := j * · * j` is not the same operation as `· [⊥]`,
+so this equality no longer speaks to the `SRA` theorem
+`box_mul_box_le : □R * □S ≤ □(R * S)` (the only surviving half of
+LICS'26 §3.2.1's asserted equality — the reverse direction is refuted;
+see `SynRel.not_box_mul_le_mul_box` and the "Status — open items"
+section of `Structure/Derived.lean`). The two `substBot_*` theorems
+are retained as facts about `subst · ⊥` per se; see the block-level
+docstring at their definition.
+
+Sanity note on the dropped axiom `box_subst_le : subst (box a) b ≤
+box a`. Under the OLD reading `□a := a[⊥]`, this becomes
+`subst (subst a ⊥) b ≤ subst a ⊥`, which is in fact an EQUALITY via
+`subst_assoc` and `subst_bot_left` (`subst (subst a ⊥) b =
+subst a (subst ⊥ b) = subst a ⊥`); it holds *abstractly*, not merely
+in the term model. Under the NEW reading `□ := j * · * j`, the same
+statement `subst (j * a * j) b ≤ j * a * j` is neither derivable nor
+true in the term model — this is the actual reason the axiom was
+dropped, and the counterexample lives in `Structure/Derived.lean`'s
+Investigation block on `box_subst_le`.
 
 ## References
 
@@ -752,45 +767,6 @@ theorem substJClosed (a : SynRel S) : SRA.IsClosed (SynRel.subst a j) := by
           hsubst⟩,
           ⟨rfl, s.subst τ', hv_cls⟩⟩
 
-/-! ## Experiment 3′(b) — `j[T] = j` in the term model.
-
-Model verification of `SRA.SubstJEqJ` (see `Structure/Derived.lean`):
-for every `T : SynRel S`, `SynRel.subst j T = j`.
-
-Argument. The `⊆` direction destructures a `subst j T`-witness
-`⟨Γ, t, s, τ, σ, _, _, hj, _⟩` where `hj : j.rel Γ t s` forces `t = s`
-and `t = Tm.close Γ t₀` for some closed `t₀`; then
-`Tm.subst_close` collapses both endpoints `t.subst τ` and `t.subst σ`
-to the same weakened closed term `Tm.close Θ t₀`, giving the
-`j`-witness. The `⊇` direction takes source context `Γ := Empty` and
-`τ := σ := Tm.var ∘ Empty.elim`, making the pointwise `T`-clause
-vacuous — this route works for **every** `T`, including `T = ⊥`, which
-is precisely why the earlier `j[T] = ⊥` proposal collapsed. -/
-
-/-- The advisor's corrected `j[T] = j` (see `SRA.SubstJEqJ`), verified
-for every `T` in the term model `SynRel S`. Uses `Tm.subst_close` (`⊆`)
-and the empty source context together with `Tm.ren_id` (`⊇`). -/
-theorem substJEqJ (T : SynRel S) : SynRel.subst j T = j := by
-  ext Θ u v
-  constructor
-  · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, ⟨hts, t₀, ht⟩, _hT⟩
-    subst hts
-    refine ⟨?_, t₀, ?_⟩
-    · rw [ht, Tm.subst_close, Tm.subst_close]
-    · rw [ht, Tm.subst_close]
-  · rintro ⟨huv, t₀, hu⟩
-    subst huv
-    refine ⟨Empty, t₀, t₀,
-            (Tm.var ∘ Empty.elim : Empty → Tm S Θ),
-            (Tm.var ∘ Empty.elim : Empty → Tm S Θ), ?_, ?_,
-            ⟨rfl, t₀, ?_⟩, fun x => x.elim⟩
-    · rw [hu]; rfl
-    · rw [hu]; rfl
-    · change t₀ = t₀.ren (Empty.elim : Empty → Empty)
-      rw [show (Empty.elim : Empty → Empty) = _root_.id from
-            funext (fun e => e.elim)]
-      exact (Tm.ren_id t₀).symm
-
 end SynRel
 
 end LeanTra.Instances.FirstOrder
@@ -802,4 +778,3 @@ end LeanTra.Instances.FirstOrder
 #print axioms LeanTra.Instances.FirstOrder.instSRA
 #print axioms LeanTra.Instances.FirstOrder.SynRel.substBot_mul
 #print axioms LeanTra.Instances.FirstOrder.SynRel.substJClosed
-#print axioms LeanTra.Instances.FirstOrder.SynRel.substJEqJ
