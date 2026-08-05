@@ -5,6 +5,7 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.Structure.SRA
+public import LeanTra.Structure.OperationalDecomposition
 
 /-!
 # Toy SRA model
@@ -150,8 +151,48 @@ instance instNontrivial : Nontrivial Toy where
 theorem bot_ne_top : (⊥ : Toy) ≠ (⊤ : Toy) := fun h =>
   (h.symm.mp trivial : False)
 
+/-! ## Operational-decomposition instance
+
+Toy carries the `OperationalDecomposition` layer with `intro := fun _ => ⊥`
+and `elim := fun _ _ => ⊥`. Every axiom of the class becomes trivial:
+- `scr = const ⊥` forces the decomposition `scr a = intro a ⊔ elim a a` to
+  `⊥ = ⊥ ⊔ ⊥`;
+- orthogonality `intro _ * elim _ _ ≤ ⊥` is `⊥ * ⊥ = ⊥ ≤ ⊥`;
+- monotonicity, composition-, converse-, unit- and substitution-laws all
+  reduce to statements about `⊥`.
+
+**What this certifies.** Consistency of the extension — the
+`OperationalDecomposition` axioms do not contradict the `SRA` layer.
+
+**What this does NOT certify.** The intro/elim decomposition is
+DEGENERATE here: `introDiag = intro 1 = ⊥`, `elimDiag = elim 1 1 = ⊥`,
+`valDiag = box introDiag = ⊥`, and every recursor definition
+(`evalRec`, `oneStep`, `bigStep`) collapses to `⊥`. No non-trivial
+operational behaviour is exercised. A genuine test would need a
+term-model instance, which we do NOT construct here (deferred to a
+later phase — cf. `Instances/FirstOrder/`, which so far only provides
+`SRA`, not `OperationalDecomposition`). -/
+instance instOperationalDecomposition : OperationalDecomposition Toy where
+  intro _ := False
+  elim _ _ := False
+  intro_mono _ _ _ := le_refl _
+  intro_mul _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  intro_converse _ := rfl
+  intro_one_le := fun h => h.elim
+  elim_mono _ _ _ _ _ _ := le_refl _
+  elim_mul _ _ _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  elim_converse _ _ := rfl
+  elim_one_one_le := fun h => h.elim
+  intro_mul_elim_le_bot _ _ _ := fun ⟨h, _⟩ => h
+  scr_eq_intro_sup_elim _ :=
+    propext ⟨fun h => Or.inl h, fun h => h.elim (fun h => h) (fun h => h)⟩
+  subst_intro_le _ _ := fun ⟨h, _⟩ => h
+  subst_elim_le _ _ _ := fun ⟨h, _⟩ => h
+  box_elim_le _ _ := fun h => h.1.1
+
 end Toy
 
 end LeanTra.Structure.Model
 
 #print axioms LeanTra.Structure.Model.Toy.instSRA
+#print axioms LeanTra.Structure.Model.Toy.instOperationalDecomposition
