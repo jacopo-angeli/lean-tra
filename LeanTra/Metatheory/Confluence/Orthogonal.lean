@@ -4,8 +4,9 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.Structure.Derived
-public import LeanTra.Confluence.Abstract
+public import LeanTra.SRA.Derived
+public import LeanTra.Metatheory.Reduction
+public import LeanTra.Metatheory.Confluence.Diamond
 public import Mathlib.Order.FixedPoints
 
 /-!
@@ -298,10 +299,6 @@ namespace LeanTra.Confluence
 variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
   [SRA α]
-
-/-- `a` is a *reduction* when its LHS is never a variable: `Δη * a = ⊥`.
-Gavazzo LICS'23 Remark 5 / LICS'26 Def. 17. -/
-def IsReduction (a : α) : Prop := SRA.varDiag * a = ⊥
 
 /-- Parallel reduction `a⇛`: the Howe extension of the *reflexive
 substitution closure* `1 ⊔ a[1]` of `a`. Note that `1` here is the

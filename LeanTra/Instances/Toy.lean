@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.Structure.SRA
+public import LeanTra.SRA.Basic
 
 /-!
 # Toy SRA model

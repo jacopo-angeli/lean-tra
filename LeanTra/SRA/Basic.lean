@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.Structure.InvolutiveQuantale
+public import LeanTra.Algebra.InvolutiveQuantale
 
 /-!
 # Syntax Relation Algebras
