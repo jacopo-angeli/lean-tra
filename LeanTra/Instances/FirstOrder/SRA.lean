@@ -5,8 +5,9 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.Instances.FirstOrder.Relations
-public import LeanTra.Structure.SRA
-public import LeanTra.Structure.Derived
+public import LeanTra.SRA.Basic
+public import LeanTra.SRA.Derived
+public import LeanTra.Metatheory.Modality
 
 /-!
 # The three SRA operations on syntax relations

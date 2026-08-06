@@ -5,7 +5,7 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.Instances.FirstOrder.SRA
-public import LeanTra.Confluence.Orthogonal
+public import LeanTra.Metatheory.Confluence.Orthogonal
 
 /-!
 # Confluence of orthogonal reduction on first-order terms
