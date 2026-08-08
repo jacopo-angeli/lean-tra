@@ -175,11 +175,19 @@ later phase — cf. `Instances/FirstOrder/`, which so far only provides
 instance instOperationalDecomposition : OperationalDecomposition Toy where
   intro _ := False
   elim _ _ := False
-  intro_mono _ _ _ := le_refl _
+  intro_sSup s := by
+    refine le_antisymm False.elim ?_
+    refine sSup_le ?_
+    rintro _ ⟨_, _, rfl⟩
+    exact le_refl _
   intro_mul _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
   intro_converse _ := rfl
   intro_one_le := fun h => h.elim
-  elim_mono _ _ _ _ _ _ := le_refl _
+  elim_sSup s := by
+    refine le_antisymm False.elim ?_
+    refine sSup_le ?_
+    rintro _ ⟨_, _, rfl⟩
+    exact le_refl _
   elim_mul _ _ _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
   elim_converse _ _ := rfl
   elim_one_one_le := fun h => h.elim
@@ -188,7 +196,8 @@ instance instOperationalDecomposition : OperationalDecomposition Toy where
     propext ⟨fun h => Or.inl h, fun h => h.elim (fun h => h) (fun h => h)⟩
   subst_intro_le _ _ := fun ⟨h, _⟩ => h
   subst_elim_le _ _ _ := fun ⟨h, _⟩ => h
-  box_elim_le _ _ := fun h => h.1.1
+  box_elim _ _ := by
+    refine propext ⟨fun h => h.1.1, fun h => h.elim⟩
 
 end Toy
 
