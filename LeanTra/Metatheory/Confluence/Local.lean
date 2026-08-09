@@ -51,7 +51,7 @@ def IsDeterministicReduction (a : α) : Prop :=
 /-- The Gentzen Conservation Principle for `a`: for every compatible `x`, the
 composite `elim (hat x) x * a` factors on the right through the substitution
 `x[x]` following `a`. -/
-def SatisfiesGentzenConservation (a : α) : Prop :=
+def GCP (a : α) : Prop :=
   ∀ x, IsCompatible x →
     OperationalDecomposition.elim (SRA.cr x) x * a ≤ a * SRA.subst x x
 
@@ -100,25 +100,184 @@ theorem scr_mul_majIntroDiag (x : α) :
     · exact hkey.le
   · exact le_sup_of_le_right hkey.ge
 
+/-- Observation from the paper's proof sketch of Lemma 6.5: composing an
+introduction-form step with parallel reduction stays inside the introduction
+layer. -/
+theorem intro_mul_parRed_le {a : α} (hgip : GIP a) (x : α) :
+    OperationalDecomposition.intro x * parRed a
+      ≤ OperationalDecomposition.intro (x * parRed a) := by
+  have hfix : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
+    SRA.howe_fix _
+  have hcr :
+      OperationalDecomposition.intro x * SRA.cr (parRed a)
+        ≤ OperationalDecomposition.intro x
+            * OperationalDecomposition.intro (parRed a) := by
+    have hexp :
+        OperationalDecomposition.intro x * SRA.cr (parRed a)
+          = OperationalDecomposition.intro x * SRA.varDiag
+              ⊔ OperationalDecomposition.intro x
+                  * OperationalDecomposition.intro (parRed a)
+              ⊔ OperationalDecomposition.intro x
+                  * OperationalDecomposition.elim (parRed a) (parRed a) := by
+      unfold SRA.cr
+      rw [OperationalDecomposition.scr_eq_intro_sup_elim,
+          Quantale.mul_sup_distrib, Quantale.mul_sup_distrib, sup_assoc]
+    rw [hexp]
+    refine sup_le (sup_le ?_ le_rfl) ?_
+    · calc OperationalDecomposition.intro x * SRA.varDiag
+          ≤ SRA.scr x * SRA.varDiag :=
+            mul_le_mul' (OperationalDecomposition.intro_le_scr x) le_rfl
+        _ ≤ ⊥ := SRA.scr_mul_varDiag_le_bot x
+        _ ≤ _ := bot_le
+    · exact
+        (OperationalDecomposition.intro_mul_elim_le_bot _ _ _).trans bot_le
+  have hkillGIP :
+      OperationalDecomposition.intro (parRed a) * SRA.subst a 1 ≤ (⊥ : α) := by
+    calc OperationalDecomposition.intro (parRed a) * SRA.subst a 1
+        ≤ OperationalDecomposition.intro (parRed a)
+              * (maj (introDiag : α) * SRA.subst a 1) :=
+          mul_le_mul' le_rfl (GIP_substOne hgip)
+      _ = OperationalDecomposition.intro (parRed a) * maj (introDiag : α)
+              * SRA.subst a 1 := (mul_assoc _ _ _).symm
+      _ ≤ (⊥ : α) * SRA.subst a 1 :=
+          mul_le_mul' (OperationalDecomposition.intro_mul_elim_le_bot _ _ _) le_rfl
+      _ = ⊥ := Quantale.bot_mul
+  calc OperationalDecomposition.intro x * parRed a
+      = OperationalDecomposition.intro x
+            * (SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1)) := by rw [← hfix]
+    _ = OperationalDecomposition.intro x * SRA.cr (parRed a)
+            * (1 ⊔ SRA.subst a 1) := (mul_assoc _ _ _).symm
+    _ ≤ OperationalDecomposition.intro x
+            * OperationalDecomposition.intro (parRed a)
+            * (1 ⊔ SRA.subst a 1) := mul_le_mul' hcr le_rfl
+    _ = OperationalDecomposition.intro x
+            * OperationalDecomposition.intro (parRed a)
+          ⊔ OperationalDecomposition.intro x
+              * OperationalDecomposition.intro (parRed a) * SRA.subst a 1 := by
+          rw [Quantale.mul_sup_distrib, mul_one]
+    _ ≤ OperationalDecomposition.intro x
+            * OperationalDecomposition.intro (parRed a) := by
+          refine sup_le le_rfl ?_
+          calc OperationalDecomposition.intro x
+                  * OperationalDecomposition.intro (parRed a) * SRA.subst a 1
+              = OperationalDecomposition.intro x
+                  * (OperationalDecomposition.intro (parRed a)
+                      * SRA.subst a 1) := mul_assoc _ _ _
+            _ ≤ OperationalDecomposition.intro x * (⊥ : α) :=
+                mul_le_mul' le_rfl hkillGIP
+            _ = ⊥ := Quantale.mul_bot
+            _ ≤ _ := bot_le
+    _ = OperationalDecomposition.intro (x * parRed a) :=
+          (OperationalDecomposition.intro_mul _ _).symm
+
 /-- Paper's Lemma 6.5: `a[Δ]° * ~(a[Δ]⇛) ≤ a°[a⇛]` for any reduction `a`
 satisfying (GCP) and (GIP).
 
-**Proof status.** Not proved here. The two lemmas above reduce the goal,
-in converse form and after `parRed_substOne`, to
-`elim ((parRed a)ᵒ * introDiag) ((parRed a)ᵒ) * SRA.subst a 1
-  ≤ SRA.subst a ((parRed a)ᵒ)`. Instantiating (GCP) at `x = (parRed a)ᵒ`
-gives `elim (hat x) x * a ≤ a * x[x]`, and `x[x] ≤ x` there by
-substitutivity of parallel reduction. Three mismatches remain: `x * introDiag`
-against `hat x` in the first argument of `elim`; `SRA.subst a 1` against `a`;
-and `SRA.subst a x` against `a * x`. The paper's proof sketch is a one-line
-argument whose glyphs do not survive extraction from the PDF. -/
+**Proof status.** The introduction branch closes; the elimination branch
+does not. After splitting `~(a[Δ]⇛) = intro(a⇛) ⊔ elim(a⇛)(a⇛)` via
+`parRed_substOne` and `scr_eq_intro_sup_elim`, the introduction branch is
+discharged from `GIP_substOne` transposed and `elim_mul_intro_le_bot`. On
+the elimination branch, `GIP_substOne` (transposed), the composition law of
+`elim`, and `intro_mul_parRed_le` at `x = 1` reduce the goal to
+`(SRA.subst a 1)ᵒ * elim (SRA.cr (parRed a)) (parRed a)
+  ≤ SRA.subst aᵒ (parRed a)`.
+The right-hand factor of the LHS is now exactly the LHS of (GCP) at
+`x = parRed a`, but the orientation is wrong twice:
+
+* (GCP) is stated about `a`, while the goal carries `SRA.subst a 1`. The
+  substitution axiom `subst (u * v) (b * c) ≤ subst u b * subst v c` is
+  oplax the wrong way to lift a fact about `a` to `SRA.subst a 1`.
+* The transposed (GCP) at `x = (parRed a)ᵒ`, combined with `parRed_subst_le`,
+  produces `parRed a * aᵒ`, while the goal asks for `SRA.subst aᵒ (parRed a)`.
+  The `nesting` lemma relates the two in the opposite direction. -/
 theorem orthogonality_second_of_gentzen_principles {a : α}
     (hred : IsReduction a)
-    (hgcp : SatisfiesGentzenConservation a)
+    (hgcp : GCP a)
     (hgip : GIP a) :
-    (SRA.subst a 1)ᵒ * SRA.scr (parRed (SRA.subst a 1))
-      ≤ SRA.subst aᵒ (parRed a) := by
-  sorry
+    (SRA.subst a 1)ᵒ * SRA.scr (parRed (SRA.subst a 1)) ≤ SRA.subst aᵒ (parRed a) := by
+  rw [parRed_substOne, OperationalDecomposition.scr_eq_intro_sup_elim, Quantale.mul_sup_distrib]
+  refine sup_le ?_ ?_
+  · have hgipT :
+        (SRA.subst a 1)ᵒ
+          ≤ (SRA.subst a 1)ᵒ * (maj (introDiag : α))ᵒ := by
+      have h := IsInvolutiveQuantale.converse_le_converse (GIP_substOne hgip)
+      rwa [IsInvolutiveQuantale.mul_converse] at h
+    have hkill :
+        (maj (introDiag : α))ᵒ * OperationalDecomposition.intro (parRed a)
+          ≤ (⊥ : α) := by
+      have : (OperationalDecomposition.elim (introDiag : α) 1)ᵒ
+                * OperationalDecomposition.intro (parRed a) ≤ ⊥ := by
+        rw [← OperationalDecomposition.elim_converse]
+        exact OperationalDecomposition.elim_mul_intro_le_bot _ _ _
+      exact this
+    calc (SRA.subst a 1)ᵒ * OperationalDecomposition.intro (parRed a)
+        ≤ (SRA.subst a 1)ᵒ * (maj (introDiag : α))ᵒ
+              * OperationalDecomposition.intro (parRed a) :=
+          mul_le_mul' hgipT le_rfl
+      _ = (SRA.subst a 1)ᵒ
+              * ((maj (introDiag : α))ᵒ
+                  * OperationalDecomposition.intro (parRed a)) := mul_assoc _ _ _
+      _ ≤ (SRA.subst a 1)ᵒ * (⊥ : α) := mul_le_mul' le_rfl hkill
+      _ = ⊥ := Quantale.mul_bot
+      _ ≤ SRA.subst aᵒ (parRed a) := bot_le
+  · have hgipT :
+        (SRA.subst a 1)ᵒ
+          ≤ (SRA.subst a 1)ᵒ * (maj (introDiag : α))ᵒ := by
+      have h := IsInvolutiveQuantale.converse_le_converse (GIP_substOne hgip)
+      rwa [IsInvolutiveQuantale.mul_converse] at h
+    have hmajSelf : (maj (introDiag : α))ᵒ = maj (introDiag : α) := by
+      change (OperationalDecomposition.elim (introDiag : α) 1)ᵒ
+              = OperationalDecomposition.elim (introDiag : α) 1
+      rw [← OperationalDecomposition.elim_converse,
+          IsInvolutiveQuantale.converse_one]
+      congr 1
+      change (OperationalDecomposition.intro (1 : α))ᵒ
+              = OperationalDecomposition.intro (1 : α)
+      rw [← OperationalDecomposition.intro_converse,
+          IsInvolutiveQuantale.converse_one]
+    have hmulExpand :
+        maj (introDiag : α)
+          * OperationalDecomposition.elim (parRed a) (parRed a)
+        = OperationalDecomposition.elim ((introDiag : α) * parRed a) (parRed a) := by
+      change OperationalDecomposition.elim (introDiag : α) 1
+              * OperationalDecomposition.elim (parRed a) (parRed a) = _
+      rw [← OperationalDecomposition.elim_mul, one_mul]
+    have hkey :
+        (SRA.subst a 1)ᵒ
+              * OperationalDecomposition.elim (parRed a) (parRed a)
+          ≤ (SRA.subst a 1)ᵒ
+              * OperationalDecomposition.elim
+                  (SRA.cr (parRed a)) (parRed a) := by
+      calc (SRA.subst a 1)ᵒ
+              * OperationalDecomposition.elim (parRed a) (parRed a)
+          ≤ (SRA.subst a 1)ᵒ * (maj (introDiag : α))ᵒ
+                * OperationalDecomposition.elim (parRed a) (parRed a) :=
+              mul_le_mul' hgipT le_rfl
+        _ = (SRA.subst a 1)ᵒ
+                * (maj (introDiag : α)
+                    * OperationalDecomposition.elim (parRed a) (parRed a)) := by
+              rw [mul_assoc, hmajSelf]
+        _ = (SRA.subst a 1)ᵒ
+                * OperationalDecomposition.elim
+                    ((introDiag : α) * parRed a) (parRed a) := by
+              rw [hmulExpand]
+        _ ≤ (SRA.subst a 1)ᵒ
+                * OperationalDecomposition.elim
+                    (OperationalDecomposition.intro (parRed a)) (parRed a) := by
+              refine mul_le_mul' le_rfl (elim_mono ?_ le_rfl)
+              have := intro_mul_parRed_le hgip (1 : α)
+              rw [one_mul] at this
+              exact this
+        _ ≤ (SRA.subst a 1)ᵒ
+                * OperationalDecomposition.elim
+                    (SRA.cr (parRed a)) (parRed a) := by
+              refine mul_le_mul' le_rfl (elim_mono ?_ le_rfl)
+              exact (OperationalDecomposition.intro_le_scr _).trans le_sup_right
+    refine hkey.trans ?_
+    show (SRA.subst a 1)ᵒ
+            * OperationalDecomposition.elim (SRA.cr (parRed a)) (parRed a)
+          ≤ SRA.subst aᵒ (parRed a)
+    sorry
 
 /-- Paper's Theorem 6.6, conclusion (i): a substitutive and deterministic
 reduction that satisfies (GCP) and (GIP) has confluent parallel reduction.
@@ -134,7 +293,7 @@ theorem confluent_parallelReduction_of_gentzen_principles {a : α}
     (hred : IsReduction a)
     (hsub : IsSubstitutive a)
     (hdet : IsDeterministicReduction a)
-    (hgcp : SatisfiesGentzenConservation a)
+    (hgcp : GCP a)
     (hgip : GIP a) :
     Confluent (parRed a) :=
   confluent_parRed hred
