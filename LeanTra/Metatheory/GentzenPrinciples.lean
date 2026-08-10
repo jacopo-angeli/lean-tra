@@ -6,7 +6,6 @@ module
 
 public import LeanTra.Metatheory.OperationalDecomposition
 public import LeanTra.Metatheory.Reduction
-public import LeanTra.Metatheory.Confluence.Orthogonal
 
 /-!
 # Gentzen inversion and conservation principles

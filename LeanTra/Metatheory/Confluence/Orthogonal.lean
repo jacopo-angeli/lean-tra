@@ -39,22 +39,6 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 
 /-! ### S-lemmas -/
 
-/-- `1[1] = 1`: substituting the identity into the identity is the identity. -/
-theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
-  refine le_antisymm ?_ ?_
-  · refine subst_le_iff.mpr ?_
-    refine one_le_of_cr_le ?_
-    refine sup_le ?_ ?_
-    · exact subst_le_iff.mp (by rw [SRA.subst_varDiag_left])
-    · refine subst_le_iff.mp ?_
-      calc SRA.subst (SRA.scr (SRA.substResid (1 : α) 1)) 1
-          ≤ SRA.scr (SRA.subst (SRA.substResid (1 : α) 1) 1) := SRA.subst_scr_le _ _
-        _ ≤ SRA.scr 1 := SRA.scr_mono (subst_le_iff.mpr le_rfl)
-        _ ≤ 1 := scr_one_le
-  · calc (1 : α)
-        = SRA.subst SRA.varDiag 1 := (SRA.subst_varDiag_left 1).symm
-      _ ≤ SRA.subst 1 1 := subst_mono_left varDiag_le_one
-
 /-- Idempotence of the base substitution instance: substituting `1` twice
 into `a` is the same as substituting `1` once. -/
 theorem substOne_substOne (a : α) :
