@@ -4,6 +4,8 @@ import LeanTra.SRA.Basic
 import LeanTra.SRA.Derived
 import LeanTra.Metatheory.Modality
 import LeanTra.Metatheory.OperationalDecomposition
+import LeanTra.Metatheory.GentzenPrinciples
+import LeanTra.Metatheory.Evaluation
 import LeanTra.Metatheory.Reduction
 import LeanTra.Metatheory.Confluence.Diamond
 import LeanTra.Metatheory.Confluence.Orthogonal
