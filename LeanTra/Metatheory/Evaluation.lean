@@ -99,6 +99,45 @@ theorem oneStep_le_of {a x : α} (hGIP : GIP a)
   rw [evalStep_apply_a_sup_introDiag hGIP]
   exact h
 
+private theorem introDiag_mul_oneStep
+    {a : α} (hGIP : GIP a) :
+    (introDiag : α) * oneStep a = introDiag := by
+  conv_lhs => rw [oneStep_fix hGIP]
+  rw [Quantale.mul_sup_distrib, introDiag_mul_self]
+  refine le_antisymm ?_ le_sup_left
+  refine sup_le le_rfl ?_
+  calc (introDiag : α) * (maj (oneStep a) * a)
+      = introDiag * maj (oneStep a) * a := (mul_assoc _ _ _).symm
+    _ ≤ (⊥ : α) * a := by
+        refine mul_le_mul' ?_ le_rfl
+        change OperationalDecomposition.intro 1
+              * OperationalDecomposition.elim (oneStep a) 1 ≤ ⊥
+        exact OperationalDecomposition.intro_mul_elim_le_bot _ _ _
+    _ = ⊥ := Quantale.bot_mul
+    _ ≤ introDiag := bot_le
+
+private theorem introDiag_mul_oneStep_star
+    {a : α} (hGIP : GIP a) :
+    (introDiag : α) * (oneStep a)∗ = introDiag := by
+  refine le_antisymm ?_ ?_
+  · refine Quantale.rightMulResiduation_le_iff_mul_le.mp ?_
+    refine LeanTra.Confluence.star_le_of ?_
+    refine sup_le ?_ ?_
+    · exact Quantale.rightMulResiduation_le_iff_mul_le.mpr
+        (by rw [mul_one])
+    · refine Quantale.rightMulResiduation_le_iff_mul_le.mpr ?_
+      calc (introDiag : α) * (oneStep a * ((introDiag : α) ⇨ᵣ introDiag))
+          = introDiag * oneStep a * (introDiag ⇨ᵣ introDiag) :=
+            (mul_assoc _ _ _).symm
+        _ = introDiag * (introDiag ⇨ᵣ introDiag) := by
+            rw [introDiag_mul_oneStep hGIP]
+        _ ≤ introDiag :=
+            Quantale.rightMulResiduation_le_iff_mul_le.mp le_rfl
+  · calc (introDiag : α)
+        = introDiag * 1 := (mul_one _).symm
+      _ ≤ introDiag * (oneStep a)∗ := by
+          exact mul_le_mul' le_rfl (LeanTra.Confluence.one_le_star _)
+
 /-- Star-normal-form fixed-point law for big-step evaluation.
 
 **Status.** This closes the star-normal form
@@ -177,12 +216,5 @@ theorem box_bigStep
 
 end OperationalDecomposition
 
-#print axioms OperationalDecomposition.evalStep
-#print axioms OperationalDecomposition.evalRec
-#print axioms OperationalDecomposition.evalRec_fix
-#print axioms OperationalDecomposition.evalRec_le_of
-#print axioms OperationalDecomposition.oneStep
-#print axioms OperationalDecomposition.bigStep
-#print axioms OperationalDecomposition.oneStep_fix
-#print axioms OperationalDecomposition.oneStep_le_of
 #print axioms OperationalDecomposition.bigStep_fix
+#print axioms OperationalDecomposition.box_bigStep
