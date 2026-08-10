@@ -55,6 +55,12 @@ theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
         = SRA.subst SRA.varDiag 1 := (SRA.subst_varDiag_left 1).symm
       _ ≤ SRA.subst 1 1 := subst_mono_left varDiag_le_one
 
+/-- Idempotence of the base substitution instance: substituting `1` twice
+into `a` is the same as substituting `1` once. -/
+theorem substOne_substOne (a : α) :
+    SRA.subst (SRA.subst a 1) 1 = SRA.subst a 1 := by
+  rw [SRA.subst_assoc, subst_one_one]
+
 /-- `(hat a)[b] ≤ b ⊔ hat (a[b])`: substituting into a compatible refinement
 is bounded by either returning `b` on the variable branch or refining the
 substitution on the strict branch. -/
@@ -167,6 +173,12 @@ theorem one_le_parRed (a : α) : (1 : α) ≤ parRed a :=
 /-- Leibniz at `parRed`: `1[a⇛] ≤ a⇛`. -/
 theorem subst_one_parRed_le (a : α) : SRA.subst 1 (parRed a) ≤ parRed a :=
   SRA.subst_one_le_of_cr_le (cr_parRed_le a)
+
+/-- Parallel reduction is invariant under passing to the base substitution
+instance: `(a[Δ])⇛ = a⇛`. -/
+theorem parRed_substOne (a : α) : parRed (SRA.subst a 1) = parRed a := by
+  unfold parRed
+  rw [SRA.substOne_substOne]
 
 /-! ### Substitutivity of `parRed` -/
 
