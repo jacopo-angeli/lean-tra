@@ -81,9 +81,6 @@ class OperationalDecomposition (α : Type u)
   /-- `introduction` preserves converse. -/
   protected introduction_morphism_converse (a : α) : introduction (aᵒ) = (introduction a)ᵒ
 
-  /-- `introduction` is weakly unital. -/
-  protected introduction_weakly_unital : introduction 1 ≤ 1
-
 
   /-- `elimination` preserves arbitrary joins, taken componentwise on pairs. -/
   protected elimination_morphism_join (s : Set (α × α)) : elimination (sSup (Prod.fst '' s)) (sSup (Prod.snd '' s)) = sSup ((fun p : α × α => elimination p.1 p.2) '' s)
@@ -92,27 +89,33 @@ class OperationalDecomposition (α : Type u)
   /-- `elimination` preserves converse, slot by slot. -/
   protected elimination_morphism_converse (a b : α) : elimination (aᵒ) (bᵒ) = (elimination a b)ᵒ
 
+
   /-- `elimination` is weakly unital. -/
   protected elimination_weakly_unital : elimination 1 1 ≤ 1
+  /-- `introduction` is weakly unital. -/
+  protected introduction_weakly_unital : introduction 1 ≤ 1
+
 
   /-- `introduction` and `elimination` are orthogonal. -/
   protected introduction_elimination_orthogonality (a b c : α) : introduction a * elimination b c ≤ ⊥
 
+
   /-- The strict compatible refinement decomposes into its
   constructor part and its destructor part, and into nothing else. -/
   protected cocartesian_decomposition (a : α) : SRA.scr a = introduction a ⊔ elimination a a
+
 
   /-- Substitution distributes, oplaxly, over `introduction`. -/
   protected substitution_distribution_introduction (a b : α) : SRA.subst (introduction a) b ≤ introduction (SRA.subst a b)
   /-- Substitution distributes, oplaxly, over `elimination`, slot by slot. -/
   protected substitution_distribution_elimination (a₁ a₂ b : α) : SRA.subst (elimination a₁ a₂) b ≤ elimination (SRA.subst a₁ b) (SRA.subst a₂ b)
 
+
   /-- The closure modality passes through the major slot of
   an elimination form. This is what makes the major argument of a closed
   term closed in turn, and therefore what keeps evaluation inside the
   fragment of programs. -/
   protected box_distribution_elimination (a b : α) : SRA.box (elimination a b) ≤ elimination (SRA.box a) b
-
 
 namespace OperationalDecomposition
 
