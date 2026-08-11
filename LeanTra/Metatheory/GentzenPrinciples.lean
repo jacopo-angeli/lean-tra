@@ -120,4 +120,24 @@ theorem scr_mul_majIntroDiag (x : α) :
     · exact hkey.le
   · exact le_sup_of_le_right hkey.ge
 
+/-- Under the invariance hypothesis `Inv a`, composing the value-diagonal
+on the left with `a` lands in `⊥`. The draft's derivation is
+`Δκ ; a = Δκ ; ⟨Δκ⟩ ; a ≤ ‾Δ ; ⟨Δκ⟩ ; a = ⊥`, the last step by
+orthogonality of intro and elim. -/
+theorem valDiag_mul_le_bot_of_inv {a : α} (h : Inv a) : valDiag * a ≤ ⊥ := by
+  rcases h with ⟨hclosed, hinv⟩
+  have h_eq : valDiag * a = valDiag * (maj (valDiag : α) * a) :=
+    congrArg (fun x => valDiag * x) hinv
+  rw [h_eq]
+  calc valDiag * (maj (valDiag : α) * a)
+      = (valDiag * maj (valDiag : α)) * a := by rw [mul_assoc]
+    _ ≤ (introDiag * maj (valDiag : α)) * a :=
+        mul_le_mul' (mul_le_mul' valDiag_le_introDiag le_rfl) le_rfl
+    _ = ((OperationalDecomposition.intro 1 : α) * OperationalDecomposition.elim (valDiag : α) 1) * a := rfl
+    _ ≤ (⊥ : α) * a :=
+        mul_le_mul' (OperationalDecomposition.intro_mul_elim_le_bot 1 (valDiag : α) 1) le_rfl
+    _ = ⊥ := Quantale.bot_mul
+
+#print axioms LeanTra.Confluence.valDiag_mul_le_bot_of_inv
+
 end LeanTra.Confluence

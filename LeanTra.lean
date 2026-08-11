@@ -6,6 +6,9 @@ import LeanTra.Metatheory.Modality
 import LeanTra.Metatheory.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Evaluation
+import LeanTra.Metatheory.CanonicalTerms
+import LeanTra.Metatheory.Determinism.BigStepLaws
+import LeanTra.Metatheory.Determinism.Determinism
 import LeanTra.Metatheory.Reduction
 import LeanTra.Metatheory.Confluence.Diamond
 import LeanTra.Metatheory.Confluence.Orthogonal

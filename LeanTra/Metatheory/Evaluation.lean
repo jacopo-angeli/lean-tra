@@ -150,7 +150,7 @@ inequality **fails** because `a⇓` ends with a `* ‾Δ` on the right and
 `aᴱ` does not, so the two-tail-shape mismatch is not fixable without a
 "right GIP" axiom (`a ≤ a * elimDiag`) that the current class does not
 carry. -/
-theorem bigStep_fix (a : α) :
+theorem bigStep_fix_starNormalForm (a : α) :
     bigStep a = introDiag ⊔ oneStep a * bigStep a := by
   change (oneStep a)∗ * introDiag = introDiag ⊔ oneStep a * ((oneStep a)∗ * introDiag)
   conv_lhs => rw [LeanTra.Confluence.star_fix]
@@ -158,7 +158,7 @@ theorem bigStep_fix (a : α) :
 
 /-- Star-normal-form least-prefix-point law: `a⇓` is below every
 prefix point of `x ↦ ‾Δ ⊔ aᴱ * x`. -/
-theorem bigStep_le_of {a x : α}
+theorem bigStep_le_of_starNormalForm {a x : α}
     (h : (introDiag : α) ⊔ oneStep a * x ≤ x) : bigStep a ≤ x := by
   have hintroDiag : (introDiag : α) ≤ x := le_sup_left.trans h
   have hone : oneStep a * x ≤ x := le_sup_right.trans h
@@ -191,7 +191,7 @@ the paper's Prop. 29(c) there. The three auxiliary "□ commutes with"
 premises (`hboxIntroDiag`, `hboxOneStep`, `hboxStar`) are likewise not
 derivable from the current axioms even under `hmul`, and are carried
 explicitly rather than proved. -/
-theorem box_bigStep
+theorem box_bigStep_of_box_mul_le
     (hmul : ∀ A B : α, SRA.box (A * B) ≤ SRA.box A * SRA.box B)
     (a : α)
     (hboxIntroDiag : SRA.box (introDiag : α) = introDiag)
@@ -214,7 +214,37 @@ theorem box_bigStep
       _ ≤ SRA.box ((oneStep a)∗ * introDiag) := SRA.box_mul_box_le _ _
       _ = SRA.box (bigStep a) := rfl
 
+/-- Law (5.7a): `SRA.box (oneStep a) = oneStep (SRA.box a)`. -/
+theorem box_oneStep (a : α) : SRA.box (oneStep a) = oneStep (SRA.box a) := by
+  sorry
+
+/-- Law (5.7b): `bigStep a = introDiag ⊔ maj (bigStep a) * a * bigStep a`. -/
+theorem bigStep_fix (a : α) :
+    bigStep a = introDiag ⊔ maj (bigStep a) * a * bigStep a := by
+  sorry
+
+/-- Law (5.7c): if `introDiag ⊔ maj x * a * x ≤ x` then `bigStep a ≤ x`. -/
+theorem bigStep_le_of {a x : α}
+    (h : introDiag ⊔ maj x * a * x ≤ x) : bigStep a ≤ x := by
+  sorry
+
+/-- Law (5.7d): `SRA.box (bigStep a) = bigStep (SRA.box a)`. -/
+theorem box_bigStep (a : α) : SRA.box (bigStep a) = bigStep (SRA.box a) := by
+  sorry
+
+/-- Law (5.7e): if `a = SRA.box a` then
+`bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a`. -/
+theorem bigStep_fix_of_closed {a : α} (h : a = SRA.box a) :
+    bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a := by
+  sorry
+
 end OperationalDecomposition
 
+#print axioms OperationalDecomposition.bigStep_fix_starNormalForm
+#print axioms OperationalDecomposition.box_bigStep_of_box_mul_le
+
+#print axioms OperationalDecomposition.box_oneStep
 #print axioms OperationalDecomposition.bigStep_fix
+#print axioms OperationalDecomposition.bigStep_le_of
 #print axioms OperationalDecomposition.box_bigStep
+#print axioms OperationalDecomposition.bigStep_fix_of_closed

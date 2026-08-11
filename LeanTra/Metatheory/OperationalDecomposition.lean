@@ -170,3 +170,30 @@ theorem maj_mul_introDiag_le_bot (a : α) : maj a * (introDiag : α) ≤ ⊥ := 
      * OperationalDecomposition.intro 1 ≤ ⊥
   exact elim_mul_intro_le_bot _ _ _
 
+/-- The value-diagonal is below the introduction diagonal:
+`Δκ = SRA.box 1 ≤ introDiag = ‾Δ`. -/
+theorem valDiag_le_introDiag : (valDiag : α) ≤ introDiag := by
+  change SRA.box (OperationalDecomposition.intro 1) ≤ OperationalDecomposition.intro 1
+  exact SRA.box_le _
+
+/-- The value-diagonal is sub-idempotent: `Δκ * Δκ ≤ Δκ`. -/
+theorem valDiag_mul_self_le : (valDiag : α) * valDiag ≤ valDiag := by
+  change SRA.box (OperationalDecomposition.intro 1) * SRA.box (OperationalDecomposition.intro 1)
+      ≤ SRA.box (OperationalDecomposition.intro 1)
+  refine le_trans (SRA.box_mul_box_le _ _) ?_
+  rw [introDiag_mul_self]
+
+/-- The value-diagonal is idempotent: `Δκ * Δκ = Δκ`.
+
+**Status.** The `≤` direction is proved above via `box_mul_box_le` and
+`introDiag_mul_self`. The reverse inequality `Δκ ≤ Δκ * Δκ` is expected
+not to hold in an involutive quantale; it would require the modular law
+which is not available here. Left as `sorry`. -/
+theorem valDiag_mul_self : (valDiag : α) * valDiag = valDiag := by
+  refine le_antisymm valDiag_mul_self_le ?_
+  sorry
+
+#print axioms OperationalDecomposition.valDiag_le_introDiag
+#print axioms OperationalDecomposition.valDiag_mul_self_le
+#print axioms OperationalDecomposition.valDiag_mul_self
+
