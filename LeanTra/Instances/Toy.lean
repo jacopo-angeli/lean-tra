@@ -144,51 +144,52 @@ instance instSRA : SRA Toy where
 
 /-! ## Operational-decomposition instance
 
-Toy carries the `OperationalDecomposition` layer with `intro := fun _ => ⊥`
-and `elim := fun _ _ => ⊥`. Every axiom of the class becomes trivial:
-- `scr = const ⊥` forces the decomposition `scr a = intro a ⊔ elim a a` to
-  `⊥ = ⊥ ⊔ ⊥`;
-- orthogonality `intro _ * elim _ _ ≤ ⊥` is `⊥ * ⊥ = ⊥ ≤ ⊥`;
+Toy carries the `OperationalDecomposition` layer with
+`introduction := fun _ => ⊥` and `elimination := fun _ _ => ⊥`. Every
+axiom of the class becomes trivial:
+- `scr = const ⊥` forces the decomposition
+  `scr a = introduction a ⊔ elimination a a` to `⊥ = ⊥ ⊔ ⊥`;
+- orthogonality `introduction _ * elimination _ _ ≤ ⊥` is `⊥ * ⊥ = ⊥ ≤ ⊥`;
 - monotonicity, composition-, converse-, unit- and substitution-laws all
   reduce to statements about `⊥`.
 
 **What this certifies.** Consistency of the extension — the
 `OperationalDecomposition` axioms do not contradict the `SRA` layer.
 
-**What this does NOT certify.** The intro/elim decomposition is
-DEGENERATE here: `introDiag = intro 1 = ⊥`, `elimDiag = elim 1 1 = ⊥`,
-`valDiag = box introDiag = ⊥`, and every recursor definition
-(`evalRec`, `oneStep`, `bigStep`) collapses to `⊥`. No non-trivial
+**What this does NOT certify.** The introduction/elimination decomposition
+is DEGENERATE here: `introductionCoreflexive = introduction 1 = ⊥`,
+`eliminationCoreflexive = elimination 1 1 = ⊥`,
+`valueCoreflexive = box introductionCoreflexive = ⊥`, and every recursor
+definition (`evalRec`, `oneStep`, `bigStep`) collapses to `⊥`. No non-trivial
 operational behaviour is exercised. A genuine test would need a
 term-model instance, which we do NOT construct here (deferred to a
 later phase — cf. `Instances/FirstOrder/`, which so far only provides
 `SRA`, not `OperationalDecomposition`). -/
 instance instOperationalDecomposition : OperationalDecomposition Toy where
-  intro _ := False
-  elim _ _ := False
-  intro_sSup s := by
+  introduction _ := False
+  elimination _ _ := False
+  introduction_morphism_join s := by
     refine le_antisymm False.elim ?_
     refine sSup_le ?_
     rintro _ ⟨_, _, rfl⟩
     exact le_refl _
-  intro_mul _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
-  intro_converse _ := rfl
-  intro_one_le := fun h => h.elim
-  elim_sSup s := by
+  introduction_morphism_composition _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  introduction_morphism_converse _ := rfl
+  introduction_weakly_unital := fun h => h.elim
+  elimination_morphism_join s := by
     refine le_antisymm False.elim ?_
     refine sSup_le ?_
     rintro _ ⟨_, _, rfl⟩
     exact le_refl _
-  elim_mul _ _ _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
-  elim_converse _ _ := rfl
-  elim_one_one_le := fun h => h.elim
-  intro_mul_elim_le_bot _ _ _ := fun ⟨h, _⟩ => h
-  scr_eq_intro_sup_elim _ :=
+  elimination_morphism_composition _ _ _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  elimination_morphism_converse _ _ := rfl
+  elimination_weakly_unital := fun h => h.elim
+  introduction_elimination_orthogonality _ _ _ := fun ⟨h, _⟩ => h
+  cocartesian_decomposition _ :=
     propext ⟨fun h => Or.inl h, fun h => h.elim (fun h => h) (fun h => h)⟩
-  subst_intro_le _ _ := fun ⟨h, _⟩ => h
-  subst_elim_le _ _ _ := fun ⟨h, _⟩ => h
-  box_elim _ _ := by
-    refine propext ⟨fun h => h.1.1, fun h => h.elim⟩
+  substitution_distribution_introduction _ _ := fun ⟨h, _⟩ => h
+  substitution_distribution_elimination _ _ _ := fun ⟨h, _⟩ => h
+  box_distribution_elimination _ _ := fun h => h.1.1
 
 /-! ## Non-degeneracy -/
 
