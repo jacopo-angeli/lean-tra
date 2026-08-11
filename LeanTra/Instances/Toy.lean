@@ -5,6 +5,7 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.SRA.Basic
+public import LeanTra.Algebra.Modular
 public import LeanTra.Metatheory.OperationalDecomposition
 
 /-!
@@ -106,6 +107,9 @@ instance instIsInvolutiveQuantale : IsInvolutiveQuantale Toy where
   converse_converse _ := rfl
   converse_mul _ _ := propext ⟨fun ⟨p, q⟩ => ⟨q, p⟩, fun ⟨p, q⟩ => ⟨q, p⟩⟩
   converse_mono _ _ h := h
+
+instance instIsModularQuantale : IsModularQuantale Toy where
+  modular _ _ _ := fun ⟨⟨p, q⟩, r⟩ => ⟨⟨p, r, q⟩, q⟩
 
 instance instSRA : SRA Toy where
   varDiag := True

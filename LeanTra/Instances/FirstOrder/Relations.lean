@@ -5,6 +5,7 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.Algebra.InvolutiveQuantale
+public import LeanTra.Algebra.Modular
 public import LeanTra.Instances.FirstOrder.Terms
 
 /-!
@@ -383,6 +384,19 @@ instance instIsInvolutiveQuantale : IsInvolutiveQuantale (SynRel S) where
     · rintro ⟨u, hφ, hψ⟩; exact ⟨u, hψ, hφ⟩
     · rintro ⟨u, hψ, hφ⟩; exact ⟨u, hφ, hψ⟩
   converse_mono _ _ h Γ t s h' := h Γ s t h'
+
+/-! ## The modular law
+
+Composition, meet, and converse are all pointwise. Pointwise, the axiom
+reduces to the standard modular law for binary relations on `Tm S Γ`.
+`ren_closed` is a `Prop` field, so proof irrelevance handles it. -/
+
+instance instIsModularQuantale : IsModularQuantale (SynRel S) where
+  modular a b c := by
+    intro Γ t z h
+    obtain ⟨⟨u, hau, hbuz⟩, hctz⟩ := h
+    refine ⟨u, ⟨hau, ?_⟩, hbuz⟩
+    exact ⟨z, hctz, hbuz⟩
 
 /-! ## Sanity checks -/
 

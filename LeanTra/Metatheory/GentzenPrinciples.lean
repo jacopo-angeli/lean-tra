@@ -40,6 +40,16 @@ the left through the major-slot projection of the closed-values
 relation. -/
 def Inv (a : α) : Prop := a = SRA.box a ∧ a = maj (valDiag : α) * a
 
+/-- `Inv a` implies `GIP a`: from the second conjunct
+`a = maj valDiag * a` and `valDiag ≤ introDiag`, monotonicity of
+`elim` in its first slot lifts the equation to
+`a ≤ maj introDiag * a`. -/
+theorem gip_of_inv {a : α} (h : Inv a) : GIP a := by
+  have hle : maj (valDiag : α) ≤ maj introDiag :=
+    elim_mono valDiag_le_introDiag le_rfl
+  calc a = maj (valDiag : α) * a := h.2
+    _ ≤ maj (introDiag : α) * a := mul_le_mul' hle le_rfl
+
 /-- Under the Gentzen Inversion Principle, composing an introduction on
 the left with a GIP relation on the right lands in `⊥`. -/
 theorem intro_mul_of_gip {a : α} (hGIP : GIP a) (x : α) :

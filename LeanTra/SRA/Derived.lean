@@ -46,10 +46,11 @@ Full prose per item lives in `docs/modality-experiments.md`.
   consumer yet. The advisor's earlier `∀ T, subst j T = ⊥` proposal
   was refuted (it forces `j = ⊥`; see
   `SRA.j_eq_bot_of_subst_j_eq_bot`).
-* `R ⊓ S ≤ R * S` for co-equivalences — OPEN. The easy direction
-  `R * S ≤ R ⊓ S` is `SRA.mul_le_meet_of_coreflexive` in this file;
-  the reverse is not proved. No separating model has been found, so
-  the status is "not proved", not "not derivable".
+* `R ⊓ S ≤ R * S` for co-equivalences — derivable from the modular law
+  (`LeanTra.Algebra.Modular`, `SRA.coreflexive_mul_eq_inf`), not from
+  `SRA` alone. The easy direction `R * S ≤ R ⊓ S` is still recorded
+  here as `SRA.mul_le_meet_of_coreflexive`. Idempotence `R * R = R`
+  (Experiment 4) is the special case at `S = R`.
 
 ## References
 
@@ -338,8 +339,9 @@ def SubstJEqJ (α : Type*) [Monoid α] [CompleteLattice α]
 
 /-! ### Experiment 4 — meet vs. composition of co-equivalences.
 See `docs/modality-experiments.md#experiment-4`. Only the easy
-half `R * S ≤ R ⊓ S` closes below; the converse `R ⊓ S ≤ R * S` is
-open (not proved — no separating model). -/
+half `R * S ≤ R ⊓ S` closes here from `SRA` alone; the converse
+`R ⊓ S ≤ R * S` needs the modular law and is proved separately in
+`LeanTra.Algebra.Modular` (`SRA.coreflexive_mul_eq_inf`). -/
 
 omit [IsInvolutiveQuantale α] [SRA α] in
 /-- Easy half of the coreflexive meet-vs-composition question:

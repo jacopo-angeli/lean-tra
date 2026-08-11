@@ -214,37 +214,174 @@ theorem box_bigStep_of_box_mul_le
       _ ≤ SRA.box ((oneStep a)∗ * introDiag) := SRA.box_mul_box_le _ _
       _ = SRA.box (bigStep a) := rfl
 
-/-- Law (5.7a): `SRA.box (oneStep a) = oneStep (SRA.box a)`. -/
+/-- `bigStep a` is idempotent under composition:
+`bigStep a * bigStep a = bigStep a`, under `GIP a`. From
+`introDiag_mul_oneStep_star hGIP` (`introDiag * (oneStep a)∗ = introDiag`)
+and `introDiag_mul_self`. Consumed by `F3` and later by `F6`, `F10`, `F11`. -/
+theorem bigStep_mul_self {a : α} (hGIP : GIP a) :
+    bigStep a * bigStep a = bigStep a := by
+  change (oneStep a)∗ * introDiag * ((oneStep a)∗ * introDiag) = (oneStep a)∗ * introDiag
+  rw [mul_assoc ((oneStep a)∗) introDiag ((oneStep a)∗ * introDiag),
+      ← mul_assoc introDiag ((oneStep a)∗) introDiag,
+      introDiag_mul_oneStep_star hGIP,
+      introDiag_mul_self]
+
+/-- Law (5.7a): `SRA.box (oneStep a) = oneStep (SRA.box a)`.
+
+**Status.** As a proof attempt, this is stuck. The `≥` direction is where
+the informal argument fails: `oneStep (box a) ≥ introDiag * introDiag =
+introDiag` from `evalRec_fix`, while `box (oneStep a) ≤ oneStep a`
+factors through `box` which strips to closed-endpoint pairs; the residual
+inclusion `introDiag ≤ box (oneStep a)` unwinds to `introDiag ≤ box
+introDiag = valDiag`, an inequality of the same shape as the strict
+`box`-over-composition inequality refuted in the term model by
+`LeanTra.Instances.FirstOrder.SynRel.not_box_mul_le_mul_box` (that
+refutation is at a different subject, not directly at `introDiag`; hence
+this is treated as a failed proof attempt, not a formal refutation, per
+Phase 5).
+
+No `OperationalDecomposition` instance exists on `SynRel` in this
+repository, so `oneStep` and `introDiag` are not available there for a
+first-order refutation. Left as `sorry`. -/
 theorem box_oneStep (a : α) : SRA.box (oneStep a) = oneStep (SRA.box a) := by
   sorry
 
-/-- Law (5.7b): `bigStep a = introDiag ⊔ maj (bigStep a) * a * bigStep a`. -/
-theorem bigStep_fix (a : α) :
+/-- Weak form of `box_oneStep`: closedness of the rule propagates to
+`oneStep`.
+
+**Status.** As stated (`oneStep a = box (oneStep a)`), the equality also
+fails: `oneStep a ≥ introDiag`, `box (oneStep a) ≤ oneStep a`, and the
+inclusion `introDiag ≤ box (oneStep a)` factors through the same refuted
+`introDiag ≤ box introDiag`. The tools listed in the task (`box_elim`,
+`box_sup`, `box_mul_box_le`, `box_le`, `SRA.box_lfp`) suffice to reduce
+the goal to that inclusion, at which point the strict half of `box` is
+needed. Left as `sorry`. -/
+theorem oneStep_isClosed {a : α} (hGIP : GIP a) (h : a = SRA.box a) :
+    oneStep a = SRA.box (oneStep a) := by
+  sorry
+
+/-- Law (5.7b): `bigStep a = introDiag ⊔ maj (bigStep a) * a * bigStep a`.
+
+**Status.** Under `GIP a`: `bigStep_fix_starNormalForm` plus `oneStep_fix
+hGIP` plus `introDiag_mul_oneStep_star hGIP` reduces to
+`bigStep a = introDiag ⊔ maj (oneStep a) * a * bigStep a`. The remaining
+step `maj (oneStep a) * a * bigStep a = maj (bigStep a) * a * bigStep a`
+requires either direction of `oneStep a ≤ bigStep a` or
+`bigStep a ≤ oneStep a`, and neither is derivable under `GIP a` alone
+(`bigStep a = (oneStep a)∗ * introDiag`, and neither
+`oneStep a ≤ (oneStep a)∗ * introDiag` nor its reverse follows from Kleene
+star laws without a `1 ≤ introDiag` fact that would collapse `introDiag`
+to the unit — precisely the strict half that is refuted). -/
+theorem bigStep_fix (a : α) (hGIP : GIP a) :
     bigStep a = introDiag ⊔ maj (bigStep a) * a * bigStep a := by
   sorry
 
-/-- Law (5.7c): if `introDiag ⊔ maj x * a * x ≤ x` then `bigStep a ≤ x`. -/
-theorem bigStep_le_of {a x : α}
+/-- Law (5.7c): if `introDiag ⊔ maj x * a * x ≤ x` then `bigStep a ≤ x`.
+
+**Status.** Under `GIP a`: `bigStep_le_of_starNormalForm` needs
+`introDiag ⊔ oneStep a * x ≤ x`. Reducing via `oneStep_fix hGIP` and the
+hypothesis needs `maj (oneStep a) * a * x ≤ maj x * a * x`, i.e.
+`oneStep a ≤ x`. `oneStep_le_of hGIP` reduces that to `introDiag ⊔ maj x
+* a ≤ x`. The hypothesis only gives `maj x * a * x ≤ x`, which yields
+`maj x * a ≤ x` only under `1 ≤ x` — not derivable from the hypothesis
+alone. -/
+theorem bigStep_le_of {a x : α} (hGIP : GIP a)
     (h : introDiag ⊔ maj x * a * x ≤ x) : bigStep a ≤ x := by
   sorry
 
-/-- Law (5.7d): `SRA.box (bigStep a) = bigStep (SRA.box a)`. -/
+/-- Law (5.7d): `SRA.box (bigStep a) = bigStep (SRA.box a)`.
+
+**Status.** Same failure mode as `box_oneStep`: `bigStep (box a) ≥
+introDiag`, `box (bigStep a) ≤ bigStep a`, and `introDiag ≤ box (bigStep
+a)` needs the strict half. Kept as `sorry` per Phase 2; the strictly
+weaker `bigStep_isClosed` below is provided alongside. -/
 theorem box_bigStep (a : α) : SRA.box (bigStep a) = bigStep (SRA.box a) := by
   sorry
 
+/-- Weak form of `box_bigStep`: closedness of the rule propagates to
+`bigStep`.
+
+**Status.** As stated (`bigStep a = box (bigStep a)`), the equality fails
+because `bigStep a = (oneStep a)∗ * introDiag ≥ introDiag` while `box
+(bigStep a) ≤ bigStep a` can only exceed `box introDiag = valDiag`. The
+same `introDiag ≤ box introDiag` is needed and refuted. `box_lfp` applied
+to `evalStep` runs into the strict half of `box` over composition, also
+refuted. Left as `sorry`. -/
+theorem bigStep_isClosed {a : α} (hGIP : GIP a) (h : a = SRA.box a) :
+    bigStep a = SRA.box (bigStep a) := by
+  sorry
+
 /-- Law (5.7e): if `a = SRA.box a` then
-`bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a`. -/
-theorem bigStep_fix_of_closed {a : α} (h : a = SRA.box a) :
+`bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a`.
+
+**Status.** Under `GIP a + closedness`: reducing via
+`bigStep_fix_starNormalForm` and the intended `bigStep_isClosed` still
+requires bridging `introDiag ⇝ valDiag` on the constant summand, which
+`bigStep_isClosed` (also open, same refutation) would deliver via
+`bigStep a = box (bigStep a)` combined with `introDiag ≤ bigStep a`. The
+chain `introDiag ≤ bigStep a = box (bigStep a) ⇒ introDiag ≤ box (bigStep
+a)` — followed by the intended `⇒ box introDiag = valDiag ≤ …` — meets
+the same refuted `introDiag ≤ box introDiag`. -/
+theorem bigStep_fix_of_closed {a : α} (hGIP : GIP a) (h : a = SRA.box a) :
     bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a := by
   sorry
+
+/-! ### Structural consequences of the star-normal form
+
+The following two facts are unconditional (no `GIP`, no closedness): they
+say `introDiag` sits below `bigStep a` and hence below the deterministic
+composite `(bigStep a)ᵒ * bigStep a`. Together they give
+`determinism_implies_introDiag_le_valDiag`: the determinism conclusion
+`(bigStep a)ᵒ * bigStep a ≤ valDiag` forces `introDiag ≤ valDiag`, i.e.
+the strict half of `box` that is refuted in the term model. -/
+
+/-- `introDiag ≤ bigStep a`. Direct consequence of
+`bigStep_fix_starNormalForm`. -/
+theorem introDiag_le_bigStep (a : α) : (introDiag : α) ≤ bigStep a := by
+  conv_rhs => rw [bigStep_fix_starNormalForm]
+  exact le_sup_left
+
+/-- `introDiag ≤ (bigStep a)ᵒ * bigStep a`. Combines
+`introDiag_le_bigStep` with self-converse `introDiagᵒ = introDiag` (from
+`intro_converse` and `converse_one`) and `introDiag * introDiag =
+introDiag`. -/
+theorem introDiag_le_converse_mul (a : α) :
+    (introDiag : α) ≤ (bigStep a)ᵒ * bigStep a := by
+  have h_le : (introDiag : α) ≤ bigStep a := introDiag_le_bigStep a
+  have h_self : (introDiag : α)ᵒ = introDiag := by
+    change (OperationalDecomposition.intro (1 : α))ᵒ
+        = OperationalDecomposition.intro 1
+    rw [← OperationalDecomposition.intro_converse,
+        IsInvolutiveQuantale.converse_one]
+  have h_conv : (introDiag : α) ≤ (bigStep a)ᵒ := by
+    have := IsInvolutiveQuantale.converse_le_converse h_le
+    rwa [h_self] at this
+  calc (introDiag : α)
+      = introDiag * introDiag := introDiag_mul_self.symm
+    _ ≤ (bigStep a)ᵒ * bigStep a := mul_le_mul' h_conv h_le
+
+/-- The determinism conclusion `(bigStep a)ᵒ * bigStep a ≤ valDiag` forces
+`introDiag ≤ valDiag`, i.e. the strict half of `box` at `intro 1` that is
+refuted by the term-model witness for
+`SynRel.not_box_mul_le_mul_box`-style refutations. -/
+theorem determinism_implies_introDiag_le_valDiag {a : α}
+    (h : (bigStep a)ᵒ * bigStep a ≤ valDiag) :
+    (introDiag : α) ≤ valDiag :=
+  (introDiag_le_converse_mul a).trans h
 
 end OperationalDecomposition
 
 #print axioms OperationalDecomposition.bigStep_fix_starNormalForm
 #print axioms OperationalDecomposition.box_bigStep_of_box_mul_le
+#print axioms OperationalDecomposition.bigStep_mul_self
 
 #print axioms OperationalDecomposition.box_oneStep
+#print axioms OperationalDecomposition.oneStep_isClosed
 #print axioms OperationalDecomposition.bigStep_fix
 #print axioms OperationalDecomposition.bigStep_le_of
 #print axioms OperationalDecomposition.box_bigStep
+#print axioms OperationalDecomposition.bigStep_isClosed
 #print axioms OperationalDecomposition.bigStep_fix_of_closed
+#print axioms OperationalDecomposition.introDiag_le_bigStep
+#print axioms OperationalDecomposition.introDiag_le_converse_mul
+#print axioms OperationalDecomposition.determinism_implies_introDiag_le_valDiag

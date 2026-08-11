@@ -5,6 +5,7 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.SRA.Derived
+public import LeanTra.Algebra.Modular
 public import LeanTra.Metatheory.Modality
 
 /-!
@@ -186,12 +187,20 @@ theorem valDiag_mul_self_le : (valDiag : α) * valDiag ≤ valDiag := by
 /-- The value-diagonal is idempotent: `Δκ * Δκ = Δκ`.
 
 **Status.** The `≤` direction is proved above via `box_mul_box_le` and
-`introDiag_mul_self`. The reverse inequality `Δκ ≤ Δκ * Δκ` is expected
-not to hold in an involutive quantale; it would require the modular law
-which is not available here. Left as `sorry`. -/
-theorem valDiag_mul_self : (valDiag : α) * valDiag = valDiag := by
-  refine le_antisymm valDiag_mul_self_le ?_
-  sorry
+`introDiag_mul_self`. The reverse inequality follows from
+`SRA.coreflexive_mul_self` in `LeanTra.Algebra.Modular`, once
+`valDiag ≤ 1` is established from the coreflexivity of `j` and
+`intro 1`. Requires `[IsModularQuantale α]`. -/
+theorem valDiag_mul_self [IsModularQuantale α] :
+    (valDiag : α) * valDiag = valDiag := by
+  have hval_le_one : (valDiag : α) ≤ 1 := by
+    change (SRA.j : α) * OperationalDecomposition.intro 1 * SRA.j ≤ 1
+    calc (SRA.j : α) * OperationalDecomposition.intro 1 * SRA.j
+        ≤ (1 : α) * 1 * 1 :=
+          mul_le_mul' (mul_le_mul' SRA.j_le_one
+            OperationalDecomposition.intro_one_le) SRA.j_le_one
+      _ = 1 := by rw [mul_one, one_mul]
+  exact SRA.coreflexive_mul_self hval_le_one
 
 #print axioms OperationalDecomposition.valDiag_le_introDiag
 #print axioms OperationalDecomposition.valDiag_mul_self_le

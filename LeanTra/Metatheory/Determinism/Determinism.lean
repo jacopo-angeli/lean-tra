@@ -45,10 +45,11 @@ The derivation unfolds `bigStep a` with the closed fixed-point law
 `maj b * maj (bigStep a)` to `maj (b * bigStep a)` via `elim_mul`; (F2) finally
 absorbs the trailing `a * bigStep a`. Hypothesis `hinv` is inherited from the
 paper's Remark A.8 (Section A.1 background) but is not needed by the algebra. -/
-theorem maj_mul_bigStep_le {a : α} (hclosed : a = SRA.box a) (_hinv : Inv a)
+theorem maj_mul_bigStep_le {a : α} (hclosed : a = SRA.box a) (hinv : Inv a)
     (b : α) : maj b * bigStep a ≤ maj (b * bigStep a) * bigStep a := by
+  have hGIP : GIP a := gip_of_inv hinv
   have hfix : bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a :=
-    bigStep_fix_of_closed hclosed
+    bigStep_fix_of_closed hGIP hclosed
   have h_elim_mul : maj b * maj (bigStep a) = maj (b * bigStep a) := by
     change OperationalDecomposition.elim b 1
              * OperationalDecomposition.elim (bigStep a) 1
@@ -69,7 +70,7 @@ theorem maj_mul_bigStep_le {a : α} (hclosed : a = SRA.box a) (_hinv : Inv a)
         simp only [mul_assoc]
     _ = maj (b * bigStep a) * a * bigStep a := by rw [h_elim_mul]
     _ = maj (b * bigStep a) * (a * bigStep a) := mul_assoc _ _ _
-    _ ≤ maj (b * bigStep a) * bigStep a := mul_le_mul' le_rfl (F2 a)
+    _ ≤ maj (b * bigStep a) * bigStep a := mul_le_mul' le_rfl (F2 a hGIP)
 
 /-- Lemma A.11: the major-slot projection of the value-diagonal composed with
 `bigStep a` is bounded by `a * bigStep a`.
@@ -80,7 +81,8 @@ involutive quantale — the paper's Remark A.8 (opening of Section A.1) globally
 assumes `Inv a` throughout the section, and the algebraic step
 `maj valDiag * a = a` used in the derivation is exactly `hinv.2`. Downstream
 consumers therefore use the private helper `maj_valDiag_mul_bigStep_le_of_inv`
-below, which carries the two missing hypotheses. -/
+below, which carries the two missing hypotheses. Modular law does not touch
+this: the missing datum is `Inv a`, not an algebraic identity. -/
 theorem maj_valDiag_mul_bigStep_le (a : α) :
     maj (valDiag : α) * bigStep a ≤ a * bigStep a := by
   sorry
@@ -91,8 +93,9 @@ fixed-point law and (F10). This helper carries those hypotheses explicitly. -/
 private theorem maj_valDiag_mul_bigStep_le_of_inv {a : α}
     (hclosed : a = SRA.box a) (hinv : Inv a) :
     maj (valDiag : α) * bigStep a ≤ a * bigStep a := by
+  have hGIP : GIP a := gip_of_inv hinv
   have hfix : bigStep a = valDiag ⊔ maj (bigStep a) * a * bigStep a :=
-    bigStep_fix_of_closed hclosed
+    bigStep_fix_of_closed hGIP hclosed
   have hF10 : (valDiag : α) * bigStep a = valDiag := F10 a hinv
   have h_elim_mul :
       maj (valDiag : α) * maj (bigStep a) = maj (valDiag : α) := by
@@ -157,6 +160,7 @@ by Proposition A.9 followed by Lemma A.11. -/
 theorem determinism {a : α} (_hred : IsReduction a) (hclosed : a = SRA.box a)
     (hinv : Inv a) (hdet : IsDeterministicRule a) :
     (bigStep a)ᵒ * bigStep a ≤ valDiag := by
+  have hGIP : GIP a := gip_of_inv hinv
   have haux : aᵒ * bigStep a ≤ bigStep a :=
     converse_mul_bigStep_le hclosed hinv hdet
   have hb_key :
@@ -167,7 +171,7 @@ theorem determinism {a : α} (_hred : IsReduction a) (hclosed : a = SRA.box a)
         ≤ (bigStep a ⇨ₗ (valDiag : α)) * bigStep a :=
           mul_le_mul' h le_rfl
       _ ≤ valDiag := hb_key
-  refine F9 (a := a) ?_
+  refine F9 (a := a) hGIP ?_
   refine sup_le (sup_le ?_ ?_) ?_
   · -- (i) `valDiag ≤ b`, i.e. `valDiag * bigStep a ≤ valDiag` by (F10).
     apply Quantale.leftMulResiduation_le_iff_mul_le.mpr
@@ -204,7 +208,7 @@ theorem determinism {a : α} (_hred : IsReduction a) (hclosed : a = SRA.box a)
           mul_le_mul' le_rfl
             (maj_valDiag_mul_bigStep_le_of_inv hclosed hinv)
       _ ≤ (bigStep a ⇨ₗ (valDiag : α)) * bigStep a :=
-          mul_le_mul' le_rfl (F2 a)
+          mul_le_mul' le_rfl (F2 a hGIP)
       _ ≤ valDiag := hb_key
 
 #print axioms OperationalDecomposition.IsDeterministicRule
