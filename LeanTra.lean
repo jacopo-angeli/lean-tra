@@ -9,6 +9,7 @@ import LeanTra.Metatheory.Evaluation
 import LeanTra.Metatheory.Reduction
 import LeanTra.Metatheory.Confluence.Diamond
 import LeanTra.Metatheory.Confluence.Orthogonal
+import LeanTra.Metatheory.Confluence.Local
 import LeanTra.Instances.FirstOrder.Terms
 import LeanTra.Instances.FirstOrder.Relations
 import LeanTra.Instances.FirstOrder.SRA
