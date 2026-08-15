@@ -26,7 +26,9 @@ consumed by the orthogonal-reduction development in
 -/
 @[expose] public section
 
-open scoped Quantale IsInvolutiveQuantale LeanTra.Confluence
+open scoped Quantale IsInvolutiveQuantale LeanTra.Algebra
+
+open LeanTra.Algebra
 
 namespace LeanTra.Confluence
 
@@ -44,12 +46,12 @@ def Confluent (a : α) : Prop := Diamond (a∗)
 `aᵒ * a∗ ≤ a∗ * aᵒ`. -/
 theorem Diamond.strip {a : α} (hd : Diamond a) : aᵒ * a∗ ≤ a∗ * aᵒ := by
   refine Quantale.rightMulResiduation_le_iff_mul_le.mp ?_
-  refine star_le_of ?_
+  refine star_induction ?_
   refine sup_le ?_ ?_
   · refine Quantale.rightMulResiduation_le_iff_mul_le.mpr ?_
     rw [mul_one]
     calc aᵒ = 1 * aᵒ := (one_mul aᵒ).symm
-      _ ≤ a∗ * aᵒ := mul_le_mul_left (one_le_star a) aᵒ
+      _ ≤ a∗ * aᵒ := mul_le_mul_left (star_reflexivity a) aᵒ
   · refine Quantale.rightMulResiduation_le_iff_mul_le.mpr ?_
     calc aᵒ * (a * (aᵒ ⇨ᵣ (a∗ * aᵒ)))
         = (aᵒ * a) * (aᵒ ⇨ᵣ (a∗ * aᵒ)) := (mul_assoc _ _ _).symm
@@ -58,20 +60,20 @@ theorem Diamond.strip {a : α} (hd : Diamond a) : aᵒ * a∗ ≤ a∗ * aᵒ :=
       _ ≤ a * (a∗ * aᵒ) := mul_le_mul_right
           (Quantale.rightMulResiduation_le_iff_mul_le.mp le_rfl) a
       _ = (a * a∗) * aᵒ := (mul_assoc _ _ _).symm
-      _ ≤ a∗ * aᵒ := mul_le_mul_left (mul_star_le_star a) aᵒ
+      _ ≤ a∗ * aᵒ := mul_le_mul_left (star_absorption_left a) aᵒ
 
 /-- If `a` has the diamond property, so does `a∗`. -/
 theorem Diamond.confluent {a : α} (hd : Diamond a) : Confluent a := by
   change (a∗)ᵒ * a∗ ≤ a∗ * (a∗)ᵒ
-  rw [star_converse]
+  rw [star_converse_commutation]
   have hstrip := hd.strip
   refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
-  refine star_le_of ?_
+  refine star_induction ?_
   refine sup_le ?_ ?_
   · refine Quantale.leftMulResiduation_le_iff_mul_le.mpr ?_
     rw [one_mul]
     calc a∗ = a∗ * 1 := (mul_one _).symm
-      _ ≤ a∗ * (aᵒ)∗ := mul_le_mul_right (one_le_star aᵒ) _
+      _ ≤ a∗ * (aᵒ)∗ := mul_le_mul_right (star_reflexivity aᵒ) _
   · refine Quantale.leftMulResiduation_le_iff_mul_le.mpr ?_
     calc (aᵒ * (a∗ ⇨ₗ (a∗ * (aᵒ)∗))) * a∗
         = aᵒ * ((a∗ ⇨ₗ (a∗ * (aᵒ)∗)) * a∗) := mul_assoc _ _ _
@@ -80,7 +82,7 @@ theorem Diamond.confluent {a : α} (hd : Diamond a) : Confluent a := by
       _ = (aᵒ * a∗) * (aᵒ)∗ := (mul_assoc _ _ _).symm
       _ ≤ (a∗ * aᵒ) * (aᵒ)∗ := mul_le_mul_left hstrip _
       _ = a∗ * (aᵒ * (aᵒ)∗) := mul_assoc _ _ _
-      _ ≤ a∗ * (aᵒ)∗ := mul_le_mul_right (mul_star_le_star aᵒ) _
+      _ ≤ a∗ * (aᵒ)∗ := mul_le_mul_right (star_absorption_left aᵒ) _
 
 end LeanTra.Confluence
 

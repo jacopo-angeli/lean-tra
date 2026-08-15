@@ -89,7 +89,7 @@ of its own; the corresponding one is proved where it is used.
 -/
 @[expose] public section
 
-open scoped LeanTra.Confluence
+open scoped LeanTra.Algebra
 
 open OperationalDecomposition
 
