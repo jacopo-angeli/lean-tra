@@ -199,18 +199,18 @@ variable {a : α}
 theorem star_converse (a : α) : (a∗)ᵒ = (aᵒ)∗ := by
   have h : ∀ b : α, (b∗)ᵒ = 1 ⊔ (b∗)ᵒ * bᵒ := fun b => by
     conv_lhs => rw [star_fix b]
-    rw [IsInvolutiveQuantale.converse_sup, IsInvolutiveQuantale.converse_one,
-        IsInvolutiveQuantale.mul_converse]
+    rw [IsInvolutiveQuantale.converse_join_preservation_binary, IsInvolutiveQuantale.converse_identity,
+        IsInvolutiveQuantale.converse_compositionality]
   have ge : (aᵒ)∗ ≤ (a∗)ᵒ := by
     rw [star_eq_lfp_right]
     exact (starStepR aᵒ).lfp_le (h a).ge
   have ge' : ((aᵒ)ᵒ)∗ ≤ ((aᵒ)∗)ᵒ := by
     rw [star_eq_lfp_right]
     exact (starStepR ((aᵒ)ᵒ)).lfp_le (h aᵒ).ge
-  rw [IsInvolutiveQuantale.converse_involutive] at ge'
+  rw [IsInvolutiveQuantale.converse_involutivity] at ge'
   have le : (a∗)ᵒ ≤ (aᵒ)∗ := by
-    have := IsInvolutiveQuantale.converse_le_converse ge'
-    simpa [IsInvolutiveQuantale.converse_involutive] using this
+    have := IsInvolutiveQuantale.converse_monotonicity ge'
+    simpa [IsInvolutiveQuantale.converse_involutivity] using this
   exact le_antisymm le ge
 
 end WithInvolution

@@ -86,8 +86,8 @@ plus involutivity of converse. -/
 theorem j_converse : (SRA.j : α)ᵒ = SRA.j := by
   refine le_antisymm SRA.j_converse_le ?_
   have h : (SRA.j : α)ᵒᵒ ≤ (SRA.j : α)ᵒ :=
-    IsInvolutiveQuantale.converse_le_converse SRA.j_converse_le
-  rwa [IsInvolutiveQuantale.converse_involutive] at h
+    IsInvolutiveQuantale.converse_monotonicity SRA.j_converse_le
+  rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 /-- The advisor's identity `□T = j * T * j`, held now by `rfl` because
 `box` is defined as `j * · * j` (see `Structure/SRA.lean`). Kept as a
@@ -177,8 +177,8 @@ theorem box_mul_box_le (a b : α) : SRA.box a * SRA.box b ≤ SRA.box (a * b) :=
 theorem box_converse (a : α) : (SRA.box a)ᵒ = SRA.box (aᵒ) := by
   change (SRA.j * a * SRA.j)ᵒ = SRA.j * aᵒ * SRA.j
   calc (SRA.j * a * SRA.j)ᵒ
-      = (SRA.j)ᵒ * (SRA.j * a)ᵒ := IsInvolutiveQuantale.mul_converse _ _
-    _ = (SRA.j)ᵒ * (aᵒ * (SRA.j)ᵒ) := by rw [IsInvolutiveQuantale.mul_converse]
+      = (SRA.j)ᵒ * (SRA.j * a)ᵒ := IsInvolutiveQuantale.converse_compositionality _ _
+    _ = (SRA.j)ᵒ * (aᵒ * (SRA.j)ᵒ) := by rw [IsInvolutiveQuantale.converse_compositionality]
     _ = SRA.j * (aᵒ * SRA.j) := by rw [j_converse]
     _ = SRA.j * aᵒ * SRA.j := (mul_assoc _ _ _).symm
 

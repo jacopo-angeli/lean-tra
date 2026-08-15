@@ -376,13 +376,13 @@ def converse (φ : SynRel S) : SynRel S := {
 endpoint-swap involution. -/
 instance instIsInvolutiveQuantale : IsInvolutiveQuantale (SynRel S) where
   converse := converse
-  converse_converse _ := by ext; rfl
-  converse_mul φ ψ := by
+  converse_involutivity _ := by ext; rfl
+  converse_compositionality φ ψ := by
     ext Γ t v
     constructor
     · rintro ⟨u, hφ, hψ⟩; exact ⟨u, hψ, hφ⟩
     · rintro ⟨u, hψ, hφ⟩; exact ⟨u, hφ, hψ⟩
-  converse_mono _ _ h Γ t s h' := h Γ s t h'
+  converse_monotonicity h Γ t s h' := h Γ s t h'
 
 /-! ## Sanity checks -/
 
