@@ -100,8 +100,8 @@ just oplaxly. -/
 theorem varDiag_converse : (SRA.varDiag : α)ᵒ = SRA.varDiag := by
   refine le_antisymm SRA.varDiag_converse_le ?_
   have h : (SRA.varDiag : α)ᵒᵒ ≤ SRA.varDiagᵒ :=
-    IsInvolutiveQuantale.converse_le_converse SRA.varDiag_converse_le
-  rwa [IsInvolutiveQuantale.converse_involutive] at h
+    IsInvolutiveQuantale.converse_monotonicity SRA.varDiag_converse_le
+  rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 /-! ### Basic laws of compatible refinement -/
 
@@ -122,9 +122,9 @@ theorem one_le_of_cr_le ⦃a : α⦄ (h : cr a ≤ a) : 1 ≤ a :=
 /-- Symmetric orthogonality: `tilde a * Δη ≤ ⊥`, derived from the axiomatic
 left-orthogonality via converse. -/
 theorem scr_mul_varDiag_le_bot (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
-  rw [← IsInvolutiveQuantale.converse_le_converse_iff,
-      IsInvolutiveQuantale.converse_bot,
-      IsInvolutiveQuantale.mul_converse,
+  rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
+      IsInvolutiveQuantale.converse_bot_strictness,
+      IsInvolutiveQuantale.converse_compositionality,
       ← SRA.scr_converse, varDiag_converse]
   exact SRA.varDiag_mul_scr_le_bot _
 
@@ -159,7 +159,7 @@ theorem cr_mul (a b : α) : cr a * cr b = cr (a * b) := by
 @[simp]
 theorem cr_converse (a : α) : (cr a)ᵒ = cr (aᵒ) := by
   unfold cr
-  rw [IsInvolutiveQuantale.converse_sup, varDiag_converse, ← SRA.scr_converse]
+  rw [IsInvolutiveQuantale.converse_join_preservation_binary, varDiag_converse, ← SRA.scr_converse]
 
 /-! ### Substitution laws from join-preservation -/
 
@@ -209,7 +209,7 @@ theorem howe_mono ⦃a b : α⦄ (h : a ≤ b) : howe a ≤ howe b := by
 
 -- Design note on the *converse* of the Howe fixed-point equation.
 -- Taking `·ᵒ` of both sides of `howe_fix` (`aᴴ = cr aᴴ * a`) and using
--- `mul_converse` and `cr_converse` gives
+-- `converse_compositionality` and `cr_converse` gives
 --     `(aᴴ)ᵒ = aᵒ * cr ((aᴴ)ᵒ)`,
 -- i.e. the DUAL equation `x = a * cr x` — with the multiplication on the
 -- other side. So `(aᴴ)ᵒ` is NOT `(aᵒ)ᴴ`: the two would agree only if the

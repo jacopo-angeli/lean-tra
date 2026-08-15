@@ -117,7 +117,7 @@ theorem howe_converse (a : α) : (SRA.howe a)ᵒ = opHowe (aᵒ) := by
   refine opHowe_eq_of_fix ?_
   calc (SRA.howe a)ᵒ
       = (SRA.cr (SRA.howe a) * a)ᵒ := by rw [← howe_fix]
-    _ = aᵒ * (SRA.cr (SRA.howe a))ᵒ := IsInvolutiveQuantale.mul_converse _ _
+    _ = aᵒ * (SRA.cr (SRA.howe a))ᵒ := IsInvolutiveQuantale.converse_compositionality _ _
     _ = aᵒ * SRA.cr ((SRA.howe a)ᵒ) := by rw [cr_converse]
 
 end SRA
@@ -252,9 +252,9 @@ extension of the reflexive substitution closure of `aᵒ`. -/
 theorem parRed_converse (a : α) :
     (parRed a)ᵒ = SRA.opHowe (1 ⊔ SRA.subst aᵒ 1) := by
   unfold parRed
-  rw [SRA.howe_converse, IsInvolutiveQuantale.converse_sup,
-      IsInvolutiveQuantale.converse_one, SRA.subst_converse,
-      IsInvolutiveQuantale.converse_one]
+  rw [SRA.howe_converse, IsInvolutiveQuantale.converse_join_preservation_binary,
+      IsInvolutiveQuantale.converse_identity, SRA.subst_converse,
+      IsInvolutiveQuantale.converse_identity]
 
 /-- Nesting: `aᵒ[a⇛] ≤ a⇛ * aᵒ[1]`. -/
 theorem nesting (a : α) :
@@ -269,7 +269,7 @@ theorem nesting (a : α) :
 
 /-- Converse commutes with base substitution: `(a[1])ᵒ = aᵒ[1]`. -/
 theorem subst_one_converse (a : α) : (SRA.subst a 1)ᵒ = SRA.subst aᵒ 1 := by
-  rw [SRA.subst_converse, IsInvolutiveQuantale.converse_one]
+  rw [SRA.subst_converse, IsInvolutiveQuantale.converse_identity]
 
 /-- Converse form of `varDiag_mul_subst_one_eq_bot`: for a reduction `a`,
 `aᵒ[1] * Δη = ⊥`. -/
@@ -277,14 +277,14 @@ theorem subst_one_mul_varDiag_eq_bot {a : α} (h : IsReduction a) :
     SRA.subst aᵒ 1 * SRA.varDiag = (⊥ : α) := by
   have hL := varDiag_mul_subst_one_eq_bot h
   have := congrArg IsInvolutiveQuantale.converse hL
-  rw [IsInvolutiveQuantale.mul_converse, subst_one_converse,
-      SRA.varDiag_converse, IsInvolutiveQuantale.converse_bot] at this
+  rw [IsInvolutiveQuantale.converse_compositionality, subst_one_converse,
+      SRA.varDiag_converse, IsInvolutiveQuantale.converse_bot_strictness] at this
   exact this
 
 /-- Compatibility of the converse of parallel reduction: `hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`. -/
 theorem cr_parRed_converse_le (a : α) : SRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
   rw [← SRA.cr_converse]
-  exact IsInvolutiveQuantale.converse_le_converse (cr_parRed_le a)
+  exact IsInvolutiveQuantale.converse_monotonicity (cr_parRed_le a)
 
 /-- Leibniz at `(a⇛)ᵒ`: `1[(a⇛)ᵒ] ≤ (a⇛)ᵒ`. -/
 theorem subst_one_parRed_converse_le (a : α) :
@@ -312,8 +312,8 @@ theorem cr_mul_subst_le_parRed (a : α) :
 theorem subst_one_mul_cr_parRed_converse_le (a : α) :
     SRA.subst aᵒ 1 * SRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
   have hM6 := cr_mul_subst_le_parRed a
-  have := IsInvolutiveQuantale.converse_le_converse hM6
-  rw [IsInvolutiveQuantale.mul_converse, subst_one_converse,
+  have := IsInvolutiveQuantale.converse_monotonicity hM6
+  rw [IsInvolutiveQuantale.converse_compositionality, subst_one_converse,
       SRA.cr_converse] at this
   exact this
 
@@ -333,9 +333,9 @@ def IsOrthogonal (a : α) : Prop :=
 theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
     SRA.scr ((parRed a)ᵒ) * SRA.subst a 1 ≤ SRA.subst a ((parRed a)ᵒ) := by
   have h2 := horth.2
-  have := IsInvolutiveQuantale.converse_le_converse h2
-  rw [IsInvolutiveQuantale.mul_converse, IsInvolutiveQuantale.converse_involutive,
-      SRA.subst_converse, IsInvolutiveQuantale.converse_involutive,
+  have := IsInvolutiveQuantale.converse_monotonicity h2
+  rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity,
+      SRA.subst_converse, IsInvolutiveQuantale.converse_involutivity,
       ← SRA.scr_converse] at this
   exact this
 

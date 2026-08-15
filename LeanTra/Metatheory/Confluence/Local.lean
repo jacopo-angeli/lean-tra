@@ -99,20 +99,20 @@ theorem confluence_local {a : α}
   have hN4 : aᵒ * SRA.varDiag = (⊥ : α) := by
     have hL : SRA.varDiag * a = (⊥ : α) := h1
     have hc := congrArg IsInvolutiveQuantale.converse hL
-    rw [IsInvolutiveQuantale.mul_converse, SRA.varDiag_converse,
-        IsInvolutiveQuantale.converse_bot] at hc
+    rw [IsInvolutiveQuantale.converse_compositionality, SRA.varDiag_converse,
+        IsInvolutiveQuantale.converse_bot_strictness] at hc
     exact hc
   have hN5 : ∀ {b : α}, Struct a b →
       aᵒ * SRA.scr (bᵒ) ≤ SRA.subst (bᵒ) (bᵒ) * aᵒ := by
     intro b h
     have hL : SRA.scr b * a ≤ a * SRA.subst b b := h
-    have hc := IsInvolutiveQuantale.converse_le_converse hL
-    rw [IsInvolutiveQuantale.mul_converse, IsInvolutiveQuantale.mul_converse,
+    have hc := IsInvolutiveQuantale.converse_monotonicity hL
+    rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_compositionality,
         ← SRA.scr_converse, SRA.subst_converse] at hc
     exact hc
   have hN6 : SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
     have hL := parRed_subst_le h1
-    have hc := IsInvolutiveQuantale.converse_le_converse hL
+    have hc := IsInvolutiveQuantale.converse_monotonicity hL
     rw [SRA.subst_converse] at hc
     exact hc
   -- The diamond as a post-fixed point
@@ -127,7 +127,7 @@ theorem confluence_local {a : α}
            = SRA.scr (parRed a) * SRA.scr ((parRed a)ᵒ) :=
     SRA.scr_mul _ _
   have hP2 : (parRed a * (parRed a)ᵒ)ᵒ = parRed a * (parRed a)ᵒ := by
-    rw [IsInvolutiveQuantale.mul_converse, IsInvolutiveQuantale.converse_involutive]
+    rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity]
   have hP3 : SRA.scr (parRed a * (parRed a)ᵒ) ≤ parRed a * (parRed a)ᵒ := by
     rw [hP1]
     refine mul_le_mul' ?_ ?_
@@ -165,9 +165,9 @@ theorem confluence_local {a : α}
   -- not out of compatibility of `b`.
   have hEI : ∀ b c x : α, elimination b c * introduction x ≤ (⊥ : α) := by
     intro b c x
-    rw [← IsInvolutiveQuantale.converse_le_converse_iff,
-        IsInvolutiveQuantale.converse_bot,
-        IsInvolutiveQuantale.mul_converse,
+    rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
+        IsInvolutiveQuantale.converse_bot_strictness,
+        IsInvolutiveQuantale.converse_compositionality,
         ← OperationalDecomposition.introduction_morphism_converse,
         ← OperationalDecomposition.elimination_morphism_converse]
     exact OperationalDecomposition.introduction_elimination_orthogonality _ _ _
@@ -196,11 +196,11 @@ theorem confluence_local {a : α}
   have hL4 : ∀ x : α, aᵒ * introduction x ≤ (⊥ : α) := by
     intro x
     have hgip_conv : aᵒ ≤ aᵒ * elimination (introduction (1 : α)) 1 := by
-      have h := IsInvolutiveQuantale.converse_le_converse hgip
-      rw [IsInvolutiveQuantale.mul_converse,
+      have h := IsInvolutiveQuantale.converse_monotonicity hgip
+      rw [IsInvolutiveQuantale.converse_compositionality,
           ← OperationalDecomposition.elimination_morphism_converse,
           ← OperationalDecomposition.introduction_morphism_converse,
-          IsInvolutiveQuantale.converse_one] at h
+          IsInvolutiveQuantale.converse_identity] at h
       exact h
     calc aᵒ * introduction x
         ≤ (aᵒ * elimination (introduction 1) 1) * introduction x :=
@@ -273,7 +273,7 @@ theorem confluence_local {a : α}
   have hstruct_dual : aᵒ * SRA.scr (parRed a)
                     ≤ SRA.subst (parRed a) (parRed a) * aᵒ := by
     have hd := hN5 hStruct
-    rwa [IsInvolutiveQuantale.converse_involutive] at hd
+    rwa [IsInvolutiveQuantale.converse_involutivity] at hd
   have hL11 : aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * a
             ≤ parRed a * (parRed a)ᵒ := by
     have hstruct : SRA.scr ((parRed a)ᵒ) * a
@@ -316,8 +316,8 @@ theorem confluence_local {a : α}
       _ = parRed a * (parRed a)ᵒ := by rw [hP4]
   have hL21 : SRA.scr (parRed a * (parRed a)ᵒ) * a
             ≤ parRed a * (parRed a)ᵒ := by
-    have hconv := IsInvolutiveQuantale.converse_le_converse hL12
-    rw [IsInvolutiveQuantale.mul_converse, IsInvolutiveQuantale.converse_involutive,
+    have hconv := IsInvolutiveQuantale.converse_monotonicity hL12
+    rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity,
         ← SRA.scr_converse, hP2] at hconv
     exact hconv
   -- The two branches of the inductive step
@@ -363,8 +363,8 @@ theorem confluence_local {a : α}
   have hLeaf2 : (1 : α) * SRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
     rw [one_mul]
     have h1_le_parRed_converse : (1 : α) ≤ (parRed a)ᵒ := by
-      rw [← IsInvolutiveQuantale.converse_one]
-      exact IsInvolutiveQuantale.converse_le_converse (one_le_parRed a)
+      rw [← IsInvolutiveQuantale.converse_identity]
+      exact IsInvolutiveQuantale.converse_monotonicity (one_le_parRed a)
     have piece_varDiag : SRA.varDiag * parRed a ≤ parRed a * (parRed a)ᵒ := by
       calc SRA.varDiag * parRed a
           ≤ 1 * parRed a := mul_le_mul' SRA.varDiag_le_one le_rfl

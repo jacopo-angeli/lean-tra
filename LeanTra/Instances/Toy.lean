@@ -103,9 +103,9 @@ instance instIsQuantale : IsQuantale Toy where
 
 instance instIsInvolutiveQuantale : IsInvolutiveQuantale Toy where
   converse a := a
-  converse_converse _ := rfl
-  converse_mul _ _ := propext ⟨fun ⟨p, q⟩ => ⟨q, p⟩, fun ⟨p, q⟩ => ⟨q, p⟩⟩
-  converse_mono _ _ h := h
+  converse_involutivity _ := rfl
+  converse_compositionality _ _ := propext ⟨fun ⟨p, q⟩ => ⟨q, p⟩, fun ⟨p, q⟩ => ⟨q, p⟩⟩
+  converse_monotonicity h := h
 
 instance instSRA : SRA Toy where
   varDiag := True

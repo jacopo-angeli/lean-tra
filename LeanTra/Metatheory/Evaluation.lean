@@ -151,9 +151,9 @@ private theorem majorSubtermRecursionStep_sup_introductionCoreflexive {a : α}
   (x : α) :
   ((introductionCoreflexive : α) ⊔ majorProjection x) * (a ⊔ introductionCoreflexive) = introductionCoreflexive ⊔ majorProjection x * a := by
   have elimination_mul_introduction_le_bot : ∀ b c d : α, OperationalDecomposition.elimination b c * OperationalDecomposition.introduction d ≤ ⊥ := fun b c d => by
-    rw [← IsInvolutiveQuantale.converse_le_converse_iff,
-        IsInvolutiveQuantale.converse_bot,
-        IsInvolutiveQuantale.mul_converse,
+    rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
+        IsInvolutiveQuantale.converse_bot_strictness,
+        IsInvolutiveQuantale.converse_compositionality,
         ← OperationalDecomposition.introduction_morphism_converse,
         ← OperationalDecomposition.elimination_morphism_converse]
     exact OperationalDecomposition.introduction_elimination_orthogonality _ _ _
