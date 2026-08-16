@@ -7,7 +7,7 @@ import LeanTra.Metatheory.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Evaluation
 import LeanTra.Metatheory.Reduction
-import LeanTra.Metatheory.Confluence.Diamond
+import LeanTra.Algebra.Diamond
 import LeanTra.Metatheory.Confluence.Orthogonal
 import LeanTra.Metatheory.Confluence.Local
 import LeanTra.Instances.FirstOrder.Terms
