@@ -42,7 +42,7 @@ Direct instantiation of `LeanTra.Confluence.confluent_parRed` at the
 theorem confluent_parRed_synRel {φ : SynRel S}
     (h : LeanTra.Confluence.IsReduction φ)
     (horth : LeanTra.Confluence.IsOrthogonal φ) :
-    LeanTra.Confluence.Confluent (LeanTra.Confluence.parRed φ) :=
+    LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed φ) :=
   LeanTra.Confluence.confluent_parRed h horth
 
 end LeanTra.Instances.FirstOrder

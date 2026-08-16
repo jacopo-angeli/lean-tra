@@ -44,6 +44,7 @@ is discharged from the Gentzen principles along the way.
 @[expose] public section
 
 open scoped IsInvolutiveQuantale Quantale SRA LeanTra.Confluence
+open LeanTra.Algebra
 
 open LeanTra.Metatheory
 
@@ -80,7 +81,7 @@ theorem confluence_local {a : α}
     (h3 : IsDeterministic a)
     (hgip : GIP a)
     (hgcp : GCP a) :
-    Confluent (parRed a) := by
+    IsConfluent (parRed a) := by
   -- Consequences of the conditions
   --
   -- Elementary rearrangements of the hypotheses, used throughout. The first
@@ -392,7 +393,7 @@ theorem confluence_local {a : α}
       _ = SRA.varDiag * parRed a ⊔ SRA.scr Y * parRed a := by
           rw [Quantale.sup_mul_distrib]
       _ ≤ parRed a * (parRed a)ᵒ := sup_le piece_varDiag piece_scr
-  have hDiamond : Diamond (parRed a) := by
+  have hDiamond : IsDiamond (parRed a) := by
     change (parRed a)ᵒ * parRed a ≤ parRed a * (parRed a)ᵒ
     refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
     rw [parRed_converse a]

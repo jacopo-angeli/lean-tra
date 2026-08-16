@@ -6,14 +6,14 @@ module
 
 public import LeanTra.SRA.Howe
 public import LeanTra.Metatheory.Reduction
-public import LeanTra.Metatheory.Confluence.Diamond
+public import LeanTra.Algebra.Diamond
 public import Mathlib.Order.FixedPoints
 
 /-!
 # Confluence of orthogonal reduction
 
 Formalisation of the confluence-of-orthogonal-reduction theorem on top of
-the abstract confluence layer in `Confluence/Diamond.lean`. Provides:
+the abstract confluence layer in `Algebra/Diamond.lean`. Provides:
 parallel reduction `parRed`, the orthogonality predicate `IsOrthogonal`,
 the substitutivity result `parRed_subst_le`, and the two main theorems
 `diamond_parRed` and `confluent_parRed`. Along the way develops the
@@ -30,6 +30,7 @@ consumed only within this file.
 @[expose] public section
 
 open scoped IsInvolutiveQuantale Quantale SRA LeanTra.Confluence
+open LeanTra.Algebra
 
 namespace SRA
 
@@ -288,7 +289,7 @@ theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
 /-- Diamond property of parallel reduction: for a reduction `a` satisfying
 orthogonality, `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ`. -/
 theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
-    Diamond (parRed a) := by
+    IsDiamond (parRed a) := by
   change (parRed a)ᵒ * parRed a ≤ parRed a * (parRed a)ᵒ
   refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
   rw [parRed_converse a]
@@ -379,9 +380,9 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
       _ = parRed a * (parRed a)ᵒ := by rw [mul_one]
 
 /-- Confluence of parallel reduction: for a reduction `a` satisfying
-orthogonality, `Confluent (parRed a)`. -/
+orthogonality, `IsConfluent (parRed a)`. -/
 theorem confluent_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
-    Confluent (parRed a) :=
+    IsConfluent (parRed a) :=
   (diamond_parRed h horth).confluent
 
 end LeanTra.Confluence
