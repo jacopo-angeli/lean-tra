@@ -2,7 +2,7 @@ import LeanTra.Algebra.InvolutiveQuantale
 import LeanTra.Algebra.KleeneStar
 import LeanTra.SRA.Basic
 import LeanTra.SRA.Howe
-import LeanTra.Metatheory.Modality
+import LeanTra.SRA.Modality
 import LeanTra.Metatheory.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Evaluation

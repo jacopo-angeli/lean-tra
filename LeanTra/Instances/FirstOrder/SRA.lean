@@ -7,7 +7,7 @@ module
 public import LeanTra.Instances.FirstOrder.Relations
 public import LeanTra.SRA.Basic
 public import LeanTra.SRA.Basic
-public import LeanTra.Metatheory.Modality
+public import LeanTra.SRA.Modality
 
 /-!
 # The three SRA operations on syntax relations
@@ -153,10 +153,10 @@ LICS'26 §3.2.1 originally read `□a := a[⊥]`, and this file's
 not derivable from the abstract `SRA` axioms. Under the current
 presentation, `□ := j * · * j` is not the same operation as `· [⊥]`,
 so this equality no longer speaks to the `SRA` theorem
-`box_mul_box_le : □R * □S ≤ □(R * S)` (the only surviving half of
+`box_compositionality_lax : □R * □S ≤ □(R * S)` (the only surviving half of
 LICS'26 §3.2.1's asserted equality — the reverse direction is refuted;
-see `SynRel.not_box_mul_le_mul_box` and the "Status — open items"
-section of `Structure/Derived.lean`). The two `substBot_*` theorems
+see `SynRel.not_box_mul_le_mul_box` and the "Open questions"
+section of `SRA/Modality.lean`). The two `substBot_*` theorems
 are retained as facts about `subst · ⊥` per se; see the block-level
 docstring at their definition.
 
