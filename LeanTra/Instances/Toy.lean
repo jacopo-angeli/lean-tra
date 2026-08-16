@@ -18,8 +18,8 @@ below), so the axioms do not merely hold in a trivial one-element algebra.
 ## What this model does and does not check
 
 The model discharges all `SRA` axioms lawfully, but with `scr := const ⊥` the
-axioms governing `tilde ·` are trivial: `scr_mono` is `⊥ ≤ ⊥`, `scr_mul` is `⊥ =
-⊥ * ⊥`, `scr_converse` reduces to `rfl`, and orthogonality `varDiag * scr a ≤
+axioms governing `tilde ·` are trivial: `scr_monotonicity` is `⊥ ≤ ⊥`, `scr_compositionality` is `⊥ =
+⊥ * ⊥`, `scr_converse_commutation` reduces to `rfl`, and orthogonality `varDiag * scr a ≤
 ⊥` holds precisely because `scr a = ⊥`. So this model *does not exercise*
 the `tilde ·` axioms; it only witnesses that they do not contradict the rest.
 
@@ -38,7 +38,7 @@ values above.
 On any two-element carrier `{⊥, ⊤}` with the standard quantale structure
 (`* = ∧`, `1 = ⊤`), the `SRA` data is essentially determined:
 
-* `subst_sSup_left` at `s = ∅` gives `subst ⊥ b = ⊥`; but `subst varDiag b =
+* `subst_join_preservation_left` at `s = ∅` gives `subst ⊥ b = ⊥`; but `subst varDiag b =
   b`. If `varDiag = ⊥`, then `b = ⊥` for every `b`, collapsing the algebra.
   Hence `varDiag = ⊤ = 1`.
 * Then orthogonality `varDiag * scr a ≤ ⊥` becomes `scr a ≤ ⊥`, forcing
@@ -111,16 +111,16 @@ instance instSRA : SRA Toy where
   varDiag := True
   scr _ := False
   subst a b := a ∧ b
-  varDiag_converse_le := le_refl _
-  varDiag_le_mul_self := fun h => ⟨h, h⟩
-  scr_mono _ _ _ := le_refl _
-  scr_mul _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
-  scr_converse _ := rfl
-  varDiag_mul_scr_le_bot _ := fun ⟨_, h⟩ => h
-  subst_mono_right _ _ _ hb := fun ⟨ha, hb'⟩ => ⟨ha, hb hb'⟩
-  subst_mul_le _ _ _ _ := fun ⟨⟨ha, ha'⟩, hb, hb'⟩ => ⟨⟨ha, hb⟩, ha', hb'⟩
-  subst_converse _ _ := rfl
-  subst_sSup_left s b := by
+  varDiag_symmetry := le_refl _
+  varDiag_cotransitivity := fun h => ⟨h, h⟩
+  scr_monotonicity _ _ _ := le_refl _
+  scr_compositionality _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  scr_converse_commutation _ := rfl
+  varDiag_scr_orthogonality _ := fun ⟨_, h⟩ => h
+  subst_monotonicity_right _ _ _ hb := fun ⟨ha, hb'⟩ => ⟨ha, hb hb'⟩
+  subst_compositionality_oplax _ _ _ _ := fun ⟨⟨ha, ha'⟩, hb, hb'⟩ => ⟨⟨ha, hb⟩, ha', hb'⟩
+  subst_converse_commutation _ _ := rfl
+  subst_join_preservation_left s b := by
     change ((sSup s ∧ (b : Prop) : Prop)) = sSup ((fun a : Toy => (a ∧ b : Prop)) '' s)
     rw [sSup_image]
     apply propext
@@ -128,19 +128,19 @@ instance instSRA : SRA Toy where
     refine ⟨?_, ?_⟩
     · rintro ⟨⟨p, hps, hp⟩, hb'⟩; exact ⟨p, hps, hp, hb'⟩
     · rintro ⟨p, hps, hp, hb'⟩; exact ⟨⟨p, hps, hp⟩, hb'⟩
-  subst_varDiag_left _ := propext ⟨And.right, fun h => ⟨trivial, h⟩⟩
-  subst_varDiag_right _ := propext ⟨And.left, fun h => ⟨h, trivial⟩⟩
-  subst_assoc _ _ _ :=
+  subst_varDiag_unit_left _ := propext ⟨And.right, fun h => ⟨trivial, h⟩⟩
+  subst_varDiag_unit_right _ := propext ⟨And.left, fun h => ⟨h, trivial⟩⟩
+  subst_associativity _ _ _ :=
     propext ⟨fun h => ⟨h.1.1, h.1.2, h.2⟩, fun h => ⟨⟨h.1, h.2.1⟩, h.2.2⟩⟩
-  subst_scr_le _ _ := fun ⟨h, _⟩ => h
-  varDiag_sup_scr_one_eq :=
+  subst_scr_oplaxity _ _ := fun ⟨h, _⟩ => h
+  cr_fixpoint :=
     propext ⟨fun _ => trivial, fun _ => Or.inl trivial⟩
-  one_le_of_scr_sup_le _ h := fun _ => h (Or.inl trivial)
+  cr_induction _ h := fun _ => h (Or.inl trivial)
   j := False
-  j_le_one _ := trivial
-  j_converse_le h := h
-  j_le_mul_self h := h.elim
-  j_mul_varDiag_le_bot := fun ⟨h, _⟩ => h.elim
+  j_coreflexivity _ := trivial
+  j_symmetry h := h
+  j_cotransitivity h := h.elim
+  j_varDiag_orthogonality := fun ⟨h, _⟩ => h.elim
 
 /-! ## Operational-decomposition instance
 

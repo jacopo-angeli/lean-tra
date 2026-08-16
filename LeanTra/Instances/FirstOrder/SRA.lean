@@ -36,16 +36,16 @@ derived modality `box := j * · * j` is *not* the same operation as
   `varDiag`, its self-composition inequality, and the
   variable/node disjointness `varDiag * scr φ ≤ ⊥`.
 * Group 2 (medium axioms): the two unit laws for substitution, the
-  compatibility of `scr` with composition (`scr_mul`), the oplaxness
+  compatibility of `scr` with composition (`scr_compositionality`), the oplaxness
   law `subst (scr φ) ψ ≤ scr (subst φ ψ)`, the fixed-point law
   `varDiag ⊔ scr 1 = 1`, and structural induction
   `varDiag ⊔ scr φ ≤ φ → 1 ≤ φ`.
-* Group 3 (the hard axioms): `subst_assoc` — associativity of relation
+* Group 3 (the hard axioms): `subst_associativity` — associativity of relation
   substitution — via a dependent-sum merge (see (D-C5)); and
-  `subst_mul_le` — oplaxness of substitution on composition — with the
+  `subst_compositionality_oplax` — oplaxness of substitution on composition — with the
   strictness note (D-C6).
-* `j`, `j_rel`, `j_le_one`, `j_converse_le`, `j_le_mul_self`,
-  `j_mul_varDiag_le_bot` — the closure constant and its four axioms.
+* `j`, `j_rel`, `j_coreflexivity`, `j_symmetry`, `j_cotransitivity`,
+  `j_varDiag_orthogonality` — the closure constant and its four axioms.
 * `substBot_iff` and `substBot_mul` — legacy `subst · ⊥` normal-form
   theorems, kept as documentation of the earlier `box := subst · ⊥`
   reading. NOT the interpretation of the current derived `box`.
@@ -89,7 +89,7 @@ universe bump is triggered. A reader coming from a predicative
 metatheory (Agda-style `Set₀` vs `Set₁`) will expect this to be a
 problem; it is not.
 
-### (D-C3) `subst_varDiag_right` is renaming closure
+### (D-C3) `subst_varDiag_unit_right` is renaming closure
 
 The proof of `subst φ varDiag = φ` is where the (D-B1) renaming-closure
 field of `SynRel` earns its keep. The `varDiag` witnesses in the ψ-slot
@@ -104,7 +104,7 @@ Extracting `ρ` from `∀ x, ∃ y, τ x = var y ∧ σ x = var y` requires
 `Classical.axiomOfChoice`; this is the first axiom in the file to need
 choice.
 
-### (D-C4) `subst_scr_le` is strict, not an equality
+### (D-C4) `subst_scr_oplaxity` is strict, not an equality
 
 `subst (scr φ) ψ ≤ scr (subst φ ψ)` is an inequality because the two
 sides quantify decompositions differently: on the left, all argument
@@ -114,9 +114,9 @@ witness); on the right, each argument pair `i` may carry its own
 decomposition `(Γᵢ, tᵢ, sᵢ, τᵢ, σᵢ)`. The right-hand side is therefore
 strictly more permissive, and equality does not hold in general.
 
-### (D-C5) `subst_assoc` and the dependent-sum merge — payoff of (D1)
+### (D-C5) `subst_associativity` and the dependent-sum merge — payoff of (D1)
 
-The (≥) direction of `subst_assoc` has to merge, into a single
+The (≥) direction of `subst_associativity` has to merge, into a single
 source-context witness, the pointwise decompositions of
 `(subst ψ χ).rel Δ (τ x) (σ x)`: each `x : Γ` supplies its own
 context `G x` with `T x, S x : Tm S (G x)` and substitutions
@@ -133,7 +133,7 @@ per `x`, and every downstream lemma would carry a freshness side
 condition. Here `Sigma` closes the entire proof with `Tm.subst_ren`
 and `ψ.ren_closed`, both already available.
 
-### (D-C6) `subst_mul_le` is oplax, not tight
+### (D-C6) `subst_compositionality_oplax` is oplax, not tight
 
 `subst (φ * φ') (ψ * ψ') ≤ subst φ ψ * subst φ' ψ'` is one-directional
 for the same reason (D-C4) is: reading the right-hand side as a
@@ -163,7 +163,7 @@ docstring at their definition.
 Sanity note on the dropped axiom `box_subst_le : subst (box a) b ≤
 box a`. Under the OLD reading `□a := a[⊥]`, this becomes
 `subst (subst a ⊥) b ≤ subst a ⊥`, which is in fact an EQUALITY via
-`subst_assoc` and `subst_bot_left` (`subst (subst a ⊥) b =
+`subst_associativity` and `subst_bot_left` (`subst (subst a ⊥) b =
 subst a (subst ⊥ b) = subst a ⊥`); it holds *abstractly*, not merely
 in the term model. Under the NEW reading `□ := j * · * j`, the same
 statement `subst (j * a * j) b ≤ j * a * j` is neither derivable nor
@@ -267,20 +267,20 @@ def subst (φ ψ : SynRel S) : SynRel S := {
 /-! ## Group 1 — the easy axioms. -/
 
 /-- Monotonicity of `scr`. -/
-theorem scr_mono {φ ψ : SynRel S} (h : φ ≤ ψ) : scr φ ≤ scr ψ := by
+theorem scr_monotonicity {φ ψ : SynRel S} (h : φ ≤ ψ) : scr φ ≤ scr ψ := by
   intro Γ t s hs
   obtain ⟨g, ts, ss, ht, hs', hi⟩ := hs
   exact ⟨g, ts, ss, ht, hs', fun i => h Γ (ts i) (ss i) (hi i)⟩
 
 /-- Monotonicity of `subst` in the second argument. -/
-theorem subst_mono_right {φ ψ ψ' : SynRel S} (h : ψ ≤ ψ') :
+theorem subst_monotonicity_right {φ ψ ψ' : SynRel S} (h : ψ ≤ ψ') :
     subst φ ψ ≤ subst φ ψ' := by
   intro Θ u v hs
   obtain ⟨Γ, t, s, τ, σ, hu, hv, hφ, hψ⟩ := hs
   exact ⟨Γ, t, s, τ, σ, hu, hv, hφ, fun x => h Θ (τ x) (σ x) (hψ x)⟩
 
 /-- `scr` commutes with converse. -/
-theorem scr_converse (φ : SynRel S) : scr (φᵒ) = (scr φ)ᵒ := by
+theorem scr_converse_commutation (φ : SynRel S) : scr (φᵒ) = (scr φ)ᵒ := by
   ext Γ t s
   constructor
   · rintro ⟨g, ts, ss, rfl, rfl, hi⟩
@@ -289,7 +289,7 @@ theorem scr_converse (φ : SynRel S) : scr (φᵒ) = (scr φ)ᵒ := by
     exact ⟨g, ss, ts, rfl, rfl, fun i => hi i⟩
 
 /-- Converse commutes with `subst`, swapping both arguments' converses. -/
-theorem subst_converse (φ ψ : SynRel S) :
+theorem subst_converse_commutation (φ ψ : SynRel S) :
     (subst φ ψ)ᵒ = subst (φᵒ) (ψᵒ) := by
   ext Θ u v
   constructor
@@ -299,7 +299,7 @@ theorem subst_converse (φ ψ : SynRel S) :
     exact ⟨Γ, s, t, σ, τ, hv, hu, hφ, fun x => hψ x⟩
 
 /-- `subst` preserves arbitrary joins in the first argument. -/
-theorem subst_sSup_left (𝒮 : Set (SynRel S)) (ψ : SynRel S) :
+theorem subst_join_preservation_left (𝒮 : Set (SynRel S)) (ψ : SynRel S) :
     subst (sSup 𝒮) ψ = sSup ((fun φ => subst φ ψ) '' 𝒮) := by
   ext Θ u v
   constructor
@@ -309,14 +309,14 @@ theorem subst_sSup_left (𝒮 : Set (SynRel S)) (ψ : SynRel S) :
     exact ⟨Γ, t, s, τ, σ, hu, hv, ⟨φ, hφ𝒮, hφ⟩, hψ⟩
 
 /-- Symmetry of `varDiag`: swapping endpoints is absorbed. -/
-theorem varDiag_converse_le : (varDiag : SynRel S)ᵒ ≤ varDiag := by
+theorem varDiag_symmetry : (varDiag : SynRel S)ᵒ ≤ varDiag := by
   intro Γ t s h
   obtain ⟨x, hs, ht⟩ := h
   exact ⟨x, ht, hs⟩
 
 /-- Co-transitivity of `varDiag`: relating two variables through an
 intermediate variable is direct. -/
-theorem varDiag_le_mul_self : (varDiag : SynRel S) ≤ varDiag * varDiag := by
+theorem varDiag_cotransitivity : (varDiag : SynRel S) ≤ varDiag * varDiag := by
   intro Γ t s h
   obtain ⟨x, ht, hs⟩ := h
   exact ⟨Tm.var x, ⟨x, ht, rfl⟩, ⟨x, rfl, hs⟩⟩
@@ -325,7 +325,7 @@ theorem varDiag_le_mul_self : (varDiag : SynRel S) ≤ varDiag * varDiag := by
 `⊥`. Proof: the `varDiag` intermediate forces `u = Tm.var x`, while the
 `scr` intermediate forces `u = Tm.node g ts` — impossible by
 `Tm.noConfusion`. -/
-theorem varDiag_mul_scr_le_bot (φ : SynRel S) :
+theorem varDiag_scr_orthogonality (φ : SynRel S) :
     (varDiag : SynRel S) * scr φ ≤ ⊥ := by
   intro Γ t v h
   obtain ⟨u, ⟨x, _, rfl⟩, ⟨g, ts, ss, hu, _, _⟩⟩ := h
@@ -333,14 +333,14 @@ theorem varDiag_mul_scr_le_bot (φ : SynRel S) :
 
 /-! ## Group 2 — the medium axioms.
 
-`subst_varDiag_right` is (D-C3); `subst_scr_le` is (D-C4); `scr_mul`
-(≤) and `subst_varDiag_right` (≤) both need `Classical.axiomOfChoice`. -/
+`subst_varDiag_unit_right` is (D-C3); `subst_scr_oplaxity` is (D-C4); `scr_compositionality`
+(≤) and `subst_varDiag_unit_right` (≤) both need `Classical.axiomOfChoice`. -/
 
 /-- `varDiag` is a left unit for `subst`: the `varDiag`-witness in the
 first argument forces `t = s = Tm.var x`, and the substituted forms
 become `τ x` and `σ x` which are directly ψ-related. Reverse direction
 takes `Γ := Unit`, `t = s := Tm.var ()`. No choice needed. -/
-theorem subst_varDiag_left (ψ : SynRel S) : subst varDiag ψ = ψ := by
+theorem subst_varDiag_unit_left (ψ : SynRel S) : subst varDiag ψ = ψ := by
   ext Θ u v
   constructor
   · rintro ⟨_, _, _, τ, σ, rfl, rfl, ⟨x, rfl, rfl⟩, hψ⟩
@@ -356,7 +356,7 @@ theorem subst_varDiag_left (ψ : SynRel S) : subst varDiag ψ = ψ := by
 and the ≤ direction becomes `φ.ren_closed`. Extracting `ρ` from
 `∀ x, ∃ y, τ x = var y ∧ σ x = var y` uses
 `Classical.axiomOfChoice`. -/
-theorem subst_varDiag_right (φ : SynRel S) : subst φ varDiag = φ := by
+theorem subst_varDiag_unit_right (φ : SynRel S) : subst φ varDiag = φ := by
   ext Θ u v
   constructor
   · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, hφ, hvar⟩
@@ -375,7 +375,7 @@ threads through pointwise, reusing the same source context and
 substitution pair for every argument. Equality does not hold because
 the right-hand side is strictly more permissive: each argument may
 carry an independent decomposition. -/
-theorem subst_scr_le (φ ψ : SynRel S) :
+theorem subst_scr_oplaxity (φ ψ : SynRel S) :
     subst (scr φ) ψ ≤ scr (subst φ ψ) := by
   intro Θ u v h
   obtain ⟨Γ, t, s, τ, σ, hu, hv, hscr, hψ⟩ := h
@@ -389,7 +389,7 @@ theorem subst_scr_le (φ ψ : SynRel S) :
 witnessing the `φ * ψ` composition; the (≥) direction unfolds the two
 `scr` witnesses and uses node injectivity to identify their operators
 and argument vectors. -/
-theorem scr_mul (φ ψ : SynRel S) : scr (φ * ψ) = scr φ * scr ψ := by
+theorem scr_compositionality (φ ψ : SynRel S) : scr (φ * ψ) = scr φ * scr ψ := by
   ext Γ t v
   constructor
   · rintro ⟨g, ts, ss, rfl, rfl, hi⟩
@@ -408,7 +408,7 @@ theorem scr_mul (φ ψ : SynRel S) : scr (φ * ψ) = scr φ * scr ψ := by
 
 /-- Fixed-point law: every term is either a variable or a node.
 Algebraically, `Δη ⊔ tilde 1 = 1`. -/
-theorem varDiag_sup_scr_one_eq : (varDiag ⊔ scr 1 : SynRel S) = 1 := by
+theorem cr_fixpoint : (varDiag ⊔ scr 1 : SynRel S) = 1 := by
   ext Γ t s
   constructor
   · intro h
@@ -425,7 +425,7 @@ theorem varDiag_sup_scr_one_eq : (varDiag ⊔ scr 1 : SynRel S) = 1 := by
 
 /-- Structural induction: `Δη ⊔ tilde φ ≤ φ → 1 ≤ φ`. Proof is literal
 `induction t`. -/
-theorem one_le_of_scr_sup_le {φ : SynRel S}
+theorem cr_induction {φ : SynRel S}
     (h : varDiag ⊔ scr φ ≤ φ) : 1 ≤ φ := by
   intro Γ t s (heq : t = s)
   subst heq
@@ -450,7 +450,7 @@ dependent sum `Σ x : Γ, G x`. The disjoint-image injections
 `inj x y := ⟨x, y⟩` absorb into the outer substitution via
 `Tm.subst_ren`, and `ψ`'s renaming closure lifts the per-variable
 witness to the merged context. -/
-theorem subst_assoc (φ ψ χ : SynRel S) :
+theorem subst_associativity (φ ψ χ : SynRel S) :
     subst (subst φ ψ) χ = subst φ (subst ψ χ) := by
   ext Δ u v
   constructor
@@ -491,7 +491,7 @@ per-variable middle terms `μ x` from the pointwise `(ψ * ψ')` witness;
 the middle term of the outer composite is then `w.subst μ`. Reads as an
 inequality because the RHS decomposes independently on each side of the
 outer composition (see (D-C6)). -/
-theorem subst_mul_le (φ φ' ψ ψ' : SynRel S) :
+theorem subst_compositionality_oplax (φ φ' ψ ψ' : SynRel S) :
     subst (φ * φ') (ψ * ψ') ≤ subst φ ψ * subst φ' ψ' := by
   intro Δ u v h
   obtain ⟨Γ, t, s, τ, σ, rfl, rfl, ⟨w, hφ, hφ'⟩, hpsi⟩ := h
@@ -539,19 +539,19 @@ def j : SynRel S := {
   Iff.rfl
 
 /-- `j ≤ 1`: co-reflexive. The equality conjunct in `j` is exactly `1`. -/
-theorem j_le_one : (j : SynRel S) ≤ 1 := by
+theorem j_coreflexivity : (j : SynRel S) ≤ 1 := by
   intro Γ t s h
   exact h.1
 
 /-- `jᵒ ≤ j`: symmetric. From `s = t` we get `t = s`, and the
 closed-witness transports. -/
-theorem j_converse_le : (j : SynRel S)ᵒ ≤ j := by
+theorem j_symmetry : (j : SynRel S)ᵒ ≤ j := by
   intro Γ t s h
   obtain ⟨hst, t₀, hs⟩ := h
   exact ⟨hst.symm, t₀, hst.symm.trans hs⟩
 
 /-- `j ≤ j * j`: co-transitive. Take the middle term to be `t` itself. -/
-theorem j_le_mul_self : (j : SynRel S) ≤ j * j := by
+theorem j_cotransitivity : (j : SynRel S) ≤ j * j := by
   intro Γ t s h
   refine ⟨t, ⟨rfl, ?_⟩, h⟩
   obtain ⟨_, t₀, ht⟩ := h
@@ -563,7 +563,7 @@ forces it to be a weakened closed term — but a variable in an arbitrary
 context is not the image of any closed term under `Empty.elim` (a closed
 `Tm.var y` requires `y : Empty`, impossible; a closed `Tm.node` renames
 to a `Tm.node`, not a `Tm.var`). -/
-theorem j_mul_varDiag_le_bot : (j : SynRel S) * varDiag ≤ ⊥ := by
+theorem j_varDiag_orthogonality : (j : SynRel S) * varDiag ≤ ⊥ := by
   intro Γ t v h
   obtain ⟨u, ⟨htu, t₀, hcls⟩, ⟨x, huvar, _⟩⟩ := h
   subst htu
@@ -649,27 +649,27 @@ instance instSRA : SRA (SynRel S) where
   varDiag := SynRel.varDiag
   scr := SynRel.scr
   subst := SynRel.subst
-  varDiag_converse_le := SynRel.varDiag_converse_le
-  varDiag_le_mul_self := SynRel.varDiag_le_mul_self
-  scr_mono := fun _ _ h => SynRel.scr_mono h
-  scr_mul := SynRel.scr_mul
-  scr_converse := SynRel.scr_converse
-  varDiag_mul_scr_le_bot := SynRel.varDiag_mul_scr_le_bot
-  subst_mono_right := fun _ _ _ h => SynRel.subst_mono_right h
-  subst_mul_le := SynRel.subst_mul_le
-  subst_converse := SynRel.subst_converse
-  subst_sSup_left := SynRel.subst_sSup_left
-  subst_varDiag_left := SynRel.subst_varDiag_left
-  subst_varDiag_right := SynRel.subst_varDiag_right
-  subst_assoc := SynRel.subst_assoc
-  subst_scr_le := SynRel.subst_scr_le
-  varDiag_sup_scr_one_eq := SynRel.varDiag_sup_scr_one_eq
-  one_le_of_scr_sup_le := fun _ h => SynRel.one_le_of_scr_sup_le h
+  varDiag_symmetry := SynRel.varDiag_symmetry
+  varDiag_cotransitivity := SynRel.varDiag_cotransitivity
+  scr_monotonicity := fun _ _ h => SynRel.scr_monotonicity h
+  scr_compositionality := SynRel.scr_compositionality
+  scr_converse_commutation := SynRel.scr_converse_commutation
+  varDiag_scr_orthogonality := SynRel.varDiag_scr_orthogonality
+  subst_monotonicity_right := fun _ _ _ h => SynRel.subst_monotonicity_right h
+  subst_compositionality_oplax := SynRel.subst_compositionality_oplax
+  subst_converse_commutation := SynRel.subst_converse_commutation
+  subst_join_preservation_left := SynRel.subst_join_preservation_left
+  subst_varDiag_unit_left := SynRel.subst_varDiag_unit_left
+  subst_varDiag_unit_right := SynRel.subst_varDiag_unit_right
+  subst_associativity := SynRel.subst_associativity
+  subst_scr_oplaxity := SynRel.subst_scr_oplaxity
+  cr_fixpoint := SynRel.cr_fixpoint
+  cr_induction := fun _ h => SynRel.cr_induction h
   j := SynRel.j
-  j_le_one := SynRel.j_le_one
-  j_converse_le := SynRel.j_converse_le
-  j_le_mul_self := SynRel.j_le_mul_self
-  j_mul_varDiag_le_bot := SynRel.j_mul_varDiag_le_bot
+  j_coreflexivity := SynRel.j_coreflexivity
+  j_symmetry := SynRel.j_symmetry
+  j_cotransitivity := SynRel.j_cotransitivity
+  j_varDiag_orthogonality := SynRel.j_varDiag_orthogonality
 
 namespace SynRel
 
@@ -772,10 +772,10 @@ end SynRel
 
 end LeanTra.Instances.FirstOrder
 
-#print axioms LeanTra.Instances.FirstOrder.SynRel.subst_varDiag_right
-#print axioms LeanTra.Instances.FirstOrder.SynRel.scr_mul
-#print axioms LeanTra.Instances.FirstOrder.SynRel.subst_assoc
-#print axioms LeanTra.Instances.FirstOrder.SynRel.subst_mul_le
+#print axioms LeanTra.Instances.FirstOrder.SynRel.subst_varDiag_unit_right
+#print axioms LeanTra.Instances.FirstOrder.SynRel.scr_compositionality
+#print axioms LeanTra.Instances.FirstOrder.SynRel.subst_associativity
+#print axioms LeanTra.Instances.FirstOrder.SynRel.subst_compositionality_oplax
 #print axioms LeanTra.Instances.FirstOrder.instSRA
 #print axioms LeanTra.Instances.FirstOrder.SynRel.substBot_mul
 #print axioms LeanTra.Instances.FirstOrder.SynRel.substJClosed

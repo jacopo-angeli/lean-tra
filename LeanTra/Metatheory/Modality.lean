@@ -11,7 +11,7 @@ public import LeanTra.SRA.Derived
 
 Modalities on the *derived* `SRA.box a := SRA.j * a * SRA.j` (see the
 design note in `Structure/SRA.lean`). From the four `j` axioms
-(`j_le_one`, `j_converse_le`, `j_le_mul_self`, `j_mul_varDiag_le_bot`)
+(`j_coreflexivity`, `j_symmetry`, `j_cotransitivity`, `j_varDiag_orthogonality`)
 we discharge, in this order and each unconditionally:
 `j_mul_j`, `j_converse`, `box_eq` (`rfl`), `box_le`, `box_box`,
 `box_mono`, `box_mul_box_eq_box_mul_left`,
@@ -23,7 +23,7 @@ transfer lemma `box_lfp` — all sorry-free.
 
 The old axiom `box_subst_le : subst (box a) b ≤ box a` does NOT
 survive: as documented in the section body, no condition on `j` alone
-yields it through the oplax `subst_mul_le`, and the intended
+yields it through the oplax `subst_compositionality_oplax`, and the intended
 context-indexed model (`Instances/FirstOrder`) exhibits a concrete
 `SynRel` refuting the inequality.
 
@@ -68,25 +68,25 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 `□a := SRA.j * a * SRA.j`, defined in `Structure/SRA.lean` (see the design
 note there for why the old primitive-`□` axiomatisation was replaced). This
 section derives all eleven of the old box laws from the four `j` axioms
-(`j_le_one`, `j_converse_le`, `j_le_mul_self`, `j_mul_varDiag_le_bot`) and
+(`j_coreflexivity`, `j_symmetry`, `j_cotransitivity`, `j_varDiag_orthogonality`) and
 nothing else — no `sorry`, no additional hypothesis. -/
 
-/-- `j * j = j`. `≤` from `j_le_one` (`j*j ≤ 1*j = j`); `≥` is
-`j_le_mul_self`. -/
+/-- `j * j = j`. `≤` from `j_coreflexivity` (`j*j ≤ 1*j = j`); `≥` is
+`j_cotransitivity`. -/
 @[simp]
 theorem j_mul_j : (SRA.j : α) * SRA.j = SRA.j := by
-  refine le_antisymm ?_ SRA.j_le_mul_self
+  refine le_antisymm ?_ SRA.j_cotransitivity
   calc (SRA.j : α) * SRA.j
-      ≤ 1 * SRA.j := mul_le_mul' SRA.j_le_one le_rfl
+      ≤ 1 * SRA.j := mul_le_mul' SRA.j_coreflexivity le_rfl
     _ = SRA.j := one_mul _
 
-/-- `jᵒ = j`: same one-liner as `varDiag_converse`, from `j_converse_le`
+/-- `jᵒ = j`: same one-liner as `varDiag_converse`, from `j_symmetry`
 plus involutivity of converse. -/
 @[simp]
 theorem j_converse : (SRA.j : α)ᵒ = SRA.j := by
-  refine le_antisymm SRA.j_converse_le ?_
+  refine le_antisymm SRA.j_symmetry ?_
   have h : (SRA.j : α)ᵒᵒ ≤ (SRA.j : α)ᵒ :=
-    IsInvolutiveQuantale.converse_monotonicity SRA.j_converse_le
+    IsInvolutiveQuantale.converse_monotonicity SRA.j_symmetry
   rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 /-- The advisor's identity `□T = j * T * j`, held now by `rfl` because
@@ -94,11 +94,11 @@ theorem j_converse : (SRA.j : α)ᵒ = SRA.j := by
 lemma so downstream code can cite it under its familiar name. -/
 theorem box_eq (a : α) : SRA.box a = SRA.j * a * SRA.j := rfl
 
-/-- `□a ≤ a`. Two applications of `j_le_one`. -/
+/-- `□a ≤ a`. Two applications of `j_coreflexivity`. -/
 theorem box_le (a : α) : SRA.box a ≤ a := by
   change SRA.j * a * SRA.j ≤ a
   calc SRA.j * a * SRA.j
-      ≤ 1 * a * 1 := mul_le_mul' (mul_le_mul' SRA.j_le_one le_rfl) SRA.j_le_one
+      ≤ 1 * a * 1 := mul_le_mul' (mul_le_mul' SRA.j_coreflexivity le_rfl) SRA.j_coreflexivity
     _ = a := by rw [one_mul, mul_one]
 
 /-- `□(□a) = □a`. Collapse of the two `j*j` blocks via `j_mul_j`. -/
@@ -169,7 +169,7 @@ theorem box_mul_box_le (a b : α) : SRA.box a * SRA.box b ≤ SRA.box (a * b) :=
         rw [mul_assoc (SRA.j * a) SRA.j b]
     _ ≤ SRA.j * a * (1 * b) * SRA.j :=
         mul_le_mul' (mul_le_mul' le_rfl
-          (mul_le_mul' SRA.j_le_one le_rfl)) le_rfl
+          (mul_le_mul' SRA.j_coreflexivity le_rfl)) le_rfl
     _ = SRA.j * a * b * SRA.j := by rw [one_mul]
     _ = SRA.j * (a * b) * SRA.j := by rw [mul_assoc SRA.j a b]
 
@@ -202,14 +202,14 @@ theorem box_sup (a b : α) : SRA.box (a ⊔ b) = SRA.box a ⊔ SRA.box b := by
   have h := box_sSup ({a, b} : Set α)
   rwa [sSup_pair, Set.image_pair, sSup_pair] at h
 
-/-- `□Δη = ⊥`. From `j_mul_varDiag_le_bot` and `Quantale.bot_mul` (the
+/-- `□Δη = ⊥`. From `j_varDiag_orthogonality` and `Quantale.bot_mul` (the
 quantale fact that `⊥` is a left annihilator, itself a consequence of
 `sSup_mul_distrib` on the empty set). -/
 theorem box_varDiag_eq_bot : SRA.box (SRA.varDiag : α) = ⊥ := by
   change SRA.j * SRA.varDiag * SRA.j = ⊥
   refine le_antisymm ?_ bot_le
   calc SRA.j * SRA.varDiag * SRA.j
-      ≤ (⊥ : α) * SRA.j := mul_le_mul' SRA.j_mul_varDiag_le_bot le_rfl
+      ≤ (⊥ : α) * SRA.j := mul_le_mul' SRA.j_varDiag_orthogonality le_rfl
     _ = ⊥ := Quantale.bot_mul
 
 /-! #### Investigation: the dropped axiom `box_subst_le`
@@ -220,10 +220,10 @@ any condition on `j` alone, and it does **not** hold in the intended
 context-indexed model.
 
 Attempted derivation from `subst j b ≤ j` (the natural "j is
-substitution-closed" axiom): every route through `SRA.subst_mul_le` — which
+substitution-closed" axiom): every route through `SRA.subst_compositionality_oplax` — which
 is oplax, `subst (a * a') (b * b') ≤ subst a b * subst a' b'` — leaks the
 middle `a` factor into a `subst a c` term for some `c ∈ {1, b}` that is
-never bounded above by `a` (only below, via `subst_varDiag_right`
+never bounded above by `a` (only below, via `subst_varDiag_unit_right`
 combined with `varDiag ≤ 1` giving `a ≤ subst a 1`). The final bound one
 obtains is `box (subst a b)`, not `box a`; the two are incomparable in
 general.

@@ -43,7 +43,7 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 into `a` is the same as substituting `1` once. -/
 theorem substOne_substOne (a : α) :
     SRA.subst (SRA.subst a 1) 1 = SRA.subst a 1 := by
-  rw [SRA.subst_assoc, subst_one_one]
+  rw [SRA.subst_associativity, subst_one_one]
 
 /-- `(hat a)[b] ≤ b ⊔ hat (a[b])`: substituting into a compatible refinement
 is bounded by either returning `b` on the variable branch or refining the
@@ -51,8 +51,8 @@ substitution on the strict branch. -/
 theorem cr_subst_le (a b : α) :
     SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
   unfold SRA.cr
-  rw [subst_sup_left, SRA.subst_varDiag_left]
-  exact sup_le_sup_left ((SRA.subst_scr_le _ _).trans le_sup_right) b
+  rw [subst_sup_left, SRA.subst_varDiag_unit_left]
+  exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _).trans le_sup_right) b
 
 /-- Compatibility implies Leibniz: if `hat a ≤ a`, then `1[a] ≤ a`. -/
 theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
@@ -174,7 +174,7 @@ theorem factor_scr_of_isReduction {a : α} (h : IsReduction a) :
   calc a
       = 1 * a := (one_mul _).symm
     _ = (SRA.varDiag ⊔ SRA.scr 1) * a := by
-        rw [SRA.varDiag_sup_scr_one_eq]
+        rw [SRA.cr_fixpoint]
     _ = SRA.varDiag * a ⊔ SRA.scr 1 * a := Quantale.sup_mul_distrib
     _ = ⊥ ⊔ SRA.scr 1 * a := by rw [h']
     _ = SRA.scr 1 * a := bot_sup_eq _
@@ -188,15 +188,15 @@ theorem varDiag_mul_subst_one_eq_bot {a : α} (h : IsReduction a) :
     calc SRA.subst a 1
         = SRA.subst (SRA.scr 1 * a) (1 * 1) := by
             rw [← factor_scr_of_isReduction h, mul_one]
-      _ ≤ SRA.subst (SRA.scr 1) 1 * SRA.subst a 1 := SRA.subst_mul_le _ _ _ _
+      _ ≤ SRA.subst (SRA.scr 1) 1 * SRA.subst a 1 := SRA.subst_compositionality_oplax _ _ _ _
       _ ≤ SRA.scr (SRA.subst 1 1) * SRA.subst a 1 :=
-            mul_le_mul_left (SRA.subst_scr_le _ _) _
+            mul_le_mul_left (SRA.subst_scr_oplaxity _ _) _
       _ = SRA.scr 1 * SRA.subst a 1 := by rw [SRA.subst_one_one]
   calc SRA.varDiag * SRA.subst a 1
       ≤ SRA.varDiag * (SRA.scr 1 * SRA.subst a 1) := mul_le_mul_right key _
     _ = SRA.varDiag * SRA.scr 1 * SRA.subst a 1 := (mul_assoc _ _ _).symm
     _ ≤ ⊥ * SRA.subst a 1 :=
-          mul_le_mul_left (SRA.varDiag_mul_scr_le_bot _) _
+          mul_le_mul_left (SRA.varDiag_scr_orthogonality _) _
     _ = ⊥ := Quantale.bot_mul
 
 /-- Substitutivity of parallel reduction: for a reduction `a`,
@@ -216,11 +216,11 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
         varDiag_mul_subst_one_eq_bot h, sup_bot_eq, ← sup_assoc]
   rw [hrw, SRA.subst_sup_left, SRA.subst_sup_left]
   refine sup_le (sup_le ?_ ?_) ?_
-  · exact le_of_eq (SRA.subst_varDiag_left _)
+  · exact le_of_eq (SRA.subst_varDiag_unit_left _)
   · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
         ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
-          SRA.subst_scr_le _ _
-      _ ≤ SRA.scr (parRed a) := SRA.scr_mono (SRA.subst_le_iff.mpr le_rfl)
+          SRA.subst_scr_oplaxity _ _
+      _ ≤ SRA.scr (parRed a) := SRA.scr_monotonicity (SRA.subst_le_iff.mpr le_rfl)
       _ ≤ SRA.cr (parRed a) := le_sup_right
       _ ≤ parRed a := cr_parRed_le a
   · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1)
@@ -229,17 +229,17 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
             (parRed a * 1) := by rw [mul_one]
       _ ≤ SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
             * SRA.subst (SRA.subst a 1) 1 :=
-            SRA.subst_mul_le _ _ _ _
+            SRA.subst_compositionality_oplax _ _ _ _
       _ = SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
             * SRA.subst a 1 := by
-            rw [SRA.subst_assoc, SRA.subst_one_one]
+            rw [SRA.subst_associativity, SRA.subst_one_one]
       _ ≤ SRA.cr (parRed a) * SRA.subst a 1 := by
           refine mul_le_mul_left ?_ _
           calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
               ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
-                SRA.subst_scr_le _ _
+                SRA.subst_scr_oplaxity _ _
             _ ≤ SRA.scr (parRed a) :=
-                SRA.scr_mono (SRA.subst_le_iff.mpr le_rfl)
+                SRA.scr_monotonicity (SRA.subst_le_iff.mpr le_rfl)
             _ ≤ SRA.cr (parRed a) := le_sup_right
       _ ≤ SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
           mul_le_mul_right le_sup_right _
@@ -253,7 +253,7 @@ theorem parRed_converse (a : α) :
     (parRed a)ᵒ = SRA.opHowe (1 ⊔ SRA.subst aᵒ 1) := by
   unfold parRed
   rw [SRA.howe_converse, IsInvolutiveQuantale.converse_join_preservation_binary,
-      IsInvolutiveQuantale.converse_identity, SRA.subst_converse,
+      IsInvolutiveQuantale.converse_identity, SRA.subst_converse_commutation,
       IsInvolutiveQuantale.converse_identity]
 
 /-- Nesting: `aᵒ[a⇛] ≤ a⇛ * aᵒ[1]`. -/
@@ -261,7 +261,7 @@ theorem nesting (a : α) :
     SRA.subst aᵒ (parRed a) ≤ parRed a * SRA.subst aᵒ 1 := by
   calc SRA.subst aᵒ (parRed a)
       = SRA.subst (1 * aᵒ) (parRed a * 1) := by rw [one_mul, mul_one]
-    _ ≤ SRA.subst 1 (parRed a) * SRA.subst aᵒ 1 := SRA.subst_mul_le _ _ _ _
+    _ ≤ SRA.subst 1 (parRed a) * SRA.subst aᵒ 1 := SRA.subst_compositionality_oplax _ _ _ _
     _ ≤ parRed a * SRA.subst aᵒ 1 :=
         mul_le_mul_left (subst_one_parRed_le a) _
 
@@ -269,7 +269,7 @@ theorem nesting (a : α) :
 
 /-- Converse commutes with base substitution: `(a[1])ᵒ = aᵒ[1]`. -/
 theorem subst_one_converse (a : α) : (SRA.subst a 1)ᵒ = SRA.subst aᵒ 1 := by
-  rw [SRA.subst_converse, IsInvolutiveQuantale.converse_identity]
+  rw [SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_identity]
 
 /-- Converse form of `varDiag_mul_subst_one_eq_bot`: for a reduction `a`,
 `aᵒ[1] * Δη = ⊥`. -/
@@ -296,7 +296,7 @@ theorem co_nesting (a : α) :
     SRA.subst a ((parRed a)ᵒ) ≤ SRA.subst a 1 * (parRed a)ᵒ := by
   calc SRA.subst a ((parRed a)ᵒ)
       = SRA.subst (a * 1) (1 * (parRed a)ᵒ) := by rw [mul_one, one_mul]
-    _ ≤ SRA.subst a 1 * SRA.subst 1 ((parRed a)ᵒ) := SRA.subst_mul_le _ _ _ _
+    _ ≤ SRA.subst a 1 * SRA.subst 1 ((parRed a)ᵒ) := SRA.subst_compositionality_oplax _ _ _ _
     _ ≤ SRA.subst a 1 * (parRed a)ᵒ :=
         mul_le_mul_right (subst_one_parRed_converse_le a) _
 
@@ -335,8 +335,8 @@ theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
   have h2 := horth.2
   have := IsInvolutiveQuantale.converse_monotonicity h2
   rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity,
-      SRA.subst_converse, IsInvolutiveQuantale.converse_involutivity,
-      ← SRA.scr_converse] at this
+      SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_involutivity,
+      ← SRA.scr_converse_commutation] at this
   exact this
 
 /-- Diamond property of parallel reduction: for a reduction `a` satisfying

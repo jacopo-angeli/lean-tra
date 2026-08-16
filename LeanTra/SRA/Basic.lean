@@ -9,93 +9,98 @@ public import LeanTra.Algebra.InvolutiveQuantale
 /-!
 # Syntax Relation Algebras
 
-A `SRA` is the algebraic structure underlying Gavazzo's Term Relation Algebras,
-formalised here over the involutive-quantale base (`IsInvolutiveQuantale`)
-rather than over allegories, the two being equivalent in the one-object case.
+An algebra of relations over an unspecified syntax. The base involutive
+quantale is extended with the three operations that make its elements behave
+like relations *between terms*: a distinguished relation of variables, a way
+to lift a relation one layer of term structure, and a substitution operation.
 
-A `SRA` extends the involutive unital quantale with four data — the variable
-co-equivalence `Δη`, the strict compatible refinement `tilde ·` (a weakly unital
-morphism), relation substitution `·[·]` (an oplax bimorphism), and the closure
-constant `j` (co-reflexive, symmetric, co-transitive) — subject to the axioms
-recalled below. Two derived operations are `def`s, not fields: the compatible
-refinement `hat · := Δη ⊔ tilde ·`, and the closure modality
-`□ a := j * a * j`.
+## Relation to Definition 6 of the reference
 
-## Axioms (fields of the class)
+There a Term Relation Algebra is a locally-complete allegory carrying the same
+operations. The class below has a single carrier, so that allegory is
+one-object, and a one-object locally-complete allegory is an involutive
+quantale satisfying the modular law. That law is the one axiom of the
+reference's base not assumed below; a structure that needs it can require it
+separately.
 
-* `Δη` is a co-equivalence: symmetric, co-transitive, co-reflexive.
-* `tilde ·` weakly unital: monotone, exact on composition and converse, oplax on the
-  unit (`tilde Δ ≤ Δ`).
-* `Δη` and `tilde ·` orthogonal (`Δη ; tilde a ≤ ⊥`).
-* `Δ` is the least fixed point of `hat ·` (fixed-point law + structural induction).
-* `·[·]` oplax bimorphism, strict on converse, join-preserving in the first
-  argument.
-* `(·, Δη, ·[·])` a monoid — recorded as `Prop` fields, NOT as a second `Monoid`
-  instance (which would clash with the composition monoid).
-* `·[·]` distributes over `tilde ·` (`tilde a[b] ≤ tilde (a[b])`).
-* `j` is a *closure constant*: co-reflexive (`j ≤ 1`), symmetric (`jᵒ ≤ j`),
-  and co-transitive (`j ≤ j * j`) — the three co-equivalence axioms already
-  used for `Δη`, applied to `j` instead. Orthogonal to `Δη` on the right
-  (`j * Δη ≤ ⊥`), which is the closure-versus-variable disjointness needed to
-  discharge `□ Δη = ⊥` for the derived `□`.
+The remaining differences have a common shape: what Definition 6 assumes,
+completeness of the lattice supplies.
 
-## Design note — `□` as `j * · * j`
+* It asks the compatible refinement to be ω-cocontinuous. Monotonicity is
+  enough, the fixed points coming from Knaster–Tarski rather than from
+  colimits of ω-chains.
+* It postulates a uniform unique solution of `x = cr x * a`. `SRA.howe` is
+  that least fixed point, and its uniqueness is a theorem
+  (`SRA.howe_unique`).
+* It asks `(·, Δη, ·[·])` to be a *closed* monoid. The monoid laws are axioms
+  below; closedness is not, since `SRA.substResid` is the join of its own
+  candidates and the adjunction follows from join-preservation of substitution
+  in its first argument.
 
-Earlier drafts made `□` a primitive field of `SRA`, with the advisor-supplied
-axioms `box_le`, `box_box`, `box_mono`, `box_mul_box_eq_box_mul_{left,right}`,
-`box_mul_box_le`, `box_varDiag_eq_bot`, `box_subst_le`. In the present
-revision the advisor's own proposal is followed instead: `j` is taken as a
-sub-1 closure constant with just three co-equivalence axioms (plus one
-orthogonality to `Δη`), and `□ a` is *defined* as `j * a * j`. All the box
-laws listed above then become theorems (see `Structure/Derived.lean`), so the
-class drops from `4 (data) + 15 (Δη, scr, subst) + 8 (box)` fields down to
-`4 (data) + 15 + 4 (j)`.
+The class below therefore assumes strictly less than Definition 6. The closure
+constant `j`, and the modality derived from it, have no counterpart there.
 
-The single old box axiom that does **not** derive under `□ := j * · * j` is
-`box_subst_le : subst (box a) b ≤ box a`. As `Structure/Derived.lean`
-documents, no condition on `j` alone yields it through the oplax
-`subst_mul_le`; and the intended context-indexed term model
-(`Instances/FirstOrder`, with `j` the identity on closed terms) exhibits a
-concrete `SynRel a` and a substituent `b` for which the inequality fails. So
-`box_subst_le` is dropped from the class rather than re-axiomatised.
+## The class
 
-`box_varDiag_eq_bot` survives, discharged from `j_mul_varDiag_le_bot` and
-`Quantale.bot_mul`.
+Four data and twenty axioms.
 
-Laws Gavazzo lists but that are derivable — e.g. closedness `·[b] ⊣ b » ·` from
-join-preservation, `Δᵒ = Δ` and join-preservation of `·ᵒ` from the base — are
-NOT fields; they are (or will be) proved in `Derived.lean`.
+The variable relation `Δη` is a co-equivalence: symmetric and co-transitive
+(2 axioms). The strict compatible refinement `tilde ·` is a weakly unital
+morphism: monotone, exact on composition and on converse (3), and disjoint
+from `Δη`, since a variable is never a compound term (1). Substitution `·[·]`
+is an oplax bimorphism, strict on converse, join-preserving on the left, with
+`Δη` as two-sided unit, associative, and oplax over `tilde ·` (8). Two further
+axioms make `Δ` the least fixed point of the compatible refinement — the
+fixed-point equation and structural induction — which is what lets proofs
+about all terms run by induction on term structure (2). The closure constant
+`j` is co-reflexive, symmetric, co-transitive, and orthogonal to `Δη` (4).
 
-## Source symbol ↔ Lean name
+The unit and associativity of substitution are recorded as `Prop` fields
+rather than a second `Monoid` instance, which would clash with the one
+carrying composition.
 
-The code is deliberately name-based: paper symbols are used in the thesis text
-only, not in the sources. Two of the source's diacritics — a widetilde over the
-argument and an overline that is drawn as a rule and vanishes from text
-extraction — proved unreliable to transcribe, so all SRA operations are
-referred to by their identifiers.
+## Derived operations
 
-| Source symbol | Lean name                                 |
-|---------------|-------------------------------------------|
-| `Δη`          | `SRA.varDiag`                             |
-| tilde         | `SRA.scr`                                 |
-| hat           | `SRA.cr`                                  |
-| `a[b]`        | `SRA.subst a b`                           |
-| `·ᴴ`          | `SRA.howe`                                |
-| `·§`          | `SRA.opHowe`                              |
-| `b » c`       | `SRA.substResid b c`                      |
-| `j` (`□Δ`)    | `SRA.j` (primitive field)                 |
-| `□a`          | `SRA.box a` (`:= SRA.j * a * SRA.j`)      |
-| `♦a`          | `SRA.dia a` (right adjoint of `SRA.box`)  |
+Two operations are `def`s below rather than fields, because their laws follow
+from the axioms above:
 
-Only the base-level involutive-quantale notations (`·ᵒ` for converse, `⇨ₗ` /
-`⇨ᵣ` for the composition residuals, `·∗` for the Kleene star) remain scoped;
-they are unambiguous and belong to Mathlib-style prose.
+* `cr a := Δη ⊔ tilde a`, the compatible refinement — the strict one, widened
+  to hold on variables;
+* `box a := j * a * j`, the closure modality — the pairs of `a` whose two
+  endpoints are closed. Its laws are theorems in `SRA/Derived.lean`.
+
+One law of `box` does not follow: `subst (box a) b ≤ box a`. No condition on
+`j` alone yields it through the oplax `subst_compositionality_oplax`, and the first-order term
+model of `Instances/FirstOrder`, where `j` is the identity on closed terms,
+exhibits a relation and a substituent for which it fails. It is therefore
+absent from the class rather than assumed.
+
+## Naming
+
+Identifiers are used throughout in place of the reference's symbols, which
+appear in the thesis text only. The table below covers the whole `SRA` layer,
+not just this file.
+
+| Reference symbol | Lean name                              |
+|------------------|----------------------------------------|
+| `Δη`             | `SRA.varDiag`                          |
+| tilde            | `SRA.scr`                              |
+| hat              | `SRA.cr`                               |
+| `a[b]`           | `SRA.subst a b`                        |
+| `·ᴴ`             | `SRA.howe`                             |
+| `·§`             | `SRA.opHowe`                           |
+| `b » c`          | `SRA.substResid b c`                   |
+| `j` (`□Δ`)       | `SRA.j`                                |
+| `□a`             | `SRA.box a`                            |
+| `♦a`             | `SRA.dia a`                            |
+
+The notations in scope are those of the algebraic base: `·ᵒ` for converse and
+`⇨ₗ`, `⇨ᵣ` for the composition residuals.
 
 ## References
 
 * Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.*
-  LICS 2026. (Presented there over allegories; the involutive-quantale
-  presentation used here is equivalent in the one-object case.)
+  LICS 2026.
 -/
 @[expose] public section
 
@@ -126,60 +131,60 @@ class SRA (α : Type u)
   subst : α → α → α
   /-- `Δη` is symmetric: swapping the endpoints of a variable-to-variable
   relation stays within the variable relation. -/
-  protected varDiag_converse_le : varDiagᵒ ≤ varDiag
+  protected varDiag_symmetry : varDiagᵒ ≤ varDiag
   /-- `Δη` is co-transitive: two variables related through an intermediate
   variable are related directly. -/
-  protected varDiag_le_mul_self : varDiag ≤ varDiag * varDiag
+  protected varDiag_cotransitivity : varDiag ≤ varDiag * varDiag
   /-- `tilde ·` is monotone: refining the argument refines its strict compatible
   refinement. -/
-  protected scr_mono ⦃a b : α⦄ : a ≤ b → scr a ≤ scr b
+  protected scr_monotonicity ⦃a b : α⦄ : a ≤ b → scr a ≤ scr b
   /-- `tilde ·` preserves composition: relating two terms via a composite of
   sub-term relations is the same as composing their strict refinements. -/
-  protected scr_mul (a b : α) : scr (a * b) = scr a * scr b
+  protected scr_compositionality (a b : α) : scr (a * b) = scr a * scr b
   /-- `tilde ·` preserves converse: turning the sub-term relation around commutes
   with taking the strict compatible refinement. -/
-  protected scr_converse (a : α) : scr (aᵒ) = (scr a)ᵒ
+  protected scr_converse_commutation (a : α) : scr (aᵒ) = (scr a)ᵒ
   /-- Variables and compound terms are disjoint: a variable is never a term
   built from an outermost operator, so `Δη` and `tilde ·` cannot both hold. -/
-  protected varDiag_mul_scr_le_bot (a : α) : varDiag * scr a ≤ ⊥
+  protected varDiag_scr_orthogonality (a : α) : varDiag * scr a ≤ ⊥
   /-- Substitution is monotone in the second argument: refining the
   substituent refines the result. Left-argument monotonicity follows from
-  join-preservation in the first argument (`subst_sSup_left`). -/
-  protected subst_mono_right ⦃a b b' : α⦄ : b ≤ b' → subst a b ≤ subst a b'
+  join-preservation in the first argument (`subst_join_preservation_left`). -/
+  protected subst_monotonicity_right ⦃a b b' : α⦄ : b ≤ b' → subst a b ≤ subst a b'
   /-- Substitution is oplax on composition in both arguments: substituting a
   composite is refined by composing the substitutions of its parts. -/
-  protected subst_mul_le (a a' b b' : α) :
+  protected subst_compositionality_oplax (a a' b b' : α) :
       subst (a * a') (b * b') ≤ subst a b * subst a' b'
   /-- Substitution commutes with converse: swapping the endpoints of a
   substitution is the substitution of the swapped relations. -/
-  protected subst_converse (a b : α) : (subst a b)ᵒ = subst (aᵒ) (bᵒ)
+  protected subst_converse_commutation (a b : α) : (subst a b)ᵒ = subst (aᵒ) (bᵒ)
   /-- Substitution preserves arbitrary joins in the first argument:
   substituting into a join of relations is the join of the substituted
   relations. -/
-  protected subst_sSup_left (s : Set α) (b : α) :
+  protected subst_join_preservation_left (s : Set α) (b : α) :
       subst (sSup s) b = sSup ((fun a => subst a b) '' s)
   /-- `Δη` is a left unit for substitution: substituting into the variable
   relation is the identity. -/
-  protected subst_varDiag_left (a : α) : subst varDiag a = a
+  protected subst_varDiag_unit_left (a : α) : subst varDiag a = a
   /-- `Δη` is a right unit for substitution: substituting variables for
   variables changes nothing. -/
-  protected subst_varDiag_right (a : α) : subst a varDiag = a
+  protected subst_varDiag_unit_right (a : α) : subst a varDiag = a
   /-- Substitution is associative: substituting into a substitution is the
   same as substituting once with the composed substitution. -/
-  protected subst_assoc (a b c : α) : subst (subst a b) c = subst a (subst b c)
+  protected subst_associativity (a b c : α) : subst (subst a b) c = subst a (subst b c)
   /-- Substitution is compatible with term structure: substituting into a
   strict compatible refinement refines the strict refinement of the
   substitution. -/
-  protected subst_scr_le (a b : α) : subst (scr a) b ≤ scr (subst a b)
+  protected subst_scr_oplaxity (a b : α) : subst (scr a) b ≤ scr (subst a b)
   /-- Fixed-point law for `hat ·`: the identity is a fixed point of compatible
   refinement, i.e. any term equals itself either as a variable or by having
   pairwise equal sub-terms. Inlined as `Δη ⊔ tilde 1 = 1` since `hat ·` is defined
   after the class. -/
-  protected varDiag_sup_scr_one_eq : varDiag ⊔ scr 1 = 1
+  protected cr_fixpoint : varDiag ⊔ scr 1 = 1
   /-- Structural induction: the identity is the *least* fixed point of `hat ·`,
   so any relation stable under compatible refinement contains the identity.
   Inlined as `Δη ⊔ tilde a ≤ a → 1 ≤ a` since `hat ·` is defined after the class. -/
-  protected one_le_of_scr_sup_le ⦃a : α⦄ : varDiag ⊔ scr a ≤ a → 1 ≤ a
+  protected cr_induction ⦃a : α⦄ : varDiag ⊔ scr a ≤ a → 1 ≤ a
 
 
   /-- The closure constant `j`: informally the identity restricted to closed
@@ -191,19 +196,19 @@ class SRA (α : Type u)
   /-- `j` is co-reflexive: `j ≤ 1`. Mirrors `varDiag_le_one` — but `varDiag`
   is not co-reflexive by axiom, only in the `Δη ⊔ tilde ·` decomposition; here
   `j ≤ 1` is a genuine axiom. -/
-  protected j_le_one : j ≤ 1
+  protected j_coreflexivity : j ≤ 1
   /-- `j` is symmetric: `jᵒ ≤ j`. The full equality `jᵒ = j` is derived in
-  `Structure/Derived.lean` by the same one-line involution argument as
+  `SRA/Derived.lean` by the same one-line involution argument as
   `varDiag_converse`. -/
-  protected j_converse_le : jᵒ ≤ j
+  protected j_symmetry : jᵒ ≤ j
   /-- `j` is co-transitive: `j ≤ j * j`. Together with the co-reflexivity
   `j ≤ 1` it forces the reverse `j * j ≤ j` (since `j * j ≤ 1 * j = j`), so
-  the equality `j * j = j` holds — see `Structure/Derived.lean`. -/
-  protected j_le_mul_self : j ≤ j * j
+  the equality `j * j = j` holds — see `SRA/Derived.lean`. -/
+  protected j_cotransitivity : j ≤ j * j
   /-- `j` and `Δη` are orthogonal on the right: `j * Δη ≤ ⊥`. Mirrors the
-  existing `varDiag_mul_scr_le_bot`. Its role is to discharge the derived
+  existing `varDiag_scr_orthogonality`. Its role is to discharge the derived
   `box_varDiag_eq_bot : box Δη = ⊥`, via `j * Δη * j ≤ ⊥ * j = ⊥`. -/
-  protected j_mul_varDiag_le_bot : j * varDiag ≤ ⊥
+  protected j_varDiag_orthogonality : j * varDiag ≤ ⊥
 
 namespace SRA
 
@@ -221,5 +226,10 @@ def cr (a : α) : α := varDiag ⊔ scr a
 docstring's design note). Reads as "the pairs of `a` whose two endpoints are
 closed", with `j` the closure constant. -/
 def box (a : α) : α := SRA.j * a * SRA.j
+
+scoped prefix:max "~" => SRA.scr
+scoped prefix:max "⌃" => SRA.cr
+scoped prefix:max "□" => SRA.box
+scoped notation:max a "⟦" b "⟧" => SRA.subst a b
 
 end SRA

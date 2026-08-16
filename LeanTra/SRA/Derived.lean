@@ -18,11 +18,11 @@ Grown across four passes, whose scope is reflected in the Contents list below.
 * Laws recovered from the three axioms removed as redundant when `SRA` was
   minimised: `varDiag_le_one`, `scr_one_le`, `subst_mono_left`, plus the full
   two-argument `subst_mono` combining the recovered left monotonicity with
-  the axiom `subst_mono_right`.
+  the axiom `subst_monotonicity_right`.
 * Basic laws of the derived operation `hat ·`: monotonicity, restatement of the
   fixed-point axiom (`cr_one`, `one_le_of_cr_le`), multiplicativity
   `cr a * cr b = cr (a * b)`, and converse `(cr a)ᵒ = cr (aᵒ)`.
-* Two immediate consequences of `subst_sSup_left`: `subst ⊥ b = ⊥` and
+* Two immediate consequences of `subst_join_preservation_left`: `subst ⊥ b = ⊥` and
   `subst (a ⊔ a') b = subst a b ⊔ subst a' b`.
 * The Howe extension `·ᴴ` as the least solution of `x = cr x * a`
   (Knaster–Tarski via `OrderHom.lfp`), together with its fixed-point law,
@@ -70,18 +70,18 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 
 /-- `Δη ≤ 1`: the variable co-equivalence is co-reflexive. -/
 theorem varDiag_le_one : (SRA.varDiag : α) ≤ 1 :=
-  le_sup_left.trans_eq SRA.varDiag_sup_scr_one_eq
+  le_sup_left.trans_eq SRA.cr_fixpoint
 
 /-- `tilde 1 ≤ 1`: the strict compatible refinement is oplax on the unit. -/
 theorem scr_one_le : SRA.scr (1 : α) ≤ 1 :=
-  le_sup_right.trans_eq SRA.varDiag_sup_scr_one_eq
+  le_sup_right.trans_eq SRA.cr_fixpoint
 
 /-- Left-argument monotonicity of substitution. -/
 theorem subst_mono_left ⦃a a' b : α⦄ (h : a ≤ a') :
     SRA.subst a b ≤ SRA.subst a' b := by
   have key : SRA.subst (sSup ({a, a'} : Set α)) b
       = sSup ((fun x => SRA.subst x b) '' ({a, a'} : Set α)) :=
-    SRA.subst_sSup_left _ _
+    SRA.subst_join_preservation_left _ _
   rw [sSup_pair, Set.image_pair, sSup_pair, sup_eq_right.mpr h] at key
   have hle : SRA.subst a b ≤ SRA.subst a b ⊔ SRA.subst a' b := le_sup_left
   rw [← key] at hle
@@ -90,7 +90,7 @@ theorem subst_mono_left ⦃a a' b : α⦄ (h : a ≤ a') :
 /-- Full two-argument monotonicity of substitution. -/
 theorem subst_mono ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') :
     SRA.subst a b ≤ SRA.subst a' b' :=
-  (subst_mono_left ha).trans (SRA.subst_mono_right hb)
+  (subst_mono_left ha).trans (SRA.subst_monotonicity_right hb)
 
 /-! ### Symmetry of Δη -/
 
@@ -98,24 +98,24 @@ theorem subst_mono ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') :
 just oplaxly. -/
 @[simp]
 theorem varDiag_converse : (SRA.varDiag : α)ᵒ = SRA.varDiag := by
-  refine le_antisymm SRA.varDiag_converse_le ?_
+  refine le_antisymm SRA.varDiag_symmetry ?_
   have h : (SRA.varDiag : α)ᵒᵒ ≤ SRA.varDiagᵒ :=
-    IsInvolutiveQuantale.converse_monotonicity SRA.varDiag_converse_le
+    IsInvolutiveQuantale.converse_monotonicity SRA.varDiag_symmetry
   rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 /-! ### Basic laws of compatible refinement -/
 
 /-- `hat ·` is monotone. -/
 theorem cr_mono ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b :=
-  sup_le_sup_left (SRA.scr_mono h) _
+  sup_le_sup_left (SRA.scr_monotonicity h) _
 
 /-- Fixed-point law for `hat ·`: `hat 1 = 1`. -/
 @[simp]
-theorem cr_one : cr (1 : α) = 1 := SRA.varDiag_sup_scr_one_eq
+theorem cr_one : cr (1 : α) = 1 := SRA.cr_fixpoint
 
 /-- Structural induction: `1` is the least pre-fixed point of `hat ·`. -/
 theorem one_le_of_cr_le ⦃a : α⦄ (h : cr a ≤ a) : 1 ≤ a :=
-  SRA.one_le_of_scr_sup_le h
+  SRA.cr_induction h
 
 /-! ### Orthogonality on the right -/
 
@@ -125,8 +125,8 @@ theorem scr_mul_varDiag_le_bot (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
   rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
       IsInvolutiveQuantale.converse_bot_strictness,
       IsInvolutiveQuantale.converse_compositionality,
-      ← SRA.scr_converse, varDiag_converse]
-  exact SRA.varDiag_mul_scr_le_bot _
+      ← SRA.scr_converse_commutation, varDiag_converse]
+  exact SRA.varDiag_scr_orthogonality _
 
 /-! ### Multiplicativity of Δη and `hat ·` -/
 
@@ -134,7 +134,7 @@ theorem scr_mul_varDiag_le_bot (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
 composition. -/
 @[simp]
 theorem varDiag_mul_self : (SRA.varDiag : α) * SRA.varDiag = SRA.varDiag := by
-  refine le_antisymm ?_ SRA.varDiag_le_mul_self
+  refine le_antisymm ?_ SRA.varDiag_cotransitivity
   calc (SRA.varDiag : α) * SRA.varDiag
       ≤ 1 * SRA.varDiag := mul_le_mul' varDiag_le_one le_rfl
     _ = SRA.varDiag := one_mul _
@@ -147,33 +147,33 @@ theorem cr_mul (a b : α) : cr a * cr b = cr (a * b) := by
   refine le_antisymm ?_ ?_
   · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)
     · exact le_sup_of_le_left varDiag_mul_self.le
-    · exact (SRA.varDiag_mul_scr_le_bot b).trans bot_le
+    · exact (SRA.varDiag_scr_orthogonality b).trans bot_le
     · exact (scr_mul_varDiag_le_bot a).trans bot_le
-    · rw [SRA.scr_mul]; exact le_sup_right
+    · rw [SRA.scr_compositionality]; exact le_sup_right
   · refine sup_le ?_ ?_
-    · exact le_sup_of_le_left (le_sup_of_le_left SRA.varDiag_le_mul_self)
-    · rw [SRA.scr_mul]
+    · exact le_sup_of_le_left (le_sup_of_le_left SRA.varDiag_cotransitivity)
+    · rw [SRA.scr_compositionality]
       exact le_sup_of_le_right (le_sup_of_le_right le_rfl)
 
 /-- `hat ·` commutes with converse: `(hat a)ᵒ = hat (aᵒ)`. -/
 @[simp]
 theorem cr_converse (a : α) : (cr a)ᵒ = cr (aᵒ) := by
   unfold cr
-  rw [IsInvolutiveQuantale.converse_join_preservation_binary, varDiag_converse, ← SRA.scr_converse]
+  rw [IsInvolutiveQuantale.converse_join_preservation_binary, varDiag_converse, ← SRA.scr_converse_commutation]
 
 /-! ### Substitution laws from join-preservation -/
 
 /-- Substitution annihilates `⊥` on the left: `subst ⊥ b = ⊥`. -/
 @[simp]
 theorem subst_bot_left (b : α) : SRA.subst ⊥ b = ⊥ := by
-  have h := SRA.subst_sSup_left (∅ : Set α) b
+  have h := SRA.subst_join_preservation_left (∅ : Set α) b
   simp only [Set.image_empty, sSup_empty] at h
   exact h
 
 /-- Substitution preserves binary joins in the first argument. -/
 theorem subst_sup_left (a a' b : α) :
     SRA.subst (a ⊔ a') b = SRA.subst a b ⊔ SRA.subst a' b := by
-  have h := SRA.subst_sSup_left ({a, a'} : Set α) b
+  have h := SRA.subst_join_preservation_left ({a, a'} : Set α) b
   simp only [sSup_pair, Set.image_pair] at h
   exact h
 
@@ -263,7 +263,7 @@ theorem subst_le_iff {a b c : α} : SRA.subst a b ≤ c ↔ a ≤ substResid b c
   calc SRA.subst a b
       ≤ SRA.subst (substResid b c) b := subst_mono_left h
     _ = sSup ((fun x => SRA.subst x b) '' {x | SRA.subst x b ≤ c}) :=
-        SRA.subst_sSup_left _ _
+        SRA.subst_join_preservation_left _ _
     _ ≤ c := by
         refine sSup_le ?_
         rintro _ ⟨y, hy, rfl⟩
@@ -275,14 +275,14 @@ theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
   · refine subst_le_iff.mpr ?_
     refine one_le_of_cr_le ?_
     refine sup_le ?_ ?_
-    · exact subst_le_iff.mp (by rw [SRA.subst_varDiag_left])
+    · exact subst_le_iff.mp (by rw [SRA.subst_varDiag_unit_left])
     · refine subst_le_iff.mp ?_
       calc SRA.subst (SRA.scr (SRA.substResid (1 : α) 1)) 1
-          ≤ SRA.scr (SRA.subst (SRA.substResid (1 : α) 1) 1) := SRA.subst_scr_le _ _
-        _ ≤ SRA.scr 1 := SRA.scr_mono (subst_le_iff.mpr le_rfl)
+          ≤ SRA.scr (SRA.subst (SRA.substResid (1 : α) 1) 1) := SRA.subst_scr_oplaxity _ _
+        _ ≤ SRA.scr 1 := SRA.scr_monotonicity (subst_le_iff.mpr le_rfl)
         _ ≤ 1 := scr_one_le
   · calc (1 : α)
-        = SRA.subst SRA.varDiag 1 := (SRA.subst_varDiag_left 1).symm
+        = SRA.subst SRA.varDiag 1 := (SRA.subst_varDiag_unit_left 1).symm
       _ ≤ SRA.subst 1 1 := subst_mono_left varDiag_le_one
 
 /-! ## Experiments — advisor's substitution-side suggestions
@@ -300,7 +300,7 @@ theorem j_mul_varDiag_le_meet :
     SRA.j * (SRA.varDiag : α) ≤ SRA.varDiag ⊓ SRA.j := by
   refine le_inf ?_ ?_
   · calc SRA.j * SRA.varDiag
-        ≤ 1 * SRA.varDiag := mul_le_mul' SRA.j_le_one le_rfl
+        ≤ 1 * SRA.varDiag := mul_le_mul' SRA.j_coreflexivity le_rfl
       _ = SRA.varDiag := one_mul _
   · calc SRA.j * SRA.varDiag
         ≤ SRA.j * 1 := mul_le_mul' le_rfl varDiag_le_one
@@ -308,7 +308,7 @@ theorem j_mul_varDiag_le_meet :
 
 /-- Meet form implies multiplicative form: `varDiag ⊓ j ≤ ⊥` gives
 `j * varDiag ≤ ⊥`. -/
-theorem j_mul_varDiag_le_bot_of_meet
+theorem j_varDiag_orthogonality_of_meet
     (h : (SRA.varDiag : α) ⊓ SRA.j ≤ ⊥) :
     SRA.j * (SRA.varDiag : α) ≤ ⊥ :=
   j_mul_varDiag_le_meet.trans h
@@ -317,12 +317,12 @@ theorem j_mul_varDiag_le_bot_of_meet
 See `docs/modality-experiments.md#experiment-2`. -/
 
 /-- If `∀ T, subst j T = ⊥` then `j = ⊥`: instantiate at
-`T := varDiag` and apply `subst_varDiag_right`. Hypothesis-carrying
+`T := varDiag` and apply `subst_varDiag_unit_right`. Hypothesis-carrying
 theorem, NOT a class axiom. -/
 theorem j_eq_bot_of_subst_j_eq_bot
     (h : ∀ T : α, SRA.subst SRA.j T = ⊥) : (SRA.j : α) = ⊥ := by
   have := h SRA.varDiag
-  rwa [SRA.subst_varDiag_right] at this
+  rwa [SRA.subst_varDiag_unit_right] at this
 
 /-! ### Experiment 3′ — `j[T] = j` (`SubstJEqJ`, advisor's corrected form).
 See `docs/modality-experiments.md#experiment-3-1`; term-model

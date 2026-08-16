@@ -88,8 +88,8 @@ theorem confluence_local {a : α}
   -- is what allows a condition stated on the rule to be applied to the
   -- summand that actually occurs in the fixed points of `a⇛` and `(a⇛)ᵒ`.
   have hN1 : a ≤ SRA.subst a 1 := by
-    calc a = SRA.subst a SRA.varDiag := (SRA.subst_varDiag_right a).symm
-      _ ≤ SRA.subst a 1 := SRA.subst_mono_right SRA.varDiag_le_one
+    calc a = SRA.subst a SRA.varDiag := (SRA.subst_varDiag_unit_right a).symm
+      _ ≤ SRA.subst a 1 := SRA.subst_monotonicity_right SRA.varDiag_le_one
   have hN2 : SRA.subst a 1 = a := le_antisymm h2 hN1
   have hN3 : ∀ t u : α, SRA.scr t * SRA.cr u = SRA.scr t * SRA.scr u := by
     intro t u
@@ -108,12 +108,12 @@ theorem confluence_local {a : α}
     have hL : SRA.scr b * a ≤ a * SRA.subst b b := h
     have hc := IsInvolutiveQuantale.converse_monotonicity hL
     rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_compositionality,
-        ← SRA.scr_converse, SRA.subst_converse] at hc
+        ← SRA.scr_converse_commutation, SRA.subst_converse_commutation] at hc
     exact hc
   have hN6 : SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
     have hL := parRed_subst_le h1
     have hc := IsInvolutiveQuantale.converse_monotonicity hL
-    rw [SRA.subst_converse] at hc
+    rw [SRA.subst_converse_commutation] at hc
     exact hc
   -- The diamond as a post-fixed point
   --
@@ -125,7 +125,7 @@ theorem confluence_local {a : α}
   -- facts below record that behaviour.
   have hP1 : SRA.scr (parRed a * (parRed a)ᵒ)
            = SRA.scr (parRed a) * SRA.scr ((parRed a)ᵒ) :=
-    SRA.scr_mul _ _
+    SRA.scr_compositionality _ _
   have hP2 : (parRed a * (parRed a)ᵒ)ᵒ = parRed a * (parRed a)ᵒ := by
     rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity]
   have hP3 : SRA.scr (parRed a * (parRed a)ᵒ) ≤ parRed a * (parRed a)ᵒ := by
@@ -177,7 +177,7 @@ theorem confluence_local {a : α}
           refine mul_le_mul' le_rfl ?_
           rw [OperationalDecomposition.cocartesian_decomposition]
           exact le_sup_left
-      _ ≤ ⊥ := SRA.varDiag_mul_scr_le_bot _
+      _ ≤ ⊥ := SRA.varDiag_scr_orthogonality _
   have hL3 : ∀ x : α,
       SRA.cr x * (introductionCoreflexive : α) ≤ introduction x := by
     intro x
@@ -318,7 +318,7 @@ theorem confluence_local {a : α}
             ≤ parRed a * (parRed a)ᵒ := by
     have hconv := IsInvolutiveQuantale.converse_monotonicity hL12
     rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity,
-        ← SRA.scr_converse, hP2] at hconv
+        ← SRA.scr_converse_commutation, hP2] at hconv
     exact hconv
   -- The two branches of the inductive step
   --
@@ -350,9 +350,9 @@ theorem confluence_local {a : α}
       _ = aᵒ * (SRA.scr Y * SRA.cr (parRed a)) * (a ⊔ 1) := by
           simp only [mul_assoc]
       _ = aᵒ * (SRA.scr Y * SRA.scr (parRed a)) * (a ⊔ 1) := by rw [hN3]
-      _ = aᵒ * SRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← SRA.scr_mul]
+      _ = aᵒ * SRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← SRA.scr_compositionality]
       _ ≤ aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * (a ⊔ 1) :=
-          mul_le_mul' (mul_le_mul' le_rfl (SRA.scr_mono counit)) le_rfl
+          mul_le_mul' (mul_le_mul' le_rfl (SRA.scr_monotonicity counit)) le_rfl
       _ = aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * a
             ⊔ aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * 1 := by
           rw [Quantale.mul_sup_distrib]
@@ -377,9 +377,9 @@ theorem confluence_local {a : α}
             conv_lhs => rw [hpar]
         _ = (SRA.scr Y * SRA.cr (parRed a)) * (a ⊔ 1) := by simp only [mul_assoc]
         _ = (SRA.scr Y * SRA.scr (parRed a)) * (a ⊔ 1) := by rw [hN3]
-        _ = SRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← SRA.scr_mul]
+        _ = SRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← SRA.scr_compositionality]
         _ ≤ SRA.scr (parRed a * (parRed a)ᵒ) * (a ⊔ 1) :=
-            mul_le_mul' (SRA.scr_mono counit) le_rfl
+            mul_le_mul' (SRA.scr_monotonicity counit) le_rfl
         _ = SRA.scr (parRed a * (parRed a)ᵒ) * a
               ⊔ SRA.scr (parRed a * (parRed a)ᵒ) * 1 := by
             rw [Quantale.mul_sup_distrib]
