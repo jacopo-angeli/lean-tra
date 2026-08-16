@@ -4,7 +4,8 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Derived
+public import LeanTra.SRA.Basic
+public import Mathlib.Order.FixedPoints
 
 /-!
 # Modalities on Syntax Relation Algebras
@@ -80,7 +81,7 @@ theorem j_mul_j : (SRA.j : α) * SRA.j = SRA.j := by
       ≤ 1 * SRA.j := mul_le_mul' SRA.j_coreflexivity le_rfl
     _ = SRA.j := one_mul _
 
-/-- `jᵒ = j`: same one-liner as `varDiag_converse`, from `j_symmetry`
+/-- `jᵒ = j`: same one-liner as `varDiag_symmetry_eq`, from `j_symmetry`
 plus involutivity of converse. -/
 @[simp]
 theorem j_converse : (SRA.j : α)ᵒ = SRA.j := by

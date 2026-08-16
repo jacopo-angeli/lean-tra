@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Derived
+public import LeanTra.SRA.Basic
 public import LeanTra.Metatheory.Modality
 
 /-!
