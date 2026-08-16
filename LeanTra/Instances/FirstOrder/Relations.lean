@@ -72,8 +72,8 @@ an `SRA` theorem justifying per-context composition — that direction
 is in fact REFUTED in the term model
 (`LeanTra.Instances.FirstOrder.SynRel.not_box_mul_le_mul_box`) and no
 longer a valid citation. Only the lax half
-`box_mul_box_le : □R * □S ≤ □(R * S)` survives; see the
-"Status — open items" section of `Structure/Derived.lean`.
+`box_compositionality_lax : □R * □S ≤ □(R * S)` survives; see the
+"Open questions" section of `SRA/Modality.lean`.
 
 ### (D-B3) Pointwise `sSup` / `sInf`
 

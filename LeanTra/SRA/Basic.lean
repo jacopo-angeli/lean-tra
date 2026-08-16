@@ -219,16 +219,16 @@ class SRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvo
   consequence of the fixed-point law, this is assumed outright: nothing
   else in the class constrains `j` from above. -/
   protected j_coreflexivity : j ≤ 1
-  /-- `j` is symmetric: `jᵒ ≤ j`. The full equality `jᵒ = j` is derived in
-  `Metatheory/Modality.lean` (`j_converse`) by the same one-line involution
-  argument as `varDiag_symmetry_eq` below. -/
+  /-- `j` is symmetric: `jᵒ ≤ j`. The full equality `jᵒ = j` is derived
+  below (`j_symmetry_eq`) by the same one-line involution argument as
+  `varDiag_symmetry_eq`. -/
   protected j_symmetry : jᵒ ≤ j
   /-- `j` is co-transitive: `j ≤ j * j`. Together with the co-reflexivity
   `j ≤ Δ` it forces the reverse `j * j ≤ j` (since `j * j ≤ Δ * j = j`), so
-  the equality `j * j = j` holds — `j_mul_j` in `Metatheory/Modality.lean`. -/
+  the equality `j * j = j` holds — `j_idempotence` below. -/
   protected j_cotransitivity : j ≤ j * j
   /-- `j` and `Δη` are orthogonal: `j * Δη ≤ ⊥`. A closed term is never a
-  variable. Discharges the derived `box_varDiag_eq_bot : □Δη = ⊥`, via
+  variable. Discharges the derived `box_varDiag_orthogonality : □Δη = ⊥`, via
   `j * Δη * j ≤ ⊥ * j = ⊥`. -/
   protected j_varDiag_orthogonality : j * varDiag ≤ ⊥
 
@@ -351,22 +351,34 @@ theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : SRA.subst a b
 theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : SRA.subst a b ≤ SRA.subst a' b' :=
   (subst_monotonicity_left ha).trans (SRA.subst_monotonicity_right hb)
 
+/-! ### Laws of `j`
 
+The same two upgrades that `Δη` gets above. Co-transitivity becomes
+idempotence once co-reflexivity closes it from above; the assumed
+inequality `jᵒ ≤ j` becomes an equality by involutivity, which is the
+form `rw` and `simp` can use. Both are consumed by the modality derived
+from `j` below. -/
 
-/-! ### Closure modality `□·` -/
-/-- The closure modality `□a := j * a * j`. Derived operation, not a field of
-`SRA` in the current presentation (previously primitive; see the module
-docstring under `Derived operations`). Reads as "the pairs of `a` whose two
-endpoints are closed", with `j` the closure constant. -/
-def box (a : α) : α := SRA.j * a * SRA.j
-
+/-- `j * j = j`. `≤` from `j_coreflexivity` (`j*j ≤ 1*j = j`); `≥` is
+`j_cotransitivity`. -/
+@[simp] theorem j_idempotence : (SRA.j : α) * SRA.j = SRA.j := by
+  refine le_antisymm ?_ SRA.j_cotransitivity
+  calc (SRA.j : α) * SRA.j
+      ≤ 1 * SRA.j := mul_le_mul' SRA.j_coreflexivity le_rfl
+    _ = SRA.j := one_mul _
+/-- `jᵒ = j`: same one-liner as `varDiag_symmetry_eq`, from `j_symmetry`
+plus involutivity of converse. -/
+@[simp] theorem j_symmetry_eq : (SRA.j : α)ᵒ = SRA.j := by
+  refine le_antisymm SRA.j_symmetry ?_
+  have h : (SRA.j : α)ᵒᵒ ≤ (SRA.j : α)ᵒ :=
+    IsInvolutiveQuantale.converse_monotonicity SRA.j_symmetry
+  rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 
 /-! ### Notation -/
 
 @[inherit_doc] scoped prefix:max "~" => SRA.scr
 @[inherit_doc] scoped prefix:max "⌃" => SRA.cr
-@[inherit_doc] scoped prefix:max "□" => SRA.box
 @[inherit_doc] scoped notation:max a "⟦" b "⟧" => SRA.subst a b
 
 end SRA
