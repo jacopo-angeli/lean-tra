@@ -5,7 +5,6 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.SRA.OperationalDecomposition
-public import LeanTra.Metatheory.Reduction
 
 /-!
 # Gentzen inversion and conservation principles
@@ -27,7 +26,6 @@ The principles below replace it. Each is an inequality on the rule
 alone, and together they entail the non-local condition, so that
 confluence follows from hypotheses that can be checked on a rule by
 inspection.
-
 
 A destructor is bound to inspect one of its arguments before it can act.
 Gentzen's Inversion Principle says that a rule fires only once that
@@ -62,20 +60,42 @@ y free.
 open scoped IsInvolutiveQuantale Quantale SRA
 
 open OperationalDecomposition
-open LeanTra.Confluence
 
 namespace LeanTra.Metatheory
 
 variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [OperationalDecomposition α]
 
-/-- Gentzen Inversion Principle: every `a`-step factors on the left
-through an elimination with an introduction form in the major slot. -/
-def GIP (a : α) : Prop := a ≤ majorProjection (introductionCoreflexive : α) * a
 
-/-- The Gentzen Conservation Principle for `a`: for every compatible `x`, the
-composite `elimination (hat x) x * a` factors on the right through the substitution
-`x[x]` following `a`. -/
-def GCP (a : α) : Prop := ∀ x, IsCompatible x → OperationalDecomposition.elimination (SRA.cr x) x * a ≤ a * SRA.subst x x
+
+/-! ### Compatibility
+
+A relation is compatible when it is closed under term formation. The
+conservation principle is stated for every such relation, and it is the
+only place the notion is used. -/
+
+/-- `x` is compatible when `⌃x ≤ x`. -/
+def IsCompatible (x : α) : Prop := ⌃x ≤ x
+
+
+
+/-! ### The principles
+
+Both are inequalities in the rule `a` alone. Inversion constrains where a
+step may occur — on the left, through an elimination whose major slot is
+an introduction form. Conservation constrains what a step produces — on
+the right, through the substitution of a compatible relation into
+itself. -/
+
+/-- Gentzen's inversion principle: every `a`-step factors on the left
+through an elimination with an introduction form in the major slot. -/
+def GIP (a : α) : Prop := a ≤ ε(ι Δ, Δ) * a
+
+/-- Gentzen's conservation principle: for every compatible `x`, a step
+after `ε(⌃x, x)` factors on the right through `x⟦x⟧` after the step. -/
+def GCP (a : α) : Prop := ∀ x, IsCompatible x → ε(⌃x, x) * a ≤ a * x⟦x⟧
+
+
+
 
 end LeanTra.Metatheory
