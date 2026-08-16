@@ -108,7 +108,7 @@ exactly the atom that follows: `~(parRed a)` needs its parentheses.
 | Reference symbol | Lean name            | Notation |
 |------------------|----------------------|----------|
 | `Δ`              | `(1 : α)`            | —        |
-| `Δη`             | `SRA.varDiag`        | —        |
+| `Δη`             | `SRA.varDiag`        | `Δη`     |
 | tilde `a`        | `SRA.scr a`          | `~a`     |
 | hat `a`          | `SRA.cr a`           | `⌃a`     |
 | `a[b]`           | `SRA.subst a b`      | `a⟦b⟧`   |
@@ -380,5 +380,8 @@ plus involutivity of converse. -/
 @[inherit_doc] scoped prefix:max "~" => SRA.scr
 @[inherit_doc] scoped prefix:max "⌃" => SRA.cr
 @[inherit_doc] scoped notation:max a "⟦" b "⟧" => SRA.subst a b
+@[inherit_doc] scoped notation:max "Δη" => SRA.varDiag
+/-- `Δ` is the identity relation, i.e. the unit `1` of the quantale. -/
+scoped notation:max "Δ" => (1 : _)
 
 end SRA

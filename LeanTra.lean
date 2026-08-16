@@ -3,7 +3,7 @@ import LeanTra.Algebra.KleeneStar
 import LeanTra.SRA.Basic
 import LeanTra.SRA.Howe
 import LeanTra.SRA.Modality
-import LeanTra.Metatheory.OperationalDecomposition
+import LeanTra.SRA.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Evaluation
 import LeanTra.Metatheory.Reduction

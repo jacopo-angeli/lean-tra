@@ -5,7 +5,7 @@ Author: Jacopo Angeli.
 module
 
 public import LeanTra.SRA.Basic
-public import LeanTra.Metatheory.OperationalDecomposition
+public import LeanTra.SRA.OperationalDecomposition
 
 /-!
 # Toy SRA model
@@ -168,28 +168,28 @@ later phase — cf. `Instances/FirstOrder/`, which so far only provides
 instance instOperationalDecomposition : OperationalDecomposition Toy where
   introduction _ := False
   elimination _ _ := False
-  introduction_morphism_join s := by
+  introduction_join_preservation s := by
     refine le_antisymm False.elim ?_
     refine sSup_le ?_
     rintro _ ⟨_, _, rfl⟩
     exact le_refl _
-  introduction_morphism_composition _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
-  introduction_morphism_converse _ := rfl
-  introduction_weakly_unital := fun h => h.elim
-  elimination_morphism_join s := by
+  introduction_compositionality _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  introduction_converse_commutation _ := rfl
+  introduction_unit_oplaxity := fun h => h.elim
+  elimination_join_preservation s := by
     refine le_antisymm False.elim ?_
     refine sSup_le ?_
     rintro _ ⟨_, _, rfl⟩
     exact le_refl _
-  elimination_morphism_composition _ _ _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
-  elimination_morphism_converse _ _ := rfl
-  elimination_weakly_unital := fun h => h.elim
+  elimination_compositionality _ _ _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
+  elimination_converse_commutation _ _ := rfl
+  elimination_unit_oplaxity := fun h => h.elim
   introduction_elimination_orthogonality _ _ _ := fun ⟨h, _⟩ => h
-  cocartesian_decomposition _ :=
+  scr_decomposition _ :=
     propext ⟨fun h => Or.inl h, fun h => h.elim (fun h => h) (fun h => h)⟩
-  substitution_distribution_introduction _ _ := fun ⟨h, _⟩ => h
-  substitution_distribution_elimination _ _ _ := fun ⟨h, _⟩ => h
-  box_distribution_elimination _ _ := fun h => h.1.1
+  subst_introduction_oplaxity _ _ := fun ⟨h, _⟩ => h
+  subst_elimination_oplaxity _ _ _ := fun ⟨h, _⟩ => h
+  box_elimination_oplaxity _ _ := fun h => h.1.1
 
 /-! ## Non-degeneracy -/
 

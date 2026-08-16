@@ -169,14 +169,14 @@ theorem confluence_local {a : α}
     rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
         IsInvolutiveQuantale.converse_bot_strictness,
         IsInvolutiveQuantale.converse_compositionality,
-        ← OperationalDecomposition.introduction_morphism_converse,
-        ← OperationalDecomposition.elimination_morphism_converse]
+        ← OperationalDecomposition.introduction_converse_commutation,
+        ← OperationalDecomposition.elimination_converse_commutation]
     exact OperationalDecomposition.introduction_elimination_orthogonality _ _ _
   have hL2 : SRA.varDiag * (introductionCoreflexive : α) ≤ (⊥ : α) := by
     calc SRA.varDiag * (introductionCoreflexive : α)
         ≤ SRA.varDiag * SRA.scr 1 := by
           refine mul_le_mul' le_rfl ?_
-          rw [OperationalDecomposition.cocartesian_decomposition]
+          rw [OperationalDecomposition.scr_decomposition]
           exact le_sup_left
       _ ≤ ⊥ := SRA.varDiag_scr_orthogonality _
   have hL3 : ∀ x : α,
@@ -185,13 +185,13 @@ theorem confluence_local {a : α}
     have hdecomp : SRA.cr x
         = (SRA.varDiag ⊔ introduction x) ⊔ elimination x x := by
       unfold SRA.cr
-      rw [OperationalDecomposition.cocartesian_decomposition, ← sup_assoc]
+      rw [OperationalDecomposition.scr_decomposition, ← sup_assoc]
     rw [hdecomp, Quantale.sup_mul_distrib, Quantale.sup_mul_distrib]
     refine sup_le (sup_le ?_ ?_) ?_
     · exact hL2.trans bot_le
     · have heq : introduction x * (introductionCoreflexive : α) = introduction x := by
         change introduction x * introduction 1 = introduction x
-        rw [← OperationalDecomposition.introduction_morphism_composition, mul_one]
+        rw [← OperationalDecomposition.introduction_compositionality, mul_one]
       exact heq.le
     · exact (hEI _ _ _).trans bot_le
   have hL4 : ∀ x : α, aᵒ * introduction x ≤ (⊥ : α) := by
@@ -199,8 +199,8 @@ theorem confluence_local {a : α}
     have hgip_conv : aᵒ ≤ aᵒ * elimination (introduction (1 : α)) 1 := by
       have h := IsInvolutiveQuantale.converse_monotonicity hgip
       rw [IsInvolutiveQuantale.converse_compositionality,
-          ← OperationalDecomposition.elimination_morphism_converse,
-          ← OperationalDecomposition.introduction_morphism_converse,
+          ← OperationalDecomposition.elimination_converse_commutation,
+          ← OperationalDecomposition.introduction_converse_commutation,
           IsInvolutiveQuantale.converse_identity] at h
       exact h
     calc aᵒ * introduction x
@@ -227,14 +227,14 @@ theorem confluence_local {a : α}
           · exact (hL4 _).trans bot_le
           · calc introduction ((parRed a)ᵒ)
                 ≤ SRA.scr ((parRed a)ᵒ) := by
-                  rw [OperationalDecomposition.cocartesian_decomposition]
+                  rw [OperationalDecomposition.scr_decomposition]
                   exact le_sup_left
               _ ≤ SRA.cr ((parRed a)ᵒ) := by
                   unfold SRA.cr; exact le_sup_right
   have hStruct : Struct a ((parRed a)ᵒ) := by
     change SRA.scr ((parRed a)ᵒ) * a
          ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ)
-    rw [OperationalDecomposition.cocartesian_decomposition,
+    rw [OperationalDecomposition.scr_decomposition,
         Quantale.sup_mul_distrib]
     refine sup_le ?_ ?_
     · calc introduction ((parRed a)ᵒ) * a
@@ -256,7 +256,7 @@ theorem confluence_local {a : α}
             (mul_assoc _ _ _).symm
         _ = elimination ((parRed a)ᵒ * introduction 1)
               ((parRed a)ᵒ * 1) * a := by
-            rw [← OperationalDecomposition.elimination_morphism_composition]
+            rw [← OperationalDecomposition.elimination_compositionality]
         _ = elimination ((parRed a)ᵒ * introduction 1) ((parRed a)ᵒ) * a := by
             rw [mul_one]
         _ ≤ elimination (SRA.cr ((parRed a)ᵒ)) ((parRed a)ᵒ) * a :=
