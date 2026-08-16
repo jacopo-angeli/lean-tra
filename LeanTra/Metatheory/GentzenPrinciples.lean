@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.Metatheory.OperationalDecomposition
+public import LeanTra.SRA.OperationalDecomposition
 public import LeanTra.Metatheory.Reduction
 
 /-!
