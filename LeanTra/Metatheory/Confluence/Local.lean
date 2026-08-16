@@ -89,17 +89,17 @@ theorem confluence_local {a : α}
   -- summand that actually occurs in the fixed points of `a⇛` and `(a⇛)ᵒ`.
   have hN1 : a ≤ SRA.subst a 1 := by
     calc a = SRA.subst a SRA.varDiag := (SRA.subst_varDiag_unit_right a).symm
-      _ ≤ SRA.subst a 1 := SRA.subst_monotonicity_right SRA.varDiag_le_one
+      _ ≤ SRA.subst a 1 := SRA.subst_monotonicity_right SRA.varDiag_coreflexivity
   have hN2 : SRA.subst a 1 = a := le_antisymm h2 hN1
   have hN3 : ∀ t u : α, SRA.scr t * SRA.cr u = SRA.scr t * SRA.scr u := by
     intro t u
     unfold SRA.cr
     rw [Quantale.mul_sup_distrib,
-        le_antisymm (SRA.scr_mul_varDiag_le_bot t) bot_le, bot_sup_eq]
+        le_antisymm (SRA.scr_varDiag_orthogonality t) bot_le, bot_sup_eq]
   have hN4 : aᵒ * SRA.varDiag = (⊥ : α) := by
     have hL : SRA.varDiag * a = (⊥ : α) := h1
     have hc := congrArg IsInvolutiveQuantale.converse hL
-    rw [IsInvolutiveQuantale.converse_compositionality, SRA.varDiag_converse,
+    rw [IsInvolutiveQuantale.converse_compositionality, SRA.varDiag_symmetry_eq,
         IsInvolutiveQuantale.converse_bot_strictness] at hc
     exact hc
   have hN5 : ∀ {b : α}, Struct a b →
@@ -142,7 +142,7 @@ theorem confluence_local {a : α}
       rw [← subst_one_converse a, hN2]
       exact sup_comm 1 aᵒ
     rw [← hnorm]
-    conv_rhs => rw [parRed_converse a, SRA.opHowe_fix]
+    conv_rhs => rw [parRed_converse a, SRA.opHowe_fixpoint]
     rw [← parRed_converse a]
   -- Discharging the structural condition
   --
@@ -331,7 +331,7 @@ theorem confluence_local {a : α}
   have counit : Y * parRed a ≤ parRed a * (parRed a)ᵒ :=
     Quantale.leftMulResiduation_le_iff_mul_le.mp le_rfl
   have hpar : parRed a = SRA.cr (parRed a) * (a ⊔ 1) := by
-    have hf : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) := SRA.howe_fix _
+    have hf : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) := SRA.howe_fixpoint _
     rw [hN2, sup_comm 1 a] at hf
     exact hf
   have hLeaf1 : aᵒ * SRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
@@ -367,7 +367,7 @@ theorem confluence_local {a : α}
       exact IsInvolutiveQuantale.converse_monotonicity (one_le_parRed a)
     have piece_varDiag : SRA.varDiag * parRed a ≤ parRed a * (parRed a)ᵒ := by
       calc SRA.varDiag * parRed a
-          ≤ 1 * parRed a := mul_le_mul' SRA.varDiag_le_one le_rfl
+          ≤ 1 * parRed a := mul_le_mul' SRA.varDiag_coreflexivity le_rfl
         _ = parRed a := one_mul _
         _ = parRed a * 1 := (mul_one _).symm
         _ ≤ parRed a * (parRed a)ᵒ := mul_le_mul' le_rfl h1_le_parRed_converse
@@ -396,7 +396,7 @@ theorem confluence_local {a : α}
     change (parRed a)ᵒ * parRed a ≤ parRed a * (parRed a)ᵒ
     refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
     rw [parRed_converse a]
-    refine SRA.opHowe_le_of_mul_cr_le ?_
+    refine SRA.opHowe_induction ?_
     rw [← parRed_converse a]
     have h2' : (SRA.subst aᵒ 1 : α) = aᵒ := by
       rw [← subst_one_converse a, hN2]

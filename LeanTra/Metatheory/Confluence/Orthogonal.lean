@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Derived
+public import LeanTra.SRA.Howe
 public import LeanTra.Metatheory.Reduction
 public import LeanTra.Metatheory.Confluence.Diamond
 public import Mathlib.Order.FixedPoints
@@ -51,7 +51,7 @@ substitution on the strict branch. -/
 theorem cr_subst_le (a b : α) :
     SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
   unfold SRA.cr
-  rw [subst_sup_left, SRA.subst_varDiag_unit_left]
+  rw [subst_join_preservation_binary_left, SRA.subst_varDiag_unit_left]
   exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _).trans le_sup_right) b
 
 /-- Compatibility implies Leibniz: if `hat a ≤ a`, then `1[a] ≤ a`. -/
@@ -62,63 +62,9 @@ theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
   refine subst_le_iff.mp ?_
   calc SRA.subst (SRA.cr (SRA.substResid a a)) a
       ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) := cr_subst_le _ _
-    _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_mono (subst_le_iff.mpr le_rfl)) a
+    _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_monotonicity (subst_le_iff.mpr le_rfl)) a
     _ ≤ a ⊔ a := sup_le_sup_left h a
     _ = a := sup_idem a
-
-/-! ### Op-Howe extension `·§` -/
-
-/-- Op-Howe recursor `x ↦ a * cr x`, bundled as an `OrderHom` so its least
-fixed point can be taken via `OrderHom.lfp`. Mirror of `howeStep` with the
-multiplication moved to the left. -/
-def opHoweStep (a : α) : α →o α where
-  toFun x := a * SRA.cr x
-  monotone' _ _ h := mul_le_mul_right (cr_mono h) a
-
-/-- Op-Howe extension `·§`: the unique solution of `x = a * cr x`, obtained
-as the least fixed point of `opHoweStep`. Mirror of `howe`. -/
-def opHowe (a : α) : α := (opHoweStep a).lfp
-
-/-- Fixed-point law: `a§ = a * cr a§`. -/
-theorem opHowe_fix (a : α) : opHowe a = a * SRA.cr (opHowe a) :=
-  ((opHoweStep a).map_lfp).symm
-
-/-- Fixed-point induction: `a§` is below every pre-fixed point of the
-op-Howe recursor. -/
-theorem opHowe_le_of_mul_cr_le ⦃a x : α⦄ (h : a * SRA.cr x ≤ x) :
-    opHowe a ≤ x := (opHoweStep a).lfp_le h
-
-/-- Any two solutions of `x = a * cr x` bound each other. -/
-private theorem opHowe_solution_le {a b c : α}
-    (hb : b = a * SRA.cr b) (hc : c = a * SRA.cr c) : b ≤ c := by
-  rw [show b = b * 1 from (mul_one b).symm]
-  refine Quantale.rightMulResiduation_le_iff_mul_le.mp ?_
-  refine one_le_of_cr_le ?_
-  refine Quantale.rightMulResiduation_le_iff_mul_le.mpr ?_
-  calc b * SRA.cr (b ⇨ᵣ c)
-      = (a * SRA.cr b) * SRA.cr (b ⇨ᵣ c) := by rw [← hb]
-    _ = a * (SRA.cr b * SRA.cr (b ⇨ᵣ c)) := mul_assoc _ _ _
-    _ = a * SRA.cr (b * (b ⇨ᵣ c)) := by rw [cr_mul]
-    _ ≤ a * SRA.cr c := mul_le_mul_right
-        (cr_mono (Quantale.rightMulResiduation_le_iff_mul_le.mp le_rfl)) _
-    _ = c := hc.symm
-
-/-- Uniqueness of solutions of `x = a * cr x`. -/
-theorem opHowe_unique {a b c : α} (hb : b = a * SRA.cr b)
-    (hc : c = a * SRA.cr c) : b = c :=
-  le_antisymm (opHowe_solution_le hb hc) (opHowe_solution_le hc hb)
-
-/-- Anything satisfying the op-Howe equation equals `opHowe`. -/
-theorem opHowe_eq_of_fix {a b : α} (hb : b = a * SRA.cr b) : b = opHowe a :=
-  opHowe_unique hb (opHowe_fix a)
-
-/-- Converse of Howe is op-Howe of converse: `(aᴴ)ᵒ = (aᵒ)§`. -/
-theorem howe_converse (a : α) : (SRA.howe a)ᵒ = opHowe (aᵒ) := by
-  refine opHowe_eq_of_fix ?_
-  calc (SRA.howe a)ᵒ
-      = (SRA.cr (SRA.howe a) * a)ᵒ := by rw [← howe_fix]
-    _ = aᵒ * (SRA.cr (SRA.howe a))ᵒ := IsInvolutiveQuantale.converse_compositionality _ _
-    _ = aᵒ * SRA.cr ((SRA.howe a)ᵒ) := by rw [cr_converse]
 
 end SRA
 
@@ -148,7 +94,7 @@ theorem cr_parRed_le (a : α) : SRA.cr (parRed a) ≤ parRed a := by
       = SRA.cr (SRA.howe (1 ⊔ SRA.subst a 1)) * 1 := (mul_one _).symm
     _ ≤ SRA.cr (SRA.howe (1 ⊔ SRA.subst a 1)) * (1 ⊔ SRA.subst a 1) :=
         mul_le_mul_right (one_le_parRed_arg a) _
-    _ = SRA.howe (1 ⊔ SRA.subst a 1) := (SRA.howe_fix _).symm
+    _ = SRA.howe (1 ⊔ SRA.subst a 1) := (SRA.howe_fixpoint _).symm
 
 /-- `1 ≤ a⇛`: the monoid identity sits below parallel reduction. -/
 theorem one_le_parRed (a : α) : (1 : α) ≤ parRed a :=
@@ -204,7 +150,7 @@ theorem varDiag_mul_subst_one_eq_bot {a : α} (h : IsReduction a) :
 theorem parRed_subst_le {a : α} (h : IsReduction a) :
     SRA.subst (parRed a) (parRed a) ≤ parRed a := by
   refine SRA.subst_le_iff.mpr ?_
-  refine SRA.howe_le_of_cr_mul_le ?_
+  refine SRA.howe_induction ?_
   refine SRA.subst_le_iff.mp ?_
   have hrw :
       SRA.cr (SRA.substResid (parRed a) (parRed a)) * (1 ⊔ SRA.subst a 1)
@@ -214,7 +160,7 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
     rw [Quantale.sup_mul_distrib, Quantale.mul_sup_distrib,
         Quantale.mul_sup_distrib, mul_one, mul_one,
         varDiag_mul_subst_one_eq_bot h, sup_bot_eq, ← sup_assoc]
-  rw [hrw, SRA.subst_sup_left, SRA.subst_sup_left]
+  rw [hrw, SRA.subst_join_preservation_binary_left, SRA.subst_join_preservation_binary_left]
   refine sup_le (sup_le ?_ ?_) ?_
   · exact le_of_eq (SRA.subst_varDiag_unit_left _)
   · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
@@ -243,7 +189,7 @@ theorem parRed_subst_le {a : α} (h : IsReduction a) :
             _ ≤ SRA.cr (parRed a) := le_sup_right
       _ ≤ SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
           mul_le_mul_right le_sup_right _
-      _ = parRed a := (SRA.howe_fix _).symm
+      _ = parRed a := (SRA.howe_fixpoint _).symm
 
 /-! ### Converse and nesting of `parRed` -/
 
@@ -278,12 +224,12 @@ theorem subst_one_mul_varDiag_eq_bot {a : α} (h : IsReduction a) :
   have hL := varDiag_mul_subst_one_eq_bot h
   have := congrArg IsInvolutiveQuantale.converse hL
   rw [IsInvolutiveQuantale.converse_compositionality, subst_one_converse,
-      SRA.varDiag_converse, IsInvolutiveQuantale.converse_bot_strictness] at this
+      SRA.varDiag_symmetry_eq, IsInvolutiveQuantale.converse_bot_strictness] at this
   exact this
 
 /-- Compatibility of the converse of parallel reduction: `hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`. -/
 theorem cr_parRed_converse_le (a : α) : SRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
-  rw [← SRA.cr_converse]
+  rw [← SRA.cr_converse_commutation]
   exact IsInvolutiveQuantale.converse_monotonicity (cr_parRed_le a)
 
 /-- Leibniz at `(a⇛)ᵒ`: `1[(a⇛)ᵒ] ≤ (a⇛)ᵒ`. -/
@@ -306,7 +252,7 @@ theorem cr_mul_subst_le_parRed (a : α) :
   calc SRA.cr (parRed a) * SRA.subst a 1
       ≤ SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
         mul_le_mul_right le_sup_right _
-    _ = parRed a := (SRA.howe_fix _).symm
+    _ = parRed a := (SRA.howe_fixpoint _).symm
 
 /-- Converse of `cr_mul_subst_le_parRed`: `aᵒ[1] * hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`. -/
 theorem subst_one_mul_cr_parRed_converse_le (a : α) :
@@ -314,7 +260,7 @@ theorem subst_one_mul_cr_parRed_converse_le (a : α) :
   have hM6 := cr_mul_subst_le_parRed a
   have := IsInvolutiveQuantale.converse_monotonicity hM6
   rw [IsInvolutiveQuantale.converse_compositionality, subst_one_converse,
-      SRA.cr_converse] at this
+      SRA.cr_converse_commutation] at this
   exact this
 
 /-- `a` is *orthogonal* when its base substitution instances collapse on
@@ -346,7 +292,7 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
   change (parRed a)ᵒ * parRed a ≤ parRed a * (parRed a)ᵒ
   refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
   rw [parRed_converse a]
-  refine SRA.opHowe_le_of_mul_cr_le ?_
+  refine SRA.opHowe_induction ?_
   rw [← parRed_converse a]
   refine Quantale.leftMulResiduation_le_iff_mul_le.mpr ?_
   have hU : (parRed a ⇨ₗ (parRed a * (parRed a)ᵒ)) * parRed a
@@ -357,9 +303,9 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
         ≤ SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) := by
     calc SRA.cr (parRed a ⇨ₗ (parRed a * (parRed a)ᵒ)) * SRA.cr (parRed a)
         = SRA.cr ((parRed a ⇨ₗ (parRed a * (parRed a)ᵒ)) * parRed a) :=
-            SRA.cr_mul _ _
-      _ ≤ SRA.cr (parRed a * (parRed a)ᵒ) := SRA.cr_mono hU
-      _ = SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) := (SRA.cr_mul _ _).symm
+            SRA.cr_compositionality _ _
+      _ ≤ SRA.cr (parRed a * (parRed a)ᵒ) := SRA.cr_monotonicity hU
+      _ = SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) := (SRA.cr_compositionality _ _).symm
   have Hleft :
       SRA.subst aᵒ 1 * SRA.cr (parRed a) ≤ parRed a * SRA.subst aᵒ 1 := by
     unfold SRA.cr
@@ -386,7 +332,7 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
     rw [subst_one_converse] at h1
     exact h1
   have hfix : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
-    SRA.howe_fix _
+    SRA.howe_fixpoint _
   nth_rewrite 4 [hfix]
   rw [show ∀ A B C D : α, A * B * (C * D) = A * (B * C) * D from
         fun _ _ _ _ => by simp only [mul_assoc]]

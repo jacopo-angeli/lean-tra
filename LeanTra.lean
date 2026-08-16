@@ -1,7 +1,7 @@
 import LeanTra.Algebra.InvolutiveQuantale
 import LeanTra.Algebra.KleeneStar
 import LeanTra.SRA.Basic
-import LeanTra.SRA.Derived
+import LeanTra.SRA.Howe
 import LeanTra.Metatheory.Modality
 import LeanTra.Metatheory.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples

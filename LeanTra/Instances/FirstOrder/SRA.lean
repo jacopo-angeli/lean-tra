@@ -6,7 +6,7 @@ module
 
 public import LeanTra.Instances.FirstOrder.Relations
 public import LeanTra.SRA.Basic
-public import LeanTra.SRA.Derived
+public import LeanTra.SRA.Basic
 public import LeanTra.Metatheory.Modality
 
 /-!
@@ -163,7 +163,7 @@ docstring at their definition.
 Sanity note on the dropped axiom `box_subst_le : subst (box a) b ≤
 box a`. Under the OLD reading `□a := a[⊥]`, this becomes
 `subst (subst a ⊥) b ≤ subst a ⊥`, which is in fact an EQUALITY via
-`subst_associativity` and `subst_bot_left` (`subst (subst a ⊥) b =
+`subst_associativity` and `subst_bot_strictness_left` (`subst (subst a ⊥) b =
 subst a (subst ⊥ b) = subst a ⊥`); it holds *abstractly*, not merely
 in the term model. Under the NEW reading `□ := j * · * j`, the same
 statement `subst (j * a * j) b ≤ j * a * j` is neither derivable nor
