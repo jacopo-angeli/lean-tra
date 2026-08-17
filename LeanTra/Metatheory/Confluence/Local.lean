@@ -84,7 +84,7 @@ conclusion. The proof runs in three stages, marked by the separators
 inside it: rearranging the hypotheses, discharging `IsStruct a ((a⇛)ᵒ)`
 from the Gentzen principles, and running the diamond argument. -/
 
-theorem confluence_local {a : α}
+theorem local_confluence {a : α}
     (h1 : IsReduction a)
     (h2 : IsSubstitutiveAtIdentity a)
     (h3 : IsDeterministic a)
@@ -418,4 +418,4 @@ theorem confluence_local {a : α}
 
 end LeanTra.Confluence
 
-#print axioms LeanTra.Confluence.confluence_local
+#print axioms LeanTra.Confluence.local_confluence

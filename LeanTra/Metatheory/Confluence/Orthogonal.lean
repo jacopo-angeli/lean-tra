@@ -13,26 +13,26 @@ public import LeanTra.Algebra.Diamond
 The confluence-of-orthogonal-reduction theorem of the reference, stated
 here as: for a reduction `a` whose base substitution instances collapse
 on overlaps and whose interaction with the strict compatible refinement
-of parallel reduction stays inside a substituted converse, `a⇛` has the
-diamond property, and so `a⇛∗` is confluent.
+of parallel reduction stays inside a substituted converse, `(a⇛)∗` is
+confluent.
 
 Orthogonality is a condition on the rule and on its parallel reduction.
 Its first conjunct says two `a⟦Δ⟧`-rewrites of the same term differ only
 by variable renaming, `(a⟦Δ⟧)ᵒ * a⟦Δ⟧ ≤ Δ`. Its second conjunct swaps a
 base-instance backwards step and a strict compatible refinement of
 parallel reduction for a substituted converse, `(a⟦Δ⟧)ᵒ * ~(a⇛) ≤
-aᵒ⟦a⇛⟧`. Both are inequalities on the rule that the diamond argument
-consumes verbatim; nothing further about `a⇛` is used than what
+aᵒ⟦a⇛⟧`. Both are inequalities the diamond argument consumes verbatim;
+nothing further about `a⇛` is used than what
 `Confluence/ParallelReduction.lean` already provides.
 
-The diamond property is `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ`. It is proved by
-fixed-point induction on `(a⇛)ᵒ`, which is the op-Howe extension of
-`Δ ⊔ aᵒ⟦Δ⟧`, transposed along the composition residual. The two branches
-of the induction consume the two orthogonality conjuncts, and determinism
-of `a⟦Δ⟧` cancels an `aᵒ * a` that appears in the middle. Confluence
-then follows from the abstract passage from the diamond property to
-confluence of the reflexive-transitive closure, `IsDiamond.confluent`
-from `Algebra/Diamond.lean`.
+The whole argument is the single theorem `confluent_parRed`. The diamond
+property `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ` appears inside it as an intermediate
+step, not as a result of its own: it is proved by fixed-point induction
+on `(a⇛)ᵒ`, which is the op-Howe extension of `Δ ⊔ aᵒ⟦Δ⟧`, transposed
+along the composition residual. The two branches of the induction consume
+the two orthogonality conjuncts, and the first conjunct cancels an
+`aᵒ * a` that appears in the middle of the two-sided branch. Confluence
+then follows from `IsDiamond.confluent` in `Algebra/Diamond.lean`.
 
 ## References
 
@@ -54,11 +54,9 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 
 /-! ### Orthogonality
 
-The predicate on the rule that the theorem below assumes: two conjuncts,
-each an inequality on `a⟦Δ⟧` and `a⇛`, that together let the diamond
-argument go through. The mirror of the second conjunct, derived by
-converse, is stated separately so that the two sides of the diamond
-proof can consume the two forms symmetrically. -/
+The hypothesis the theorem below assumes: two conjuncts, each an
+inequality relating the base instance `a⟦Δ⟧` to `a⇛`, that together let
+the diamond argument go through. -/
 
 /-- `a` is *orthogonal* when `(a⟦Δ⟧)ᵒ * a⟦Δ⟧ ≤ Δ` and
 `(a⟦Δ⟧)ᵒ * ~(a⇛) ≤ aᵒ⟦a⇛⟧`. -/
@@ -66,34 +64,56 @@ def IsOrthogonal (a : α) : Prop :=
   (SRA.subst a 1)ᵒ * SRA.subst a 1 ≤ 1
     ∧ (SRA.subst a 1)ᵒ * SRA.scr (parRed a) ≤ SRA.subst aᵒ (parRed a)
 
-/-- Converse form of the second orthogonality conjunct:
-`~((a⇛)ᵒ) * a⟦Δ⟧ ≤ a⟦(a⇛)ᵒ⟧`. -/
-theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
-    SRA.scr ((parRed a)ᵒ) * SRA.subst a 1 ≤ SRA.subst a ((parRed a)ᵒ) := by
-  have h2 := horth.2
-  have := IsInvolutiveQuantale.converse_monotonicity h2
-  rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity,
-      SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_involutivity,
-      ← SRA.scr_converse_commutation] at this
-  exact this
+/-! ### Confluence of orthogonal reduction
 
-/-! ### Diamond and confluence
+The single theorem the file exists to prove. The separators inside it
+mark the stages: the second orthogonality conjunct is turned round by
+converse, the goal is transposed along `⇨ₗ` and opened by fixed-point
+induction on `(a⇛)ᵒ`, the rule is commuted past the compatible
+refinements on either side, and the four branches of the resulting join
+are discharged. -/
 
-The diamond property for `a⇛`, transposed along `⇨ₗ` and proved by
-fixed-point induction on `(a⇛)ᵒ = (Δ ⊔ aᵒ⟦Δ⟧)§`. Confluence is the
-diamond property of `(a⇛)∗`, so it follows from the abstract passage
-`IsDiamond.confluent`. -/
-
-/-- Diamond property of parallel reduction: for a reduction `a` satisfying
-orthogonality, `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ`. -/
-theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
-    IsDiamond (parRed a) := by
+/-- Confluence of parallel reduction: for a reduction `a` satisfying
+orthogonality, `IsConfluent (a⇛)`. -/
+theorem othogonality_confluence {a : α}
+  (h : IsReduction a)
+  (horth : IsOrthogonal a) :
+  IsConfluent (parRed a) := by
+  -- The second conjunct, turned round
+  --
+  -- The diamond argument needs the second orthogonality conjunct on both
+  -- sides. Converse turns `(a⟦Δ⟧)ᵒ * ~(a⇛) ≤ aᵒ⟦a⇛⟧` into the mirror
+  -- statement about `(a⇛)ᵒ`, which is what the right-hand branch consumes.
+  have hscr : SRA.scr ((parRed a)ᵒ) * SRA.subst a 1
+            ≤ SRA.subst a ((parRed a)ᵒ) := by
+    have h2 := horth.2
+    have := IsInvolutiveQuantale.converse_monotonicity h2
+    rw [IsInvolutiveQuantale.converse_compositionality,
+        IsInvolutiveQuantale.converse_involutivity,
+        SRA.subst_converse_commutation,
+        IsInvolutiveQuantale.converse_involutivity,
+        ← SRA.scr_converse_commutation] at this
+    exact this
+  -- Confluence is the diamond property of the star, so the whole of the rest
+  -- establishes the diamond property of `a⇛` itself.
+  suffices hDiamond : IsDiamond (parRed a) by exact hDiamond.confluent
+  -- Transposing and opening the induction
+  --
+  -- Residuating on the left turns the goal into a statement of the form
+  -- `(a⇛)ᵒ ≤ x`, and `(a⇛)ᵒ` is the op-Howe extension of `Δ ⊔ aᵒ⟦Δ⟧`, so
+  -- fixed-point induction applies. Transposing back leaves the inductive step.
   change (parRed a)ᵒ * parRed a ≤ parRed a * (parRed a)ᵒ
   refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
   rw [parRed_converse a]
   refine SRA.opHowe_induction ?_
   rw [← parRed_converse a]
   refine Quantale.leftMulResiduation_le_iff_mul_le.mpr ?_
+  -- Commuting the rule past the compatible refinements
+  --
+  -- `hU` is the counit of the residuation, `hmid` collapses the two
+  -- refinements into one via multiplicativity of `⌃·`, and the three `H`
+  -- facts say that the base instance can be pushed past a compatible
+  -- refinement on the left, on the right, and cancelled in the middle.
   have hU : (parRed a ⇨ₗ (parRed a * (parRed a)ᵒ)) * parRed a
               ≤ parRed a * (parRed a)ᵒ :=
     Quantale.leftMulResiduation_le_iff_mul_le.mp le_rfl
@@ -104,7 +124,8 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
         = SRA.cr ((parRed a ⇨ₗ (parRed a * (parRed a)ᵒ)) * parRed a) :=
             SRA.cr_compositionality _ _
       _ ≤ SRA.cr (parRed a * (parRed a)ᵒ) := SRA.cr_monotonicity hU
-      _ = SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) := (SRA.cr_compositionality _ _).symm
+      _ = SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) :=
+            (SRA.cr_compositionality _ _).symm
   have Hleft :
       SRA.subst aᵒ 1 * SRA.cr (parRed a) ≤ parRed a * SRA.subst aᵒ 1 := by
     unfold SRA.cr
@@ -125,11 +146,17 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
     · calc SRA.varDiag * SRA.subst a 1
           = (⊥ : α) := varDiag_subst_one_orthogonality h
         _ ≤ SRA.subst a 1 * (parRed a)ᵒ := bot_le
-    · exact (scr_parRed_converse_mul_le horth).trans (parRed_converse_nesting a)
+    · exact hscr.trans (parRed_converse_nesting a)
   have Hdet : SRA.subst aᵒ 1 * SRA.subst a 1 ≤ (1 : α) := by
     have h1 := horth.1
     rw [SRA.subst_one_converse_commutation] at h1
     exact h1
+  -- The four branches
+  --
+  -- Unfolding `a⇛` once and distributing leaves a join of four products.
+  -- The first is closed by compatibility alone, the second and third by
+  -- `Hleft` and `Hright` followed by an unfolding, and the fourth by both at
+  -- once, with the first orthogonality conjunct cancelling the middle.
   have hfix : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
     SRA.howe_fixpoint _
   nth_rewrite 4 [hfix]
@@ -177,13 +204,6 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
             mul_le_mul_left (mul_le_mul_right Hdet _) _
       _ = parRed a * (parRed a)ᵒ := by rw [mul_one]
 
-/-- Confluence of parallel reduction: for a reduction `a` satisfying
-orthogonality, `IsConfluent a⇛`. -/
-theorem confluent_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
-    IsConfluent (parRed a) :=
-  (diamond_parRed h horth).confluent
-
 end LeanTra.Confluence
 
-#print axioms LeanTra.Confluence.diamond_parRed
-#print axioms LeanTra.Confluence.confluent_parRed
+#print axioms LeanTra.Confluence.othogonality_confluence
