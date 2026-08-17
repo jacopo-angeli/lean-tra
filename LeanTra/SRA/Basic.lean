@@ -105,23 +105,32 @@ residuals), this file declares four notations in the `SRA` scope; open
 them with `open scoped SRA`. Each prefix binds at `max`, so it takes
 exactly the atom that follows: `~(parRed a)` needs its parentheses.
 
-| Reference symbol | Lean name            | Notation |
-|------------------|----------------------|----------|
-| `Δ`              | `(1 : α)`            | —        |
-| `Δη`             | `SRA.varDiag`        | `Δη`     |
-| tilde `a`        | `SRA.scr a`          | `~a`     |
-| hat `a`          | `SRA.cr a`           | `⌃a`     |
-| `a[b]`           | `SRA.subst a b`      | `a⟦b⟧`   |
-| `j` (`□Δ`)       | `SRA.j`              | —        |
-| `□a`             | `SRA.box a`          | `□a`     |
-| `aᴴ`             | `SRA.howe a`         | —        |
-| `b » c`          | `SRA.substResid b c` | —        |
-| `a§`             | `SRA.opHowe a`       | —        |
-| `♦a`             | `SRA.dia a`          | —        |
+| Reference symbol | Lean name                            | Notation   |
+|------------------|--------------------------------------|------------|
+| `Δ`              | `(1 : α)`                            | —          |
+| `Δη`             | `SRA.varDiag`                        | `Δη`       |
+| tilde `a`        | `SRA.scr a`                          | `~a`       |
+| hat `a`          | `SRA.cr a`                           | `⌃a`       |
+| `a[b]`           | `SRA.subst a b`                      | `a⟦b⟧`     |
+| `j` (`□Δ`)       | `SRA.j`                              | —          |
+| `□a`             | `SRA.box a`                          | `□a`       |
+| `aᴴ`             | `SRA.howe a`                         | `aᴴ`       |
+| `b » c`          | `SRA.substResid b c`                 | —          |
+| `a§`             | `SRA.opHowe a`                       | `a§`       |
+| `♦a`             | `SRA.dia a`                          | `♦a`       |
+| `a⇛`             | `LeanTra.Confluence.parRed a`        | `a⇛`       |
+| `a∗`             | `LeanTra.Algebra.star a`             | `a∗`       |
+| ιa               | `OperationalDecomposition.introduction a`  | `ιa`       |
+| ε(a, b)          | `OperationalDecomposition.elimination a b` | `ε(a, b)`  |
 
-The last four are not declared here: `howe`, `substResid` and `opHowe`
-live in `SRA/Howe.lean`, and `dia` in `Metatheory/Modality.lean`. They
-are listed so that the table covers the whole vocabulary in one place.
+Not all of these live in this file. `howe`, `opHowe` and `substResid`
+live in `SRA/Howe.lean`; `box` and `dia` in `SRA/Modality.lean`; all
+five are scoped in `SRA`. `parRed` is scoped in `LeanTra.Confluence`
+(`Confluence/ParallelReduction.lean`); `star` in `LeanTra.Algebra`
+(`Algebra/KleeneStar.lean`); `introduction` and `elimination` in
+`OperationalDecomposition` (`SRA/OperationalDecomposition.lean`). A
+file that wants the last three notations needs the corresponding
+`open scoped`.
 
 ## References
 
@@ -250,6 +259,7 @@ can work with. Idempotence closes `varDiag_cotransitivity` from above. -/
 
 /-- `Δη ≤ Δ`: the variable co-equivalence is co-reflexive. -/
 theorem varDiag_coreflexivity : (SRA.varDiag : α) ≤ 1 := le_sup_left.trans_eq SRA.cr_fixpoint
+
 /-- `Δηᵒ = Δη`. The class only assumes `Δηᵒ ≤ Δη`; the reverse inequality is
 free, since applying converse-monotonicity to the axiom gives `Δηᵒᵒ ≤ Δηᵒ`,
 i.e. `Δη ≤ Δηᵒ`. Stated as an equality so that it can be rewritten with. -/
@@ -258,6 +268,7 @@ i.e. `Δη ≤ Δηᵒ`. Stated as an equality so that it can be rewritten with.
   have h : (SRA.varDiag : α)ᵒᵒ ≤ SRA.varDiagᵒ :=
     IsInvolutiveQuantale.converse_monotonicity SRA.varDiag_symmetry
   rwa [IsInvolutiveQuantale.converse_involutivity] at h
+
 /-- `Δη * Δη = Δη`: the variable co-equivalence is idempotent under
 composition. -/
 @[simp] theorem varDiag_idempotence : (SRA.varDiag : α) * SRA.varDiag = SRA.varDiag := by
@@ -275,6 +286,7 @@ Oplaxity on the unit is the right half of `cr_fixpoint`. Orthogonality to
 
 /-- `~Δ ≤ Δ`: the strict compatible refinement is oplax on the unit. -/
 theorem scr_unit_oplaxity : SRA.scr (1 : α) ≤ 1 := le_sup_right.trans_eq SRA.cr_fixpoint
+
 /-- Symmetric orthogonality: `~a * Δη ≤ ⊥`, derived from the axiomatic
 left-orthogonality via converse. -/
 theorem scr_varDiag_orthogonality (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
@@ -291,12 +303,16 @@ theorem scr_varDiag_orthogonality (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := 
 `SRA`: two terms are compatibly refined by `a` when they are either the same
 variable or built from the same operator with `a`-related sub-terms. -/
 def cr (a : α) : α := varDiag ⊔ scr a
+
 /-- `⌃·` is monotone. -/
 theorem cr_monotonicity ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b := sup_le_sup_left (SRA.scr_monotonicity h) _
+
 /-- Fixed-point law for `⌃·`: `⌃Δ = Δ`. -/
 @[simp] theorem cr_one : cr (1 : α) = 1 := SRA.cr_fixpoint
+
 /-- Structural induction: `Δ` is the least pre-fixed point of `⌃·`. -/
 theorem one_le_of_cr_le ⦃a : α⦄ (h : cr a ≤ a) : 1 ≤ a := SRA.cr_induction h
+
 /-- `⌃·` distributes over composition: `⌃a * ⌃b = ⌃(a * b)`. -/
 theorem cr_compositionality (a b : α) : cr a * cr b = cr (a * b) := by
   unfold cr
@@ -312,6 +328,7 @@ theorem cr_compositionality (a b : α) : cr a * cr b = cr (a * b) := by
     · exact le_sup_of_le_left (le_sup_of_le_left SRA.varDiag_cotransitivity)
     · rw [SRA.scr_compositionality]
       exact le_sup_of_le_right (le_sup_of_le_right le_rfl)
+
 /-- `⌃·` commutes with converse: `(⌃a)ᵒ = ⌃(aᵒ)`. -/
 @[simp]
 theorem cr_converse_commutation (a : α) : (cr a)ᵒ = cr (aᵒ) := by
@@ -332,12 +349,14 @@ theorem subst_bot_strictness_left (b : α) : SRA.subst ⊥ b = ⊥ := by
   have h := SRA.subst_join_preservation_left (∅ : Set α) b
   simp only [Set.image_empty, sSup_empty] at h
   exact h
+
 /-- Substitution preserves binary joins in the first argument. -/
 theorem subst_join_preservation_binary_left (a a' b : α) :
     SRA.subst (a ⊔ a') b = SRA.subst a b ⊔ SRA.subst a' b := by
   have h := SRA.subst_join_preservation_left ({a, a'} : Set α) b
   simp only [sSup_pair, Set.image_pair] at h
   exact h
+
 /-- Left-argument monotonicity of substitution. -/
 theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : SRA.subst a b ≤ SRA.subst a' b := by
   have key : SRA.subst (sSup ({a, a'} : Set α)) b
@@ -347,9 +366,24 @@ theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : SRA.subst a b
   have hle : SRA.subst a b ≤ SRA.subst a b ⊔ SRA.subst a' b := le_sup_left
   rw [← key] at hle
   exact hle
+
 /-- Full two-argument monotonicity of substitution. -/
 theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : SRA.subst a b ≤ SRA.subst a' b' :=
   (subst_monotonicity_left ha).trans (SRA.subst_monotonicity_right hb)
+
+/-- Substituting into a compatible refinement: `(⌃a)⟦b⟧ ≤ b ⊔ ⌃(a⟦b⟧)`. -/
+theorem subst_cr_oplaxity (a b : α) :
+    SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
+  unfold SRA.cr
+  rw [subst_join_preservation_binary_left, SRA.subst_varDiag_unit_left]
+  exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _).trans le_sup_right) b
+
+/-- Converse commutes with the base instance: `(a⟦Δ⟧)ᵒ = aᵒ⟦Δ⟧`. -/
+theorem subst_one_converse_commutation (a : α) :
+    (SRA.subst a 1)ᵒ = SRA.subst aᵒ 1 := by
+  rw [SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_one]
+
+
 
 /-! ### Laws of `j`
 
@@ -366,6 +400,7 @@ from `j` below. -/
   calc (SRA.j : α) * SRA.j
       ≤ 1 * SRA.j := mul_le_mul' SRA.j_coreflexivity le_rfl
     _ = SRA.j := one_mul _
+
 /-- `jᵒ = j`: same one-liner as `varDiag_symmetry_eq`, from `j_symmetry`
 plus involutivity of converse. -/
 @[simp] theorem j_symmetry_eq : (SRA.j : α)ᵒ = SRA.j := by

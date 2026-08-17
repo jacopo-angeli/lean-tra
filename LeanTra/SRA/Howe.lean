@@ -80,13 +80,16 @@ fixed point can be taken via `OrderHom.lfp`. Internal helper for `howe`. -/
 def howeRecursor (a : α) : α →o α where
   toFun x := cr x * a
   monotone' _ _ h := mul_le_mul_left (cr_monotonicity h) a
+
 /-- Howe extension `·ᴴ`: the unique solution of `x = ⌃x * a` (see
 `howe_unique`). Constructed as the least fixed point via Knaster–Tarski;
 uniqueness — proved below via residuals — turns "the least solution" into
 "the only solution". -/
 def howe (a : α) : α := (howeRecursor a).lfp
+
 /-- Fixed-point law: `aᴴ` satisfies `aᴴ = ⌃aᴴ * a`. -/
 theorem howe_fixpoint (a : α) : howe a = cr (howe a) * a := ((howeRecursor a).map_lfp).symm
+
 /-- Fixed-point induction: `aᴴ` is below every pre-fixed point of the Howe
 recursion. -/
 theorem howe_induction ⦃a x : α⦄ (h : cr x * a ≤ x) : howe a ≤ x := (howeRecursor a).lfp_le h
@@ -118,10 +121,12 @@ private theorem howe_solution_le {a b c : α}
     _ ≤ cr c * a := mul_le_mul_left
         (cr_monotonicity (Quantale.leftMulResiduation_le_iff_mul_le.mp le_rfl)) _
     _ = c := hc.symm
+
 /-- Uniqueness: `x = ⌃x * a` has at most one solution — so `aᴴ` is not just
 the *least* solution, it is the *only* solution. -/
 theorem howe_unique {a b c : α} (hb : b = cr b * a) (hc : c = cr c * a) : b = c :=
   le_antisymm (howe_solution_le hb hc) (howe_solution_le hc hb)
+
 /-- Usable form of uniqueness: anything satisfying the Howe equation *is* the
 Howe extension. Lets an alternative construction be identified with `howe`. -/
 theorem howe_eq_of_fixpoint {a b : α} (hb : b = cr b * a) : b = howe a :=
@@ -144,7 +149,7 @@ theorem howe_monotonicity ⦃a b : α⦄ (h : a ≤ b) : howe a ≤ howe b := by
 /-- The Howe extension fixes the identity: `Δᴴ = Δ`. Derived, not assumed:
 `Δ = ⌃Δ * Δ` by `cr_one` and `mul_one`, so `howe_eq_of_fixpoint` identifies `Δ`
 with `howe Δ`. -/
-theorem howe_identity : howe (1 : α) = 1 := (howe_eq_of_fixpoint (by rw [cr_one, mul_one])).symm
+theorem howe_one : howe (1 : α) = 1 := (howe_eq_of_fixpoint (by rw [cr_one, mul_one])).symm
 
 
 
@@ -164,16 +169,20 @@ fixed point can be taken via `OrderHom.lfp`. Mirror of `howeRecursor`, with
 def opHoweRecursor (a : α) : α →o α where
   toFun x := a * cr x
   monotone' _ _ h := mul_le_mul_right (cr_monotonicity h) a
+
 /-- Op-Howe extension `·§`: the unique solution of `x = a * ⌃x`, obtained
 as the least fixed point of `opHoweRecursor`. Mirror of `howe`. -/
 def opHowe (a : α) : α := (opHoweRecursor a).lfp
+
 /-- Fixed-point law: `a§ = a * ⌃(a§)`. -/
 theorem opHowe_fixpoint (a : α) : opHowe a = a * cr (opHowe a) :=
   ((opHoweRecursor a).map_lfp).symm
+
 /-- Fixed-point induction: `a§` is below every pre-fixed point of the
 op-Howe recursor. -/
 theorem opHowe_induction ⦃a x : α⦄ (h : a * cr x ≤ x) : opHowe a ≤ x :=
   (opHoweRecursor a).lfp_le h
+
 /-- Any two solutions of `x = a * ⌃x` bound each other. -/
 private theorem opHowe_solution_le {a b c : α} (hb : b = a * cr b) (hc : c = a * cr c) : b ≤ c := by
   rw [show b = b * 1 from (mul_one b).symm]
@@ -187,13 +196,16 @@ private theorem opHowe_solution_le {a b c : α} (hb : b = a * cr b) (hc : c = a 
     _ ≤ a * cr c := mul_le_mul_right
         (cr_monotonicity (Quantale.rightMulResiduation_le_iff_mul_le.mp le_rfl)) _
     _ = c := hc.symm
+
 /-- Uniqueness: `x = a * ⌃x` has at most one solution, so `a§` is not just
 the *least* solution, it is the *only* solution. -/
 theorem opHowe_unique {a b c : α} (hb : b = a * cr b) (hc : c = a * cr c) : b = c :=
   le_antisymm (opHowe_solution_le hb hc) (opHowe_solution_le hc hb)
+
 /-- Anything satisfying the op-Howe equation equals `opHowe`. -/
 theorem opHowe_eq_of_fixpoint {a b : α} (hb : b = a * cr b) : b = opHowe a :=
   opHowe_unique hb (opHowe_fixpoint a)
+
 /-- Converse of Howe is op-Howe of converse: `(aᴴ)ᵒ = (aᵒ)§`. -/
 theorem howe_converse (a : α) : (howe a)ᵒ = opHowe (aᵒ) := by
   refine opHowe_eq_of_fixpoint ?_
@@ -205,8 +217,10 @@ theorem howe_converse (a : α) : (howe a)ᵒ = opHowe (aᵒ) := by
 
 
 /-! ### Closedness: residual of substitution -/
+
 /-- Right adjoint of `·⟦b⟧`: the largest `a` such that `a⟦b⟧ ≤ c`. -/
 def substResid (b c : α) : α := sSup {a | SRA.subst a b ≤ c}
+
 /-- The substitution/residual adjunction `·⟦b⟧ ⊣ b » ·`. -/
 theorem subst_le_iff {a b c : α} : SRA.subst a b ≤ c ↔ a ≤ substResid b c := by
   refine ⟨fun h => le_sSup h, fun h => ?_⟩
@@ -218,6 +232,7 @@ theorem subst_le_iff {a b c : α} : SRA.subst a b ≤ c ↔ a ≤ substResid b c
         refine sSup_le ?_
         rintro _ ⟨y, hy, rfl⟩
         exact hy
+
 /-- `Δ⟦Δ⟧ = Δ`: substituting the identity into the identity is the identity. -/
 theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
   refine le_antisymm ?_ ?_
@@ -233,6 +248,23 @@ theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
   · calc (1 : α)
         = SRA.subst varDiag 1 := (SRA.subst_varDiag_unit_left 1).symm
       _ ≤ SRA.subst 1 1 := subst_monotonicity_left varDiag_coreflexivity
+
+/-- The base instance is idempotent: `(a⟦Δ⟧)⟦Δ⟧ = a⟦Δ⟧`. -/
+theorem subst_one_idempotence (a : α) :
+    SRA.subst (SRA.subst a 1) 1 = SRA.subst a 1 := by
+  rw [SRA.subst_associativity, subst_one_one]
+
+/-- Compatibility implies Leibniz: if `⌃a ≤ a` then `Δ⟦a⟧ ≤ a`. -/
+theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
+    SRA.subst 1 a ≤ a := by
+  refine subst_le_iff.mpr ?_
+  refine one_le_of_cr_le ?_
+  refine subst_le_iff.mp ?_
+  calc SRA.subst (SRA.cr (SRA.substResid a a)) a
+      ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) := subst_cr_oplaxity _ _
+    _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_monotonicity (subst_le_iff.mpr le_rfl)) a
+    _ ≤ a ⊔ a := sup_le_sup_left h a
+    _ = a := sup_idem a
 
 
 

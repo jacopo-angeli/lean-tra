@@ -6,8 +6,8 @@ import LeanTra.SRA.Modality
 import LeanTra.SRA.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Evaluation
-import LeanTra.Metatheory.Reduction
 import LeanTra.Algebra.Diamond
+import LeanTra.Metatheory.Confluence.ParallelReduction
 import LeanTra.Metatheory.Confluence.Orthogonal
 import LeanTra.Metatheory.Confluence.Local
 import LeanTra.Instances.FirstOrder.Terms

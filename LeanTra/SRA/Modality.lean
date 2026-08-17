@@ -56,12 +56,14 @@ equation lemma. -/
 /-- The closure modality `□a := j * a * j`: the pairs of `a` whose two
 endpoints are both closed. -/
 def box (a : α) : α := SRA.j * a * SRA.j
+
 /-- `□` is deflationary: `□a ≤ a`. -/
 theorem box_le (a : α) : SRA.box a ≤ a := by
   change SRA.j * a * SRA.j ≤ a
   calc SRA.j * a * SRA.j
       ≤ 1 * a * 1 := mul_le_mul' (mul_le_mul' SRA.j_coreflexivity le_rfl) SRA.j_coreflexivity
     _ = a := by rw [one_mul, mul_one]
+
 /-- `□` is idempotent: `□(□a) = □a`. -/
 theorem box_idempotence (a : α) : SRA.box (SRA.box a) = SRA.box a := by
   change SRA.j * (SRA.j * a * SRA.j) * SRA.j = SRA.j * a * SRA.j
@@ -70,6 +72,7 @@ theorem box_idempotence (a : α) : SRA.box (SRA.box a) = SRA.box a := by
   rw [← mul_assoc SRA.j SRA.j a]
   -- goal: SRA.j * SRA.j * a * SRA.j * SRA.j = SRA.j * a * SRA.j
   rw [j_idempotence, mul_assoc (SRA.j * a) SRA.j SRA.j, j_idempotence]
+
 /-- `□` is monotone: from monotonicity of `*`. -/
 theorem box_monotonicity ⦃a b : α⦄ (h : a ≤ b) : SRA.box a ≤ SRA.box b := by
   change SRA.j * a * SRA.j ≤ SRA.j * b * SRA.j
@@ -104,6 +107,7 @@ theorem box_absorption_left (a b : α) : SRA.box a * SRA.box b = SRA.box (SRA.bo
         ← mul_assoc SRA.j (SRA.j * a) SRA.j,
         ← mul_assoc SRA.j SRA.j a, j_idempotence]
   rw [hL, hR]
+
 /-- Right absorption: `□a * □b = □(a * □b)`. -/
 theorem box_absorption_right (a b : α) : SRA.box a * SRA.box b = SRA.box (a * SRA.box b) := by
   change SRA.j * a * SRA.j * (SRA.j * b * SRA.j)
@@ -120,6 +124,7 @@ theorem box_absorption_right (a b : α) : SRA.box a * SRA.box b = SRA.box (a * S
         ← mul_assoc (SRA.j * a) SRA.j b,
         mul_assoc (SRA.j * a * SRA.j * b) SRA.j SRA.j, j_idempotence]
   rw [hL, hR]
+
 /-- `□` is lax over composition: `□a * □b ≤ □(a * b)`. -/
 theorem box_compositionality_lax (a b : α) : SRA.box a * SRA.box b ≤ SRA.box (a * b) := by
   change SRA.j * a * SRA.j * (SRA.j * b * SRA.j) ≤ SRA.j * (a * b) * SRA.j
@@ -156,6 +161,7 @@ theorem box_converse_commutation (a : α) : (SRA.box a)ᵒ = SRA.box (aᵒ) := b
     _ = (SRA.j)ᵒ * (aᵒ * (SRA.j)ᵒ) := by rw [IsInvolutiveQuantale.converse_compositionality]
     _ = SRA.j * (aᵒ * SRA.j) := by rw [j_symmetry_eq]
     _ = SRA.j * aᵒ * SRA.j := (mul_assoc _ _ _).symm
+
 /-- `□` preserves arbitrary joins. -/
 theorem box_join_preservation (s : Set α) : SRA.box (sSup s) = sSup (SRA.box '' s) := by
   refine le_antisymm ?_ ?_
@@ -170,10 +176,12 @@ theorem box_join_preservation (s : Set α) : SRA.box (sSup s) = sSup (SRA.box ''
   · refine sSup_le ?_
     rintro _ ⟨y, hy, rfl⟩
     exact box_monotonicity (le_sSup hy)
+
 /-- `□` preserves binary joins: `□(a ⊔ b) = □a ⊔ □b`. -/
 theorem box_join_preservation_binary (a b : α) : SRA.box (a ⊔ b) = SRA.box a ⊔ SRA.box b := by
   have h := box_join_preservation ({a, b} : Set α)
   rwa [sSup_pair, Set.image_pair, sSup_pair] at h
+
 /-- `□` and `Δη` are orthogonal: `□Δη = ⊥`. -/
 theorem box_varDiag_orthogonality : SRA.box (SRA.varDiag : α) = ⊥ := by
   change SRA.j * SRA.varDiag * SRA.j = ⊥
@@ -214,12 +222,15 @@ candidate and the adjunction `□ ⊣ ♦` follows. -/
 /-- The diamond `♦a := sSup {x | □x ≤ a}`: the largest relation whose
 closed part `a` contains. -/
 def dia (a : α) : α := sSup {x | SRA.box x ≤ a}
+
 /-- `♦` is monotone. -/
 theorem dia_monotonicity ⦃a a' : α⦄ (h : a ≤ a') : dia a ≤ dia a' :=
   sSup_le_sSup fun _ hx => le_trans hx h
+
 /-- Introduction half of the adjunction: `□a ≤ b` gives `a ≤ ♦b`. -/
 theorem le_dia_of_box_le {a b : α} (h : SRA.box a ≤ b) : a ≤ dia b :=
   le_sSup h
+
 /-- The adjunction `□ ⊣ ♦`: `□a ≤ b ↔ a ≤ ♦b`. -/
 theorem box_le_iff {a b : α} : SRA.box a ≤ b ↔ a ≤ dia b := by
   refine ⟨le_dia_of_box_le, fun h => ?_⟩
@@ -241,11 +252,14 @@ endpoints of every pair it relates are closed. The inequality
 
 /-- `a` is closed when it refines its own `□`. -/
 def IsClosed (a : α) : Prop := a ≤ SRA.box a
+
 /-- `a` is closed iff `□a = a`. -/
 theorem isClosed_iff {a : α} : IsClosed a ↔ SRA.box a = a :=
   ⟨fun h => le_antisymm (box_le a) h, fun h => h.ge⟩
+
 /-- `□a` is closed. -/
 theorem box_isClosed (a : α) : IsClosed (SRA.box a) := (box_idempotence a).ge
+
 /-- `⊥` is closed. -/
 theorem isClosed_bot : IsClosed (⊥ : α) := bot_le
 
@@ -261,10 +275,12 @@ ones without redoing the recursion. -/
 
 /-- `F` is closed when `□ ∘ F ≤ F ∘ □` pointwise. -/
 def IsClosedFun (F : α →o α) : Prop := ∀ x, SRA.box (F x) ≤ F (SRA.box x)
+
 /-- `□ ∘ F`, bundled as an `OrderHom`. -/
 def boxComp (F : α →o α) : α →o α where
   toFun x := SRA.box (F x)
   monotone' _ _ h := box_monotonicity (F.mono h)
+
 /-- Transfer lemma: for a closed monotone `F`, `□(μF) = μ(□∘F)`. -/
 theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
     SRA.box F.lfp = (boxComp F).lfp := by
@@ -290,7 +306,7 @@ theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
 
 Two statements about `□` that are neither proved nor part of the class.
 
-`SubstJClosed` below asserts that substituting by `j` yields a closed
+`IsSubstJClosed` below asserts that substituting by `j` yields a closed
 relation. It holds in the term model
 (`Instances.FirstOrder.SynRel.substJClosed`) but is not derivable from
 the axioms, and nothing consumes it yet; it is recorded as a candidate
@@ -303,7 +319,7 @@ a direct application of `box_lfp` to an evaluation recursor, which is why
 the evaluation development does not use it. -/
 
 /-- Candidate axiom: substituting by `j` yields a closed relation. -/
-def SubstJClosed (α : Type*) [Monoid α] [CompleteLattice α]
+def IsSubstJClosed (α : Type*) [Monoid α] [CompleteLattice α]
     [IsQuantale α] [IsInvolutiveQuantale α] [SRA α] : Prop :=
   ∀ a : α, SRA.IsClosed (SRA.subst a SRA.j)
 

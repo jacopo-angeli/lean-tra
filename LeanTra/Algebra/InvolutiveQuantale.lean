@@ -25,7 +25,7 @@ We take exactly **three** as primitive: involutivity, contravariance, and
 monotonicity. The remaining two are *derived*:
 
 * `1ᵒ = 1` follows from involutivity, contravariance and the monoid unit laws
-  (`converse_identity`);
+  (`converse_one`);
 * join-preservation follows from monotonicity and involutivity, since a monotone
   involution is an order isomorphism and thus preserves arbitrary joins
   (`converse_join_preservation`).
@@ -95,7 +95,7 @@ theorem converse_monotonicity_iff : aᵒ ≤ bᵒ ↔ a ≤ b := by
 /-- `Δᵒ = Δ`: the identity is self-converse. Derived from the monoid unit laws
 together with `converse_involutivity` and `converse_compositionality`. -/
 @[simp]
-theorem converse_identity : (1 : α)ᵒ = 1 := by
+theorem converse_one : (1 : α)ᵒ = 1 := by
   have key : ∀ a : α, a * (1 : α)ᵒ = a := fun a =>
     calc a * (1 : α)ᵒ
         = aᵒᵒ * (1 : α)ᵒ := by rw [converse_involutivity]

@@ -713,7 +713,7 @@ theorem box_top_ne_bot (f : S.op) (h : S.arity f = 0) :
 
 /-! ## Experiment 3(c) — `T[j]` is closed in the term model.
 
-Model verification of `SRA.SubstJClosed` (see `Structure/Derived.lean`):
+Model verification of `SRA.IsSubstJClosed` (see `Structure/Derived.lean`):
 for every `a : SynRel S`, `subst a j` is closed. The argument: the
 pointwise clause `∀ x, j.rel Θ (τ x) (σ x)` in the definition of
 `subst · j` forces `τ = σ` and every `τ x` a weakened closed term.
@@ -732,7 +732,7 @@ with `τ x = Tm.close Θ (τ' x)`; then
 similarly for `v` using `τ = σ`. Choice enters via
 `Classical.axiomOfChoice` to package the per-variable `τ' x`.
 
-Together with the abstract `SRA.SubstJClosed` predicate, this
+Together with the abstract `SRA.IsSubstJClosed` predicate, this
 theorem is the model-side half of the "candidate axiom" record: the
 axiom holds where it matters. -/
 theorem substJClosed (a : SynRel S) : SRA.IsClosed (SynRel.subst a j) := by
