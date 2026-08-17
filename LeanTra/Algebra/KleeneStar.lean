@@ -140,7 +140,7 @@ theorem star_idempotence (a : α) : a∗∗ = a∗ := by
 
 /-- The identity is already closed: iterating it produces nothing new. -/
 @[simp]
-theorem star_identity : (1 : α)∗ = 1 := by
+theorem star_one : (1 : α)∗ = 1 := by
   refine le_antisymm ?_ (star_reflexivity _)
   refine star_induction ?_
   rw [one_mul]
@@ -214,7 +214,7 @@ an `aᵒ∗`-sequence. -/
 theorem star_converse_commutation (a : α) : (a∗)ᵒ = (aᵒ)∗ := by
   have h : ∀ b : α, (b∗)ᵒ = 1 ⊔ (b∗)ᵒ * bᵒ := fun b => by
     conv_lhs => rw [star_fixpoint b]
-    rw [IsInvolutiveQuantale.converse_join_preservation_binary, IsInvolutiveQuantale.converse_identity,
+    rw [IsInvolutiveQuantale.converse_join_preservation_binary, IsInvolutiveQuantale.converse_one,
         IsInvolutiveQuantale.converse_compositionality]
   have ge : (aᵒ)∗ ≤ (a∗)ᵒ := by
     rw [star_right_characterisation]

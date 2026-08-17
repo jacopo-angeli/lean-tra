@@ -10,18 +10,12 @@ public import LeanTra.Algebra.KleeneStar
 /-!
 # Evaluation
 
-This development expresses the metatheory of a formal system in a
-point-free algebra of relations: properties are stated as inequalities
-between relations, built from composition, converse, join and
-substitution, rather than as quantified statements about terms and
-derivations. Confluence, determinism and semantic equivalence are all
-formulated that way.
-
-Two of those three are not properties of reduction. Determinism is a
-property of the evaluation a rule induces, and semantic equivalence is
-defined from evaluation as well. The algebra therefore needs a notion of
-evaluation of its own, expressed in the same operations as everything
-else and not imported from outside. Supplying it is what this file does.
+Confluence, determinism and semantic equivalence are all formulated as
+inequalities on relations. Two of the three, determinism and semantic
+equivalence, are properties of *evaluation*, not of reduction. The
+algebra therefore needs a notion of evaluation of its own, expressed in
+the same operations as everything else and not imported from outside.
+Supplying it is what this file does.
 
 A rule of computation says how a term may change. It does not say when
 the changing stops, nor in what order the opportunities to change are
@@ -30,67 +24,52 @@ that the operational decomposition has already fixed.
 
 The starting observation is that a rule cannot fire wherever it pleases.
 A destructor must inspect one of its arguments, and that argument might
-not be in the right shape to begin with: in `app(app(λx.t, s), r)` the
-outer application is not a redex, and becomes one only once the inner
-one has been contracted. Evaluation is therefore not the rule iterated
-blindly, but the rule applied after the inspected argument has itself
-been brought into shape.
+not be in the right shape to begin with: `app(app(λx.t, s), r)` is not a
+redex, and becomes one only once the inner application has been
+contracted. Evaluation is therefore not the rule iterated blindly, but
+the rule applied after the inspected argument has itself been brought
+into shape.
 
-`majorSubtermRecursionStep` performs one such preparation: a construction
-is accepted as it stands, a destruction has its inspected argument handed
-back for evaluation, and the rule then acts on the outcome. Iterating it
-to exhaustion gives `majorSubtermRecursion`, the least relation closed
-under that step. The recursion runs through the structure of the term, not
-through time: it descends the spine of inspected arguments as far as
-necessary, and the rule fires once at each level it passes.
+`majorDescentRecursor` performs one such preparation: a
+construction is accepted as it stands, a destruction has its inspected
+argument handed back for evaluation, and the rule then acts on the
+outcome. Iterating it to exhaustion gives `majorDescent`, the
+least fixed point of that step. The recursion runs through the structure
+of the term, not through time: it descends the spine of inspected
+arguments as far as necessary, and the rule fires once at each level it
+passes.
 
-Because the step ends with the rule, `majorSubtermRecursion` obliges the
+Because the step ends with the rule, `majorDescent` obliges the
 rule to fire. A term already in constructed shape has nothing left to
-prepare and no redex to offer, so it is related to nothing at all. This
-is the sense in which the recursor is not yet a semantics: it can begin a
-computation but it cannot finish one.
-
-`majorSubtermRecursion_solution` is the equation the recursor satisfies, and
-`majorSubtermRecursion_least` says it lies below every other solution.The
-equation is not arbitrary. Howe's construction is the least solution of
-`x = x̂ ; a`, where `x̂` refines compatibly everywhere: under constructors,
-and in every argument of a destructor. The operational decomposition splits
-that refinement into an introduction part and an elimination part, and the
-recursor keeps the shape while restricting both. The introduction part becomes
-the bare canonical forms, so that nothing is evaluated under a constructor;
-the elimination part keeps the recursion in the inspected slot and drops it
-elsewhere, so that minor arguments are left alone. What remains is the
-evaluation order the decomposition declares, written as an equation.
+prepare and no redex to offer, so it is related to nothing.
+`majorDescent` is not yet a semantics: it can begin a computation but
+cannot finish one.
 
 `oneStepEvaluation` repairs the omission by applying the recursor not to
-the rule but to the rule enlarged with the canonical forms. Where the
-recursor obliged the rule to fire, the enlarged one permits it not to:
+the rule but to the rule enlarged with the canonical forms. Where
+`majorDescent` obliged the rule to fire, the enlarged one permits it not to:
 a term in constructed shape is now related to itself, so a run may come
 to rest. One step of evaluation is thus either an answer or a single
-contraction. `oneStepEvaluation_solution` and `oneStepEvaluation_least`
-are the two laws for it. Both carry a hypothesis the recursor's did not:
-enlarging the rule adds nothing only if the rule cannot act on a canonical
-form in the first place, and that is what the Gentzen inversion
-principle `GIP` guarantees.
+contraction. Its fixed-point equation and induction principle carry a
+hypothesis the recursor's did not: enlarging the rule adds nothing only
+if the rule cannot act on a canonical form in the first place, and that
+is what `GIP` guarantees.
 
 `bigStepEvaluation` iterates a single step any number of times, then
 requires what is reached to be canonical. The iteration is the
 reflexive-transitive closure; the requirement is a composition with the
 canonical forms on the right. It is the requirement that makes this
 evaluation rather than reduction: a run counts only if it ends where a
-run may end. In the call-by-value lambda calculus, with beta restricted
-to value arguments, this is the usual big-step judgement. Being built by
-iteration rather than as a fixed point, it carries no characterisation
-of its own; the corresponding one is proved where it is used.
+run may end.
 
 ## References
 
-* Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.* LICS 2026
+* Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.*
+  LICS 2026.
 -/
 @[expose] public section
 
 open scoped LeanTra.Algebra
-
 open OperationalDecomposition
 
 namespace LeanTra.Metatheory
@@ -98,55 +77,61 @@ namespace LeanTra.Metatheory
 variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [OperationalDecomposition α]
 
-/-- To evaluate a destruction, the subterm it inspects must be evaluated
-first; only then can the rule fire. This map performs one such step. It
-is monotone, so it has a least fixed point. -/
-def majorSubtermRecursionStep (a : α) : α →o α where
+/-! ### The subterm recursion
+
+The bundled OrderHom whose least fixed point runs the rule under the
+inspected subterms, together with the two laws that pin down that fixed
+point. Nothing further is used about the recursor once its fixed-point
+equation and induction principle are established. -/
+
+/-- One preparation step: a construction is accepted as it stands, a
+destruction has its inspected argument handed back, and the rule then
+acts on the result. Bundled as an `OrderHom` so its least fixed point
+can be taken via `OrderHom.lfp`. -/
+def majorDescentRecursor (a : α) : α →o α where
   toFun x := ((introductionCoreflexive : α) ⊔ majorProjection x) * a
   monotone' _ _ h := by
     exact mul_le_mul' (sup_le_sup_left
       (elimination_monotonicity h le_rfl) _) le_rfl
 
-/-- That least fixed point: recursion that descends into inspected
-subterms until a construction is reached. Taking the least one means two
-terms are related only when a finite descent relates them. -/
-def majorSubtermRecursion (a : α) : α := (majorSubtermRecursionStep a).lfp
+/-- The recursion that descends into inspected subterms until a
+construction is reached: the least fixed point of the preparation step. -/
+def majorDescent (a : α) : α := (majorDescentRecursor a).lfp
 
-/-- The recursor solves its equation: a construction, or a destruction
-whose inspected subterm has already been evaluated, with the rule acting
-on the result. A fixed point does not unfold by itself, so this is how a
-single step is exposed. -/
-theorem majorSubtermRecursion_solution (a : α) :
-  majorSubtermRecursion a = ((introductionCoreflexive : α) ⊔ majorProjection (majorSubtermRecursion a)) * a := by
-  change (majorSubtermRecursionStep a).lfp
-        = ((introductionCoreflexive : α) ⊔ majorProjection (majorSubtermRecursionStep a).lfp) * a
-  exact ((majorSubtermRecursionStep a).map_lfp).symm
+/-- Fixed-point law:
+`majorDescent a = (introductionCoreflexive ⊔ majorProjection (majorDescent a)) * a`. -/
+theorem majorDescent_fixpoint (a : α) :
+  majorDescent a = ((introductionCoreflexive : α) ⊔ majorProjection (majorDescent a)) * a := by
+  change (majorDescentRecursor a).lfp
+        = ((introductionCoreflexive : α) ⊔ majorProjection (majorDescentRecursor a).lfp) * a
+  exact ((majorDescentRecursor a).map_lfp).symm
 
-/-- The recursor also lies below every other solution of that equation.
-The two laws together are all that is known about it, and all that is
-needed: the construction can be set aside from here on. -/
-theorem majorSubtermRecursion_least {a x : α}
+/-- Fixed-point induction: `majorDescent a` lies below every
+pre-fixed point of the preparation step. -/
+theorem majorDescent_induction {a x : α}
     (h : ((introductionCoreflexive : α) ⊔ majorProjection x) * a ≤ x) :
-    majorSubtermRecursion a ≤ x :=
-  (majorSubtermRecursionStep a).lfp_le h
+    majorDescent a ≤ x :=
+  (majorDescentRecursor a).lfp_le h
 
-/-- The recursor alone never brings a run to rest, since a term already
-in constructed shape has nothing to descend into and no redex to offer.
-Enlarging the rule with the canonical forms repairs this: such a term is
-now related to itself, and a single step is either an answer or one
-contraction. -/
-def oneStepEvaluation (a : α) : α := majorSubtermRecursion (a ⊔ introductionCoreflexive)
+/-! ### One-step evaluation
 
-/-- By construction one-step evaluation is the least solution of the
-recursor's equation at the enlarged rule, `x = (‾Δ ∨ ⟨x⟩) ; (a ∨ ‾Δ)`,
-which is not the equation one wants. Distributing gives four summands,
-and three of them collapse. Composing a canonical form with the rule is
-empty, since `GIP` keeps the rule from acting on one; composing the
-inspected slot with a canonical form is empty by orthogonality of
-introductions and eliminations; and a canonical form composed with
-itself is again a canonical form. Only the descent survives untouched,
-and what remains is `‾Δ ∨ ⟨x⟩ ; a`. -/
-private theorem majorSubtermRecursionStep_sup_introductionCoreflexive {a : α}
+Enlarging the rule with the canonical forms turns the recursion into an
+evaluation whose runs may terminate: a term in constructed shape is now
+related to itself. The fixed-point equation and induction principle
+match `majorDescent`'s, restricted to the summand `majorProjection x * a`,
+and they hold only for rules that cannot already act on a canonical
+form, which is what `GIP` supplies. -/
+
+/-- One-step evaluation: the recursion applied to the rule enlarged with
+the canonical forms, so that a run may come to rest at an answer. -/
+def oneStepEvaluation (a : α) : α := majorDescent (a ⊔ introductionCoreflexive)
+
+/-- Collapse of the four summands of the enlarged recursor: composing a
+canonical form with the rule is empty by `GIP`, composing the inspected
+slot with a canonical form is empty by intro/elim orthogonality, and
+composing a canonical form with itself is again a canonical form. What
+remains is `introductionCoreflexive ⊔ majorProjection x * a`. -/
+private theorem majorDescentRecursor_sup_introductionCoreflexive {a : α}
   (hGIP : GIP a)
   (x : α) :
   ((introductionCoreflexive : α) ⊔ majorProjection x) * (a ⊔ introductionCoreflexive) = introductionCoreflexive ⊔ majorProjection x * a := by
@@ -194,39 +179,41 @@ private theorem majorSubtermRecursionStep_sup_introductionCoreflexive {a : α}
         (le_sup_of_le_left introductionCoreflexive_mul_self.ge)
     · exact le_sup_of_le_left le_sup_right
 
-/-- One-step evaluation therefore solves `x = ‾Δ ∨ ⟨x⟩ ; a`: a term is
-either already canonical, or its inspected subterm is evaluated and the
-rule fires on the result. The hypothesis is what the collapse above
-consumes, and it is why this law is conditional where the recursor's was
-not. -/
-theorem oneStepEvaluation_solution {a : α} (hGIP : GIP a) :
+/-- Fixed-point law for one-step evaluation:
+`oneStepEvaluation a = introductionCoreflexive ⊔ majorProjection (oneStepEvaluation a) * a`,
+under `GIP a`. -/
+theorem oneStepEvaluation_fixpoint {a : α} (hGIP : GIP a) :
     oneStepEvaluation a = introductionCoreflexive ⊔ majorProjection (oneStepEvaluation a) * a := by
-  change majorSubtermRecursion (a ⊔ introductionCoreflexive)
+  change majorDescent (a ⊔ introductionCoreflexive)
       = introductionCoreflexive
-          ⊔ majorProjection (majorSubtermRecursion (a ⊔ introductionCoreflexive)) * a
-  conv_lhs => rw [majorSubtermRecursion_solution (a ⊔ introductionCoreflexive)]
-  rw [majorSubtermRecursionStep_sup_introductionCoreflexive hGIP]
+          ⊔ majorProjection (majorDescent (a ⊔ introductionCoreflexive)) * a
+  conv_lhs => rw [majorDescent_fixpoint (a ⊔ introductionCoreflexive)]
+  rw [majorDescentRecursor_sup_introductionCoreflexive hGIP]
 
-/-- And it lies below every other solution of that equation. With both
-laws established, one-step evaluation is determined without reference to
-the fixed point it was built from. -/
-theorem oneStepEvaluation_least {a x : α}
+/-- Fixed-point induction for one-step evaluation: `oneStepEvaluation a`
+lies below every pre-fixed point of `introductionCoreflexive ⊔
+majorProjection · * a`, under `GIP a`. -/
+theorem oneStepEvaluation_induction {a x : α}
     (hGIP : GIP a)
     (h : (introductionCoreflexive : α) ⊔ majorProjection x * a ≤ x) :
     oneStepEvaluation a ≤ x := by
-  refine majorSubtermRecursion_least ?_
-  rw [majorSubtermRecursionStep_sup_introductionCoreflexive hGIP]
+  refine majorDescent_induction ?_
+  rw [majorDescentRecursor_sup_introductionCoreflexive hGIP]
   exact h
 
-/-- One step contracts once and halts. Evaluation contracts until
-nothing remains, then reports what was reached: iterate one step, and
-require the result to be canonical. That requirement is what separates
-evaluation from reduction, which may stop anywhere. -/
+/-! ### Big-step evaluation
+
+The reflexive-transitive closure of one-step, followed by a compulsory
+canonical form. The latter is what separates evaluation from reduction:
+a run counts only if it ends where a run may end. -/
+
+/-- Big-step evaluation: any number of one-step evaluations, then a
+canonical form. -/
 def bigStepEvaluation (a : α) : α := (oneStepEvaluation a)∗ * introductionCoreflexive
 
 end LeanTra.Metatheory
 
-#print axioms LeanTra.Metatheory.majorSubtermRecursion_solution
-#print axioms LeanTra.Metatheory.majorSubtermRecursion_least
-#print axioms LeanTra.Metatheory.oneStepEvaluation_solution
-#print axioms LeanTra.Metatheory.oneStepEvaluation_least
+#print axioms LeanTra.Metatheory.majorDescent_fixpoint
+#print axioms LeanTra.Metatheory.majorDescent_induction
+#print axioms LeanTra.Metatheory.oneStepEvaluation_fixpoint
+#print axioms LeanTra.Metatheory.oneStepEvaluation_induction

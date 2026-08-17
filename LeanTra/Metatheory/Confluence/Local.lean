@@ -4,11 +4,12 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.Metatheory.Confluence.Orthogonal
+public import LeanTra.Metatheory.Confluence.ParallelReduction
+public import LeanTra.Algebra.Diamond
 public import LeanTra.Metatheory.GentzenPrinciples
 
 /-!
-# Confluence of parallel reduction from conditions on the rule
+# Confluence from local conditions on the rule
 
 `Confluence/Orthogonal.lean` derives the diamond property of `a⇛` from
 `IsOrthogonal a`. That hypothesis is adequate but not usable as a
@@ -16,38 +17,37 @@ criterion: its second conjunct mentions `a⇛` itself, so deciding whether
 a given rewrite rule satisfies it presupposes knowledge of the very
 object the theorem is about.
 
-This file takes the other route. Every hypothesis here is a condition on
-the rule alone: `a` is a reduction, it is closed under substitution
-instances, it is deterministic, and it satisfies the two Gentzen
-principles. Parallel reduction occurs only in the conclusion.
+This file takes the other route. Every hypothesis is a condition on the
+rule alone: `a` is a reduction, its base substitution instance `a⟦Δ⟧`
+is bounded by `a`, `aᵒ * a ≤ Δ`, and the two Gentzen principles. Each
+one can be read off a rewrite rule directly, and parallel reduction
+occurs only in the conclusion.
 
-The argument is organised in three layers. The bottom layer is the four
-conditions on `a`, each of which can be read off a rewrite rule directly.
-The top layer is the diamond property. Between them sits a single
-intermediate condition, `Struct a b`, relating the rule to an auxiliary
-relation `b`. It isolates exactly the amount of interaction between rule
-and parallel reduction that the diamond argument consumes, and nothing
-more, which is what lets the outer hypotheses stay local: `Struct` is
-discharged at `b = (a⇛)ᵒ` from the Gentzen principles, so it never has to
-be assumed.
+The argument is organised in three layers. The bottom layer is those
+four conditions on `a`. The top layer is the diamond property. Between
+them sits a single intermediate condition, `IsStruct a b`, relating the
+rule to an auxiliary relation `b`: it isolates exactly the amount of
+interaction between rule and parallel reduction that the diamond
+argument consumes, and nothing more. That is what lets the outer
+hypotheses stay local: `IsStruct` is discharged at `b = (a⇛)ᵒ` from the
+Gentzen principles, so it never has to be assumed.
 
-The whole argument is the single theorem `confluence_local` — conclusion
-(i) of the bridge theorem. The separators inside its proof mark the
-stages: the diamond property is established from `Struct`, and `Struct`
-is discharged from the Gentzen principles along the way.
+The whole argument is the single theorem `confluence_local`, conclusion
+(i) of the bridge theorem of the reference. The separators inside its
+proof mark the stages: the diamond property is established from
+`IsStruct`, and `IsStruct` is discharged from the Gentzen principles along
+the way.
 
 ## References
 
-* Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.* LICS 2026
+* Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.*
+  LICS 2026.
 -/
-
 @[expose] public section
 
-open scoped IsInvolutiveQuantale Quantale SRA LeanTra.Confluence
+open scoped IsInvolutiveQuantale Quantale SRA
 open LeanTra.Algebra
-
 open LeanTra.Metatheory
-
 open OperationalDecomposition
 
 namespace LeanTra.Confluence
@@ -56,24 +56,33 @@ variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
   [OperationalDecomposition α]
 
-/-- A relation is *substitutive at identity* when substituting the monoid
-identity is bounded by the relation itself: `a[1] ≤ a`. -/
+/-! ### Predicates on rules
+
+Three inequalities on the rule alone, used only in the theorem below.
+`IsSubstitutiveAtIdentity` and `IsDeterministic` are the local
+counterparts of the two orthogonality conjuncts; `IsStruct` is the
+intermediate condition on `(a, b)` that the diamond argument actually
+consumes, and that the Gentzen principles discharge at `b = (a⇛)ᵒ`. -/
+
+/-- `a⟦Δ⟧ ≤ a`: the base substitution instance is bounded by the rule. -/
 def IsSubstitutiveAtIdentity (a : α) : Prop := SRA.subst a 1 ≤ a
 
-/-- A relation is *deterministic* when its converse-post-composition is
-sub-identity: `aᵒ * a ≤ 1`. Distinct from `IsDeterministicReduction`, which
-is the same condition on the base substitution instance `a[1]`. -/
+/-- `aᵒ * a ≤ Δ`: the rule is deterministic on the nose, i.e. any two
+`a`-rewrites of the same term agree. -/
 def IsDeterministic (a : α) : Prop := aᵒ * a ≤ 1
 
-/-- The *structural condition* on a pair `(a, b)`: a strict compatible
-refinement of `b` standing in front of the rule can be pushed past it, at
-the cost of substituting `b` into itself, `~b * a ≤ a * b[b]`.
+/-- `~b * a ≤ a * b⟦b⟧`: a strict compatible refinement of `b` standing
+in front of the rule can be pushed past it, at the cost of substituting
+`b` into itself. -/
+def IsStruct (a b : α) : Prop := SRA.scr b * a ≤ a * SRA.subst b b
 
-Read operationally, this says that a rule firing underneath `b`-related
-term structure can be made to fire first, the structure being absorbed
-into a substitution afterwards. It is the only fact about the interaction
-between `a` and `b` that the diamond argument uses. -/
-def Struct (a b : α) : Prop := SRA.scr b * a ≤ a * SRA.subst b b
+/-! ### Confluence from local conditions
+
+The single theorem the file exists to prove. Its five hypotheses are all
+conditions on the rule; parallel reduction occurs only in the
+conclusion. The proof runs in three stages, marked by the separators
+inside it: rearranging the hypotheses, discharging `IsStruct a ((a⇛)ᵒ)`
+from the Gentzen principles, and running the diamond argument. -/
 
 theorem confluence_local {a : α}
     (h1 : IsReduction a)
@@ -103,7 +112,7 @@ theorem confluence_local {a : α}
     rw [IsInvolutiveQuantale.converse_compositionality, SRA.varDiag_symmetry_eq,
         IsInvolutiveQuantale.converse_bot_strictness] at hc
     exact hc
-  have hN5 : ∀ {b : α}, Struct a b →
+  have hN5 : ∀ {b : α}, IsStruct a b →
       aᵒ * SRA.scr (bᵒ) ≤ SRA.subst (bᵒ) (bᵒ) * aᵒ := by
     intro b h
     have hL : SRA.scr b * a ≤ a * SRA.subst b b := h
@@ -112,7 +121,7 @@ theorem confluence_local {a : α}
         ← SRA.scr_converse_commutation, SRA.subst_converse_commutation] at hc
     exact hc
   have hN6 : SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
-    have hL := parRed_subst_le h1
+    have hL := parRed_substitutivity h1
     have hc := IsInvolutiveQuantale.converse_monotonicity hL
     rw [SRA.subst_converse_commutation] at hc
     exact hc
@@ -134,20 +143,20 @@ theorem confluence_local {a : α}
     refine mul_le_mul' ?_ ?_
     · calc SRA.scr (parRed a)
           ≤ SRA.cr (parRed a) := by unfold SRA.cr; exact le_sup_right
-        _ ≤ parRed a := cr_parRed_le a
+        _ ≤ parRed a := parRed_compatibility a
     · calc SRA.scr ((parRed a)ᵒ)
           ≤ SRA.cr ((parRed a)ᵒ) := by unfold SRA.cr; exact le_sup_right
-        _ ≤ (parRed a)ᵒ := cr_parRed_converse_le a
+        _ ≤ (parRed a)ᵒ := parRed_converse_compatibility a
   have hP4 : (aᵒ ⊔ 1) * SRA.cr ((parRed a)ᵒ) = (parRed a)ᵒ := by
     have hnorm : ((1 : α) ⊔ SRA.subst aᵒ 1) = aᵒ ⊔ 1 := by
-      rw [← subst_one_converse a, hN2]
+      rw [← SRA.subst_one_converse_commutation a, hN2]
       exact sup_comm 1 aᵒ
     rw [← hnorm]
     conv_rhs => rw [parRed_converse a, SRA.opHowe_fixpoint]
     rw [← parRed_converse a]
   -- Discharging the structural condition
   --
-  -- What remains is to obtain `Struct a ((a⇛)ᵒ)` from the Gentzen principles,
+  -- What remains is to obtain `IsStruct a ((a⇛)ᵒ)` from the Gentzen principles,
   -- so that it need not be assumed.
   --
   -- Decompose `~b` into its constructor and destructor parts. Against the
@@ -201,7 +210,7 @@ theorem confluence_local {a : α}
       rw [IsInvolutiveQuantale.converse_compositionality,
           ← OperationalDecomposition.elimination_converse_commutation,
           ← OperationalDecomposition.introduction_converse_commutation,
-          IsInvolutiveQuantale.converse_identity] at h
+          IsInvolutiveQuantale.converse_one] at h
       exact h
     calc aᵒ * introduction x
         ≤ (aᵒ * elimination (introduction 1) 1) * introduction x :=
@@ -231,7 +240,7 @@ theorem confluence_local {a : α}
                   exact le_sup_left
               _ ≤ SRA.cr ((parRed a)ᵒ) := by
                   unfold SRA.cr; exact le_sup_right
-  have hStruct : Struct a ((parRed a)ᵒ) := by
+  have hStruct : IsStruct a ((parRed a)ᵒ) := by
     change SRA.scr ((parRed a)ᵒ) * a
          ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ)
     rw [OperationalDecomposition.scr_decomposition,
@@ -264,7 +273,7 @@ theorem confluence_local {a : α}
               (elimination_monotonicity hL5 le_rfl)
               le_rfl
         _ ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
-            hgcp _ (cr_parRed_converse_le a)
+            hgcp _ (parRed_converse_compatibility a)
   -- Commuting the rule past `~B`
   --
   -- The three inequalities below are where the hypotheses are spent. Each says
@@ -299,7 +308,7 @@ theorem confluence_local {a : α}
       _ = SRA.subst (parRed a) (parRed a) *
             SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by rw [mul_one]
       _ ≤ parRed a * (parRed a)ᵒ :=
-          mul_le_mul' (parRed_subst_le h1) hN6
+          mul_le_mul' (parRed_substitutivity h1) hN6
   have hL12 : aᵒ * SRA.scr (parRed a * (parRed a)ᵒ)
             ≤ parRed a * (parRed a)ᵒ := by
     calc aᵒ * SRA.scr (parRed a * (parRed a)ᵒ)
@@ -309,7 +318,7 @@ theorem confluence_local {a : α}
       _ ≤ SRA.subst (parRed a) (parRed a) * aᵒ * SRA.scr ((parRed a)ᵒ) :=
           mul_le_mul' hstruct_dual le_rfl
       _ ≤ parRed a * aᵒ * SRA.scr ((parRed a)ᵒ) :=
-          mul_le_mul' (mul_le_mul' (parRed_subst_le h1) le_rfl) le_rfl
+          mul_le_mul' (mul_le_mul' (parRed_substitutivity h1) le_rfl) le_rfl
       _ = parRed a * (aᵒ * SRA.scr ((parRed a)ᵒ)) := by simp only [mul_assoc]
       _ ≤ parRed a * ((aᵒ ⊔ 1) * SRA.cr ((parRed a)ᵒ)) := by
           refine mul_le_mul' le_rfl (mul_le_mul' le_sup_left ?_)
@@ -364,8 +373,8 @@ theorem confluence_local {a : α}
   have hLeaf2 : (1 : α) * SRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
     rw [one_mul]
     have h1_le_parRed_converse : (1 : α) ≤ (parRed a)ᵒ := by
-      rw [← IsInvolutiveQuantale.converse_identity]
-      exact IsInvolutiveQuantale.converse_monotonicity (one_le_parRed a)
+      rw [← IsInvolutiveQuantale.converse_one]
+      exact IsInvolutiveQuantale.converse_monotonicity (parRed_reflexivity a)
     have piece_varDiag : SRA.varDiag * parRed a ≤ parRed a * (parRed a)ᵒ := by
       calc SRA.varDiag * parRed a
           ≤ 1 * parRed a := mul_le_mul' SRA.varDiag_coreflexivity le_rfl
@@ -400,7 +409,7 @@ theorem confluence_local {a : α}
     refine SRA.opHowe_induction ?_
     rw [← parRed_converse a]
     have h2' : (SRA.subst aᵒ 1 : α) = aᵒ := by
-      rw [← subst_one_converse a, hN2]
+      rw [← SRA.subst_one_converse_commutation a, hN2]
     rw [h2', sup_comm]
     refine Quantale.leftMulResiduation_le_iff_mul_le.mpr ?_
     rw [Quantale.sup_mul_distrib, Quantale.sup_mul_distrib]

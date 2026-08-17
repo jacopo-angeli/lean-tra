@@ -4,21 +4,35 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Howe
-public import LeanTra.Metatheory.Reduction
+public import LeanTra.Metatheory.Confluence.ParallelReduction
 public import LeanTra.Algebra.Diamond
-public import Mathlib.Order.FixedPoints
 
 /-!
 # Confluence of orthogonal reduction
 
-Formalisation of the confluence-of-orthogonal-reduction theorem on top of
-the abstract confluence layer in `Algebra/Diamond.lean`. Provides:
-parallel reduction `parRed`, the orthogonality predicate `IsOrthogonal`,
-the substitutivity result `parRed_subst_le`, and the two main theorems
-`diamond_parRed` and `confluent_parRed`. Along the way develops the
-op-Howe mirror `SRA.opHowe` and its converse identity `SRA.howe_converse`,
-consumed only within this file.
+The confluence-of-orthogonal-reduction theorem of the reference, stated
+here as: for a reduction `a` whose base substitution instances collapse
+on overlaps and whose interaction with the strict compatible refinement
+of parallel reduction stays inside a substituted converse, `a⇛` has the
+diamond property, and so `a⇛∗` is confluent.
+
+Orthogonality is a condition on the rule and on its parallel reduction.
+Its first conjunct says two `a⟦Δ⟧`-rewrites of the same term differ only
+by variable renaming, `(a⟦Δ⟧)ᵒ * a⟦Δ⟧ ≤ Δ`. Its second conjunct swaps a
+base-instance backwards step and a strict compatible refinement of
+parallel reduction for a substituted converse, `(a⟦Δ⟧)ᵒ * ~(a⇛) ≤
+aᵒ⟦a⇛⟧`. Both are inequalities on the rule that the diamond argument
+consumes verbatim; nothing further about `a⇛` is used than what
+`Confluence/ParallelReduction.lean` already provides.
+
+The diamond property is `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ`. It is proved by
+fixed-point induction on `(a⇛)ᵒ`, which is the op-Howe extension of
+`Δ ⊔ aᵒ⟦Δ⟧`, transposed along the composition residual. The two branches
+of the induction consume the two orthogonality conjuncts, and determinism
+of `a⟦Δ⟧` cancels an `aᵒ * a` that appears in the middle. Confluence
+then follows from the abstract passage from the diamond property to
+confluence of the reflexive-transitive closure, `IsDiamond.confluent`
+from `Algebra/Diamond.lean`.
 
 ## References
 
@@ -29,47 +43,8 @@ consumed only within this file.
 -/
 @[expose] public section
 
-open scoped IsInvolutiveQuantale Quantale SRA LeanTra.Confluence
+open scoped IsInvolutiveQuantale Quantale SRA
 open LeanTra.Algebra
-
-namespace SRA
-
-variable {α : Type*}
-variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
-  [SRA α]
-
-/-! ### S-lemmas -/
-
-/-- Idempotence of the base substitution instance: substituting `1` twice
-into `a` is the same as substituting `1` once. -/
-theorem substOne_substOne (a : α) :
-    SRA.subst (SRA.subst a 1) 1 = SRA.subst a 1 := by
-  rw [SRA.subst_associativity, subst_one_one]
-
-/-- `(hat a)[b] ≤ b ⊔ hat (a[b])`: substituting into a compatible refinement
-is bounded by either returning `b` on the variable branch or refining the
-substitution on the strict branch. -/
-theorem cr_subst_le (a b : α) :
-    SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
-  unfold SRA.cr
-  rw [subst_join_preservation_binary_left, SRA.subst_varDiag_unit_left]
-  exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _).trans le_sup_right) b
-
-/-- Compatibility implies Leibniz: if `hat a ≤ a`, then `1[a] ≤ a`. -/
-theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
-    SRA.subst 1 a ≤ a := by
-  refine subst_le_iff.mpr ?_
-  refine one_le_of_cr_le ?_
-  refine subst_le_iff.mp ?_
-  calc SRA.subst (SRA.cr (SRA.substResid a a)) a
-      ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) := cr_subst_le _ _
-    _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_monotonicity (subst_le_iff.mpr le_rfl)) a
-    _ ≤ a ⊔ a := sup_le_sup_left h a
-    _ = a := sup_idem a
-
-end SRA
-
-/-! ## Confluence definitions -/
 
 namespace LeanTra.Confluence
 
@@ -77,206 +52,22 @@ variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
   [SRA α]
 
-/-- Parallel reduction `a⇛`: the Howe extension of the reflexive
-substitution closure `1 ⊔ a[1]` of `a`. Here `1` is the monoid unit (the
-full identity), not `Δη` (the variable-restricted identity). -/
-def parRed (a : α) : α := SRA.howe (1 ⊔ SRA.subst a 1)
+/-! ### Orthogonality
 
-/-! ### Elementary properties of `parRed` -/
+The predicate on the rule that the theorem below assumes: two conjuncts,
+each an inequality on `a⟦Δ⟧` and `a⇛`, that together let the diamond
+argument go through. The mirror of the second conjunct, derived by
+converse, is stated separately so that the two sides of the diamond
+proof can consume the two forms symmetrically. -/
 
-/-- `1 ≤ 1 ⊔ a[1]`. -/
-theorem one_le_parRed_arg (a : α) : (1 : α) ≤ 1 ⊔ SRA.subst a 1 :=
-  le_sup_left
-
-/-- Compatibility of parallel reduction: `hat (a⇛) ≤ a⇛`. -/
-theorem cr_parRed_le (a : α) : SRA.cr (parRed a) ≤ parRed a := by
-  unfold parRed
-  calc SRA.cr (SRA.howe (1 ⊔ SRA.subst a 1))
-      = SRA.cr (SRA.howe (1 ⊔ SRA.subst a 1)) * 1 := (mul_one _).symm
-    _ ≤ SRA.cr (SRA.howe (1 ⊔ SRA.subst a 1)) * (1 ⊔ SRA.subst a 1) :=
-        mul_le_mul_right (one_le_parRed_arg a) _
-    _ = SRA.howe (1 ⊔ SRA.subst a 1) := (SRA.howe_fixpoint _).symm
-
-/-- `1 ≤ a⇛`: the monoid identity sits below parallel reduction. -/
-theorem one_le_parRed (a : α) : (1 : α) ≤ parRed a :=
-  SRA.one_le_of_cr_le (cr_parRed_le a)
-
-/-- Leibniz at `parRed`: `1[a⇛] ≤ a⇛`. -/
-theorem subst_one_parRed_le (a : α) : SRA.subst 1 (parRed a) ≤ parRed a :=
-  SRA.subst_one_le_of_cr_le (cr_parRed_le a)
-
-/-- Parallel reduction is invariant under passing to the base substitution
-instance: `(a[Δ])⇛ = a⇛`. -/
-theorem parRed_substOne (a : α) : parRed (SRA.subst a 1) = parRed a := by
-  unfold parRed
-  rw [SRA.substOne_substOne]
-
-/-! ### Substitutivity of `parRed` -/
-
-/-- For a reduction `a`, the identity factors on the left as
-`a = tilde 1 * a`. -/
-theorem factor_scr_of_isReduction {a : α} (h : IsReduction a) :
-    a = SRA.scr 1 * a := by
-  have h' : SRA.varDiag * a = (⊥ : α) := h
-  calc a
-      = 1 * a := (one_mul _).symm
-    _ = (SRA.varDiag ⊔ SRA.scr 1) * a := by
-        rw [SRA.cr_fixpoint]
-    _ = SRA.varDiag * a ⊔ SRA.scr 1 * a := Quantale.sup_mul_distrib
-    _ = ⊥ ⊔ SRA.scr 1 * a := by rw [h']
-    _ = SRA.scr 1 * a := bot_sup_eq _
-
-/-- For a reduction `a`, substituting the identity preserves reduction:
-`Δη * a[1] = ⊥`. -/
-theorem varDiag_mul_subst_one_eq_bot {a : α} (h : IsReduction a) :
-    SRA.varDiag * SRA.subst a 1 = ⊥ := by
-  refine le_antisymm ?_ bot_le
-  have key : SRA.subst a 1 ≤ SRA.scr 1 * SRA.subst a 1 :=
-    calc SRA.subst a 1
-        = SRA.subst (SRA.scr 1 * a) (1 * 1) := by
-            rw [← factor_scr_of_isReduction h, mul_one]
-      _ ≤ SRA.subst (SRA.scr 1) 1 * SRA.subst a 1 := SRA.subst_compositionality_oplax _ _ _ _
-      _ ≤ SRA.scr (SRA.subst 1 1) * SRA.subst a 1 :=
-            mul_le_mul_left (SRA.subst_scr_oplaxity _ _) _
-      _ = SRA.scr 1 * SRA.subst a 1 := by rw [SRA.subst_one_one]
-  calc SRA.varDiag * SRA.subst a 1
-      ≤ SRA.varDiag * (SRA.scr 1 * SRA.subst a 1) := mul_le_mul_right key _
-    _ = SRA.varDiag * SRA.scr 1 * SRA.subst a 1 := (mul_assoc _ _ _).symm
-    _ ≤ ⊥ * SRA.subst a 1 :=
-          mul_le_mul_left (SRA.varDiag_scr_orthogonality _) _
-    _ = ⊥ := Quantale.bot_mul
-
-/-- Substitutivity of parallel reduction: for a reduction `a`,
-`a⇛[a⇛] ≤ a⇛`. -/
-theorem parRed_subst_le {a : α} (h : IsReduction a) :
-    SRA.subst (parRed a) (parRed a) ≤ parRed a := by
-  refine SRA.subst_le_iff.mpr ?_
-  refine SRA.howe_induction ?_
-  refine SRA.subst_le_iff.mp ?_
-  have hrw :
-      SRA.cr (SRA.substResid (parRed a) (parRed a)) * (1 ⊔ SRA.subst a 1)
-        = SRA.varDiag ⊔ SRA.scr (SRA.substResid (parRed a) (parRed a))
-            ⊔ SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1 := by
-    unfold SRA.cr
-    rw [Quantale.sup_mul_distrib, Quantale.mul_sup_distrib,
-        Quantale.mul_sup_distrib, mul_one, mul_one,
-        varDiag_mul_subst_one_eq_bot h, sup_bot_eq, ← sup_assoc]
-  rw [hrw, SRA.subst_join_preservation_binary_left, SRA.subst_join_preservation_binary_left]
-  refine sup_le (sup_le ?_ ?_) ?_
-  · exact le_of_eq (SRA.subst_varDiag_unit_left _)
-  · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
-        ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
-          SRA.subst_scr_oplaxity _ _
-      _ ≤ SRA.scr (parRed a) := SRA.scr_monotonicity (SRA.subst_le_iff.mpr le_rfl)
-      _ ≤ SRA.cr (parRed a) := le_sup_right
-      _ ≤ parRed a := cr_parRed_le a
-  · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1)
-            (parRed a)
-        = SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a)) * SRA.subst a 1)
-            (parRed a * 1) := by rw [mul_one]
-      _ ≤ SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
-            * SRA.subst (SRA.subst a 1) 1 :=
-            SRA.subst_compositionality_oplax _ _ _ _
-      _ = SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
-            * SRA.subst a 1 := by
-            rw [SRA.subst_associativity, SRA.subst_one_one]
-      _ ≤ SRA.cr (parRed a) * SRA.subst a 1 := by
-          refine mul_le_mul_left ?_ _
-          calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
-              ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
-                SRA.subst_scr_oplaxity _ _
-            _ ≤ SRA.scr (parRed a) :=
-                SRA.scr_monotonicity (SRA.subst_le_iff.mpr le_rfl)
-            _ ≤ SRA.cr (parRed a) := le_sup_right
-      _ ≤ SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
-          mul_le_mul_right le_sup_right _
-      _ = parRed a := (SRA.howe_fixpoint _).symm
-
-/-! ### Converse and nesting of `parRed` -/
-
-/-- Converse of parallel reduction: `(a⇛)ᵒ = §(1 ⊔ aᵒ[1])`, the op-Howe
-extension of the reflexive substitution closure of `aᵒ`. -/
-theorem parRed_converse (a : α) :
-    (parRed a)ᵒ = SRA.opHowe (1 ⊔ SRA.subst aᵒ 1) := by
-  unfold parRed
-  rw [SRA.howe_converse, IsInvolutiveQuantale.converse_join_preservation_binary,
-      IsInvolutiveQuantale.converse_identity, SRA.subst_converse_commutation,
-      IsInvolutiveQuantale.converse_identity]
-
-/-- Nesting: `aᵒ[a⇛] ≤ a⇛ * aᵒ[1]`. -/
-theorem nesting (a : α) :
-    SRA.subst aᵒ (parRed a) ≤ parRed a * SRA.subst aᵒ 1 := by
-  calc SRA.subst aᵒ (parRed a)
-      = SRA.subst (1 * aᵒ) (parRed a * 1) := by rw [one_mul, mul_one]
-    _ ≤ SRA.subst 1 (parRed a) * SRA.subst aᵒ 1 := SRA.subst_compositionality_oplax _ _ _ _
-    _ ≤ parRed a * SRA.subst aᵒ 1 :=
-        mul_le_mul_left (subst_one_parRed_le a) _
-
-/-! ### Micro-lemmas for the diamond argument -/
-
-/-- Converse commutes with base substitution: `(a[1])ᵒ = aᵒ[1]`. -/
-theorem subst_one_converse (a : α) : (SRA.subst a 1)ᵒ = SRA.subst aᵒ 1 := by
-  rw [SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_identity]
-
-/-- Converse form of `varDiag_mul_subst_one_eq_bot`: for a reduction `a`,
-`aᵒ[1] * Δη = ⊥`. -/
-theorem subst_one_mul_varDiag_eq_bot {a : α} (h : IsReduction a) :
-    SRA.subst aᵒ 1 * SRA.varDiag = (⊥ : α) := by
-  have hL := varDiag_mul_subst_one_eq_bot h
-  have := congrArg IsInvolutiveQuantale.converse hL
-  rw [IsInvolutiveQuantale.converse_compositionality, subst_one_converse,
-      SRA.varDiag_symmetry_eq, IsInvolutiveQuantale.converse_bot_strictness] at this
-  exact this
-
-/-- Compatibility of the converse of parallel reduction: `hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`. -/
-theorem cr_parRed_converse_le (a : α) : SRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
-  rw [← SRA.cr_converse_commutation]
-  exact IsInvolutiveQuantale.converse_monotonicity (cr_parRed_le a)
-
-/-- Leibniz at `(a⇛)ᵒ`: `1[(a⇛)ᵒ] ≤ (a⇛)ᵒ`. -/
-theorem subst_one_parRed_converse_le (a : α) :
-    SRA.subst 1 ((parRed a)ᵒ) ≤ (parRed a)ᵒ :=
-  SRA.subst_one_le_of_cr_le (cr_parRed_converse_le a)
-
-/-- Co-nesting: `a[(a⇛)ᵒ] ≤ a[1] * (a⇛)ᵒ`. -/
-theorem co_nesting (a : α) :
-    SRA.subst a ((parRed a)ᵒ) ≤ SRA.subst a 1 * (parRed a)ᵒ := by
-  calc SRA.subst a ((parRed a)ᵒ)
-      = SRA.subst (a * 1) (1 * (parRed a)ᵒ) := by rw [mul_one, one_mul]
-    _ ≤ SRA.subst a 1 * SRA.subst 1 ((parRed a)ᵒ) := SRA.subst_compositionality_oplax _ _ _ _
-    _ ≤ SRA.subst a 1 * (parRed a)ᵒ :=
-        mul_le_mul_right (subst_one_parRed_converse_le a) _
-
-/-- `hat (a⇛) * a[1] ≤ a⇛`. -/
-theorem cr_mul_subst_le_parRed (a : α) :
-    SRA.cr (parRed a) * SRA.subst a 1 ≤ parRed a :=
-  calc SRA.cr (parRed a) * SRA.subst a 1
-      ≤ SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
-        mul_le_mul_right le_sup_right _
-    _ = parRed a := (SRA.howe_fixpoint _).symm
-
-/-- Converse of `cr_mul_subst_le_parRed`: `aᵒ[1] * hat ((a⇛)ᵒ) ≤ (a⇛)ᵒ`. -/
-theorem subst_one_mul_cr_parRed_converse_le (a : α) :
-    SRA.subst aᵒ 1 * SRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
-  have hM6 := cr_mul_subst_le_parRed a
-  have := IsInvolutiveQuantale.converse_monotonicity hM6
-  rw [IsInvolutiveQuantale.converse_compositionality, subst_one_converse,
-      SRA.cr_converse_commutation] at this
-  exact this
-
-/-- `a` is *orthogonal* when its base substitution instances collapse on
-overlaps: `(a[1])ᵒ * a[1] ≤ 1` (two `a`-rewrites of the same term differ
-only by variable renaming) and `(a[1])ᵒ * tilde (a⇛) ≤ aᵒ[a⇛]` (a
-base-instance backwards step followed by a strict compatible refinement of
-parallel reduction can be swapped for a substituted converse). -/
+/-- `a` is *orthogonal* when `(a⟦Δ⟧)ᵒ * a⟦Δ⟧ ≤ Δ` and
+`(a⟦Δ⟧)ᵒ * ~(a⇛) ≤ aᵒ⟦a⇛⟧`. -/
 def IsOrthogonal (a : α) : Prop :=
   (SRA.subst a 1)ᵒ * SRA.subst a 1 ≤ 1
     ∧ (SRA.subst a 1)ᵒ * SRA.scr (parRed a) ≤ SRA.subst aᵒ (parRed a)
 
-/-! ### Diamond and confluence -/
-
 /-- Converse form of the second orthogonality conjunct:
-`tilde ((a⇛)ᵒ) * a[1] ≤ a[(a⇛)ᵒ]`. -/
+`~((a⇛)ᵒ) * a⟦Δ⟧ ≤ a⟦(a⇛)ᵒ⟧`. -/
 theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
     SRA.scr ((parRed a)ᵒ) * SRA.subst a 1 ≤ SRA.subst a ((parRed a)ᵒ) := by
   have h2 := horth.2
@@ -285,6 +76,13 @@ theorem scr_parRed_converse_mul_le {a : α} (horth : IsOrthogonal a) :
       SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_involutivity,
       ← SRA.scr_converse_commutation] at this
   exact this
+
+/-! ### Diamond and confluence
+
+The diamond property for `a⇛`, transposed along `⇨ₗ` and proved by
+fixed-point induction on `(a⇛)ᵒ = (Δ ⊔ aᵒ⟦Δ⟧)§`. Confluence is the
+diamond property of `(a⇛)∗`, so it follows from the abstract passage
+`IsDiamond.confluent`. -/
 
 /-- Diamond property of parallel reduction: for a reduction `a` satisfying
 orthogonality, `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ`. -/
@@ -313,11 +111,11 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
     rw [Quantale.mul_sup_distrib]
     refine sup_le ?_ ?_
     · calc SRA.subst aᵒ 1 * SRA.varDiag
-          = (⊥ : α) := subst_one_mul_varDiag_eq_bot h
+          = (⊥ : α) := subst_one_varDiag_orthogonality h
         _ ≤ parRed a * SRA.subst aᵒ 1 := bot_le
     · have h2 := horth.2
-      rw [subst_one_converse] at h2
-      exact h2.trans (nesting a)
+      rw [SRA.subst_one_converse_commutation] at h2
+      exact h2.trans (parRed_nesting a)
   have Hright :
       SRA.cr ((parRed a)ᵒ) * SRA.subst a 1
         ≤ SRA.subst a 1 * (parRed a)ᵒ := by
@@ -325,12 +123,12 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
     rw [Quantale.sup_mul_distrib]
     refine sup_le ?_ ?_
     · calc SRA.varDiag * SRA.subst a 1
-          = (⊥ : α) := varDiag_mul_subst_one_eq_bot h
+          = (⊥ : α) := varDiag_subst_one_orthogonality h
         _ ≤ SRA.subst a 1 * (parRed a)ᵒ := bot_le
-    · exact (scr_parRed_converse_mul_le horth).trans (co_nesting a)
+    · exact (scr_parRed_converse_mul_le horth).trans (parRed_converse_nesting a)
   have Hdet : SRA.subst aᵒ 1 * SRA.subst a 1 ≤ (1 : α) := by
     have h1 := horth.1
-    rw [subst_one_converse] at h1
+    rw [SRA.subst_one_converse_commutation] at h1
     exact h1
   have hfix : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) :=
     SRA.howe_fixpoint _
@@ -348,7 +146,7 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
   simp only [Quantale.sup_mul_distrib, Quantale.mul_sup_distrib,
              one_mul, mul_one]
   refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)
-  · exact mul_le_mul' (cr_parRed_le a) (cr_parRed_converse_le a)
+  · exact mul_le_mul' (parRed_compatibility a) (parRed_converse_compatibility a)
   · calc SRA.subst aᵒ 1 * (SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ))
         = SRA.subst aᵒ 1 * SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) :=
             (mul_assoc _ _ _).symm
@@ -356,7 +154,7 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
             mul_le_mul_left Hleft _
       _ = parRed a * (SRA.subst aᵒ 1 * SRA.cr ((parRed a)ᵒ)) := mul_assoc _ _ _
       _ ≤ parRed a * (parRed a)ᵒ :=
-            mul_le_mul_right (subst_one_mul_cr_parRed_converse_le a) _
+            mul_le_mul_right (parRed_converse_unfolding a) _
   · calc SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ) * SRA.subst a 1
         = SRA.cr (parRed a) * (SRA.cr ((parRed a)ᵒ) * SRA.subst a 1) :=
             mul_assoc _ _ _
@@ -365,7 +163,7 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
       _ = SRA.cr (parRed a) * SRA.subst a 1 * (parRed a)ᵒ :=
             (mul_assoc _ _ _).symm
       _ ≤ parRed a * (parRed a)ᵒ :=
-            mul_le_mul_left (cr_mul_subst_le_parRed a) _
+            mul_le_mul_left (parRed_unfolding a) _
   · calc SRA.subst aᵒ 1 * (SRA.cr (parRed a) * SRA.cr ((parRed a)ᵒ))
             * SRA.subst a 1
         = (SRA.subst aᵒ 1 * SRA.cr (parRed a))
@@ -380,16 +178,12 @@ theorem diamond_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
       _ = parRed a * (parRed a)ᵒ := by rw [mul_one]
 
 /-- Confluence of parallel reduction: for a reduction `a` satisfying
-orthogonality, `IsConfluent (parRed a)`. -/
+orthogonality, `IsConfluent a⇛`. -/
 theorem confluent_parRed {a : α} (h : IsReduction a) (horth : IsOrthogonal a) :
     IsConfluent (parRed a) :=
   (diamond_parRed h horth).confluent
 
 end LeanTra.Confluence
 
-#print axioms SRA.subst_one_one
-#print axioms SRA.subst_one_le_of_cr_le
-#print axioms SRA.howe_converse
-#print axioms LeanTra.Confluence.parRed_subst_le
 #print axioms LeanTra.Confluence.diamond_parRed
 #print axioms LeanTra.Confluence.confluent_parRed
