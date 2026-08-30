@@ -15,3 +15,4 @@ import LeanTra.Instances.FirstOrder.Relations
 import LeanTra.Instances.FirstOrder.SRA
 import LeanTra.Instances.FirstOrder.Confluence
 import LeanTra.Instances.Toy
+import LeanTra.Instances.SecondOrder.Lambda
