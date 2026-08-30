@@ -32,7 +32,7 @@ argument consumes, and nothing more. That is what lets the outer
 hypotheses stay local: `IsStruct` is discharged at `b = (a⇛)ᵒ` from the
 Gentzen principles, so it never has to be assumed.
 
-The whole argument is the single theorem `confluence_local`, conclusion
+The whole argument is the single theorem `local_confluence`, conclusion
 (i) of the bridge theorem of the reference. The separators inside its
 proof mark the stages: the diamond property is established from
 `IsStruct`, and `IsStruct` is discharged from the Gentzen principles along
