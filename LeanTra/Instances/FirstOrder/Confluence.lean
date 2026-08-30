@@ -10,7 +10,7 @@ public import LeanTra.Metatheory.Confluence.Orthogonal
 /-!
 # Confluence of orthogonal reduction on first-order terms
 
-`Confluence/Orthogonal.lean` proves `confluent_parRed` for an arbitrary
+`Confluence/Orthogonal.lean` proves `orthogonality_confluence` for an arbitrary
 `[SRA α]`: whenever `a` is a reduction (`Δη * a = ⊥`) and satisfies the
 two orthogonality conjuncts, its parallel reduction `a⇛` is confluent
 (LICS'26 Theorem 21). Phase C (`Instances/FirstOrder/SRA.lean`)
@@ -37,13 +37,13 @@ namespace LeanTra.Instances.FirstOrder
 variable {S : Signature}
 
 /-- Confluence of orthogonal reduction on the first-order term model.
-Direct instantiation of `LeanTra.Confluence.confluent_parRed` at the
+Direct instantiation of `LeanTra.Confluence.orthogonality_confluence` at the
 `SRA (SynRel S)` instance built in Phase C. -/
 theorem confluent_parRed_synRel {φ : SynRel S}
     (h : LeanTra.Confluence.IsReduction φ)
     (horth : LeanTra.Confluence.IsOrthogonal φ) :
     LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed φ) :=
-  LeanTra.Confluence.confluent_parRed h horth
+  LeanTra.Confluence.orthogonality_confluence h horth
 
 end LeanTra.Instances.FirstOrder
 

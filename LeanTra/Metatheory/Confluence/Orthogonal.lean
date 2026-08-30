@@ -25,7 +25,7 @@ aᵒ⟦a⇛⟧`. Both are inequalities the diamond argument consumes verbatim;
 nothing further about `a⇛` is used than what
 `Confluence/ParallelReduction.lean` already provides.
 
-The whole argument is the single theorem `confluent_parRed`. The diamond
+The whole argument is the single theorem `orthogonality_confluence`. The diamond
 property `(a⇛)ᵒ * a⇛ ≤ a⇛ * (a⇛)ᵒ` appears inside it as an intermediate
 step, not as a result of its own: it is proved by fixed-point induction
 on `(a⇛)ᵒ`, which is the op-Howe extension of `Δ ⊔ aᵒ⟦Δ⟧`, transposed
@@ -75,7 +75,7 @@ are discharged. -/
 
 /-- Confluence of parallel reduction: for a reduction `a` satisfying
 orthogonality, `IsConfluent (a⇛)`. -/
-theorem othogonality_confluence {a : α}
+theorem orthogonality_confluence {a : α}
   (h : IsReduction a)
   (horth : IsOrthogonal a) :
   IsConfluent (parRed a) := by
@@ -206,4 +206,4 @@ theorem othogonality_confluence {a : α}
 
 end LeanTra.Confluence
 
-#print axioms LeanTra.Confluence.othogonality_confluence
+#print axioms LeanTra.Confluence.orthogonality_confluence
