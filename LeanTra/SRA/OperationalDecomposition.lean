@@ -29,7 +29,7 @@ rests.
 
 ## The class
 
-Two data and thirteen axioms.
+Two data and fourteen axioms.
 
 `introduction a` relates two introduction forms with the same outermost
 constructor whose arguments are pairwise `a`-related. `elimination a b`
@@ -98,8 +98,10 @@ class OperationalDecomposition (α : Type u)
   /-- `introduction` preserves converse. -/
   protected introduction_converse_commutation (a : α) : introduction (aᵒ) = (introduction a)ᵒ
 
-  /-- `elimination` preserves arbitrary joins, taken componentwise on pairs. -/
-  protected elimination_join_preservation (s : Set (α × α)) : elimination (sSup (Prod.fst '' s)) (sSup (Prod.snd '' s)) = sSup ((fun p : α × α => elimination p.1 p.2) '' s)
+  /-- `elimination` preserves arbitrary joins in the major (left) slot. -/
+  protected elimination_join_preservation_left (s : Set α) (b : α) : elimination (sSup s) b = sSup ((fun a => elimination a b) '' s)
+  /-- `elimination` preserves arbitrary joins in the minor (right) slot. -/
+  protected elimination_join_preservation_right (a : α) (s : Set α) : elimination a (sSup s) = sSup ((fun b => elimination a b) '' s)
   /-- `elimination` preserves composition, slot by slot. -/
   protected elimination_compositionality (a a' b b' : α) : elimination (a * a') (b * b') = elimination a b * elimination a' b'
   /-- `elimination` preserves converse, slot by slot. -/
@@ -175,19 +177,19 @@ theorem introduction_monotonicity ⦃a b : α⦄ (h : a ≤ b) : ι a ≤ ι b :
   exact le_sup_left.trans hs.ge
 /-- `elimination` is monotone in each slot. -/
 theorem elimination_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : ε(a, b) ≤ ε(a', b') := by
-  have hsup_a : a ⊔ a' = a' := sup_of_le_right ha
-  have hsup_b : b ⊔ b' = b' := sup_of_le_right hb
-  have h := OperationalDecomposition.elimination_join_preservation (α := α) {(a, b), (a', b')}
-  rw [show (Prod.fst '' ({(a, b), (a', b')} : Set (α × α))) = {a, a'} from by
-        simp [Set.image_pair],
-      show (Prod.snd '' ({(a, b), (a', b')} : Set (α × α))) = {b, b'} from by
-        simp [Set.image_pair],
-      show ((fun p : α × α => ε(p.1, p.2))
-              '' ({(a, b), (a', b')} : Set (α × α)))
-            = {ε(a, b),ε(a', b')} from by
-        simp [Set.image_pair],
-      sSup_pair, sSup_pair, sSup_pair, hsup_a, hsup_b] at h
-  exact le_sup_left.trans h.ge
+  -- Monotone in the left slot via left join preservation.
+  have hleft : ε(a, b) ≤ ε(a', b) := by
+    have hsup_a : a ⊔ a' = a' := sup_of_le_right ha
+    have h := OperationalDecomposition.elimination_join_preservation_left (α := α) {a, a'} b
+    rw [Set.image_pair, sSup_pair, sSup_pair, hsup_a] at h
+    exact le_sup_left.trans h.ge
+  -- Monotone in the right slot via right join preservation.
+  have hright : ε(a', b) ≤ ε(a', b') := by
+    have hsup_b : b ⊔ b' = b' := sup_of_le_right hb
+    have h := OperationalDecomposition.elimination_join_preservation_right (α := α) a' {b, b'}
+    rw [Set.image_pair, sSup_pair, sSup_pair, hsup_b] at h
+    exact le_sup_left.trans h.ge
+  exact hleft.trans hright
 /-- Symmetric orthogonality: `elimination b c * introduction a ≤ ⊥`,
 derived from `introduction_elimination_orthogonality` via converse. -/
 theorem elimination_introduction_orthogonality (a b c : α) : ε(b, c) * ι a ≤ ⊥ := by

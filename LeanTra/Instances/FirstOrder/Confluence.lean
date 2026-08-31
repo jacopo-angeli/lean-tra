@@ -43,7 +43,7 @@ theorem confluent_parRed_synRel {φ : SynRel S}
     (h : LeanTra.Confluence.IsReduction φ)
     (horth : LeanTra.Confluence.IsOrthogonal φ) :
     LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed φ) :=
-  LeanTra.Confluence.confluent_parRed h horth
+  LeanTra.Confluence.othogonality_confluence h horth
 
 end LeanTra.Instances.FirstOrder
 
