@@ -49,40 +49,80 @@ The file is organised in four layers:
 `Δ_κ * a^E ≤ Δ_κ`, `Δ_κ * (a^E)∗ ≤ Δ_κ`, `Δ_κ * a^⇓ ≤ Δ_κ` —
 closedness preservation through big-step evaluation).
 
-**Layer 2**: Proposition 29's (≤)-direction proved
-(`bigStepEvaluation_unfold_le` with `⟨a^E⟩` in the elimination slot).
-The three sharper statements (`≥` direction with `⟨a^⇓⟩`, equational
-form, closed refinement) are `sorry` — they require the induction
-principle F4 of the draft's Fig. 8, whose Lean formalisation is a
-substantial standalone piece of work (~150 lines of `star_induction`
-combined with residuation).
+**Layer 2 (Prop 29 and F1–F4):**
+* **F1** (`valueCoreflexive_le_bigStepEvaluation`): proved.
+* **F2** (`rule_mul_bigStepEvaluation_le`): proved.
+* **Prop 29 (equational)** (`bigStepEvaluation_fixpoint`): `sorry`.
+  Not derivable from `(≤)` and `(≥)` alone — the `(≤)` direction
+  uses `⟨a^E⟩` in the elim slot and `a^E ≤ a^⇓` fails in general
+  (a single evaluation step need not land at a value). Requires
+  F4-style LFP reasoning. **This is now the load-bearing sorry**,
+  since F3, Prop 29 (≥), Step 1, and Prop 29 (closed) all reduce
+  to it.
+* **Auxiliary** (`bigStepEvaluation_mul_self_le`): fully proved
+  (`a^⇓ * a^⇓ ≤ a^⇓`). Uses only Δ̄'s absorption laws.
+* **F3** (`majorProjection_bigStepEvaluation_mul_bigStepEvaluation_le`):
+  proved, conditional on `bigStepEvaluation_fixpoint`. Unfold the
+  right `a^⇓` via the fixpoint equation, kill the `⟨a^⇓⟩ * Δ̄`
+  summand by orthogonality, fold `⟨a^⇓⟩ * ⟨a^⇓⟩ = ⟨a^⇓ * a^⇓⟩ ≤
+  ⟨a^⇓⟩` via the auxiliary, and land back in the fixpoint's
+  elim-summand.
+* **F4** (`bigStepEvaluation_induction`): `sorry`. Signature now
+  correctly requires `SRA.IsClosed a`. The LFP characterisation of
+  `a^⇓` needed to close this requires Prop. 5.7 of the draft
+  (`□(a^E) = (□a)^E`), which in turn needs an `IsClosedFun`
+  transfer of `□` across the `oneStepEvaluation` recursor.
+* **Prop 29 (≤)** (`bigStepEvaluation_unfold_le`): proved with
+  `⟨a^E⟩` in the elimination slot.
+* **Prop 29 (≥)** (`bigStepEvaluation_unfold_ge`): proved,
+  conditional on F3.
+* **Prop 29 (closed)** (`bigStepEvaluation_fixpoint_closed`):
+  `sorry`. Sharpens Δ̄ to Δ_κ under closedness; needs
+  `bigStepEvaluation_fixpoint` plus closedness of `a^⇓`.
 
 **Layer 3**:
-* **Step 1 (`inversion_bigStep`)**: `sorry`. The correct statement
-  (with the trailing `* a^⇓` on the RHS) is in place, but the proof
-  needs F4 or the closed form of Prop 29.
+* **Step 1 (`inversion_bigStep`)**: proved, conditional on
+  `bigStepEvaluation_fixpoint`. The proof needs neither closed
+  inversion nor closedness — Prop 29's fixpoint equation plus F2
+  suffice. The `_hinv` hypothesis is retained for compatibility
+  with the main theorem but is unused.
 * **Step 2 (`opp_bigStep_le_bigStep`)**: **fully proved sorry-free**.
   Uses only `bigStepEvaluation_unfold_le`, the closed inversion
   principle, and forward determinism `aᵒ * a ≤ 1`. Depends only on
   `[propext, Classical.choice, Quot.sound]`.
 * **Step 3 (`bigStep_op_bigStep_le_valueCoreflexive`)**: `sorry`. The
   paper's proof (Thm. A.12 second half in the draft's appendix) uses
-  F4 of Fig. 8 via a chain of residuations that would need F4 in
-  place.
+  law F9 of Fig. 8 (dual of F4) via a chain of residuations
+  `a^⇓ᵒ ≤ Δ_κ ⇨ₗ a^⇓`. F9 does not follow from F4 by mere converse
+  — it needs its own LFP argument, of comparable weight.
 
 **Layer 4 (chained `determinism`)**: type-checks. Depends
-transitively on the Layer-2/3 sorries via Steps 1 and 3.
+transitively on the remaining Layer-2 sorries via Step 1 (Prop 29
+fixpoint) and Step 3 (Prop 29 closed / F9).
 
 ## Roadmap to full closure
 
-The single mathematical prerequisite gating the remaining sorries is
-the F4 fixed-point induction principle for `a^⇓`:
+The load-bearing prerequisite is **Lemma A.6** of the draft:
+for closed `a`, `a^⇓` is the least solution of
+`x = Δ_κ ∨ a·x ∨ ⟨x⟩·x`. Once this is formalised, F1–F4 follow
+(F1/F2 already proved; F3/F4 need the ⟹/⟸ direction of the LFP
+characterisation, respectively). Beyond A.6, one also needs the
+dual LFP characterisation for `a^⇓ᵒ` to derive F9, which unblocks
+Step 3.
 
-  `Δ_κ ≤ b ∧ a * b ≤ b ∧ ⟨b⟩ * b ≤ b ⟹ a^⇓ ≤ b`
+Concretely, in order of expected effort:
 
-Once F4 is formalised (~150 lines), Step 1 (Prop. A.9 of the draft),
-Step 3 (Thm. A.12 second half), and the closed refinement of Prop. 29
-all follow by algebraic manipulation of ~30–60 lines each.
+1. Prove **Lemma A.6** (~150–250 lines): show
+   `a^⇓ = μx. Δ_κ ∨ a·x ∨ ⟨x⟩·x` for closed `a`, using
+   `SRA.box_lfp` (transfer of `□` across a closed function) applied
+   to the appropriate recursor built from the `oneStepEvaluation`
+   fixpoint.
+2. **F3, F4** fall out immediately (~10 lines each).
+3. **Prop 29 (=/closed)** follow by ≤/≥ pairing (~30 lines).
+4. **F9** (dual LFP for `a^⇓ᵒ`) is a mirror of Lemma A.6 for `aᵒ`
+   (~50–100 lines using the involutive quantale structure).
+5. **Step 3** follows by residuation `a^⇓ᵒ ≤ a^⇓ ⇨ₗ Δ_κ` and F9
+   (~30 lines).
 -/
 @[expose] public section
 
@@ -415,32 +455,118 @@ theorem rule_mul_bigStepEvaluation_le {a : α} (hgip : GIP a) :
     _ ≤ (oneStepEvaluation a)∗ * introductionCoreflexive :=
         mul_le_mul' (LeanTra.Algebra.star_absorption_left _) le_rfl
 
-/-- **F3**: `⟨a^⇓⟩ * a^⇓ ≤ a^⇓`. If a term's major slot big-step
-evaluates to a value, and the resulting elimination form big-step
-evaluates, then the whole term big-step evaluates. This is the
-substantive fixed-point property of `a^⇓`. -/
-theorem majorProjection_bigStepEvaluation_mul_bigStepEvaluation_le
-    {a : α} (_hgip : GIP a) :
-    majorProjection (bigStepEvaluation a) * bigStepEvaluation a
-      ≤ bigStepEvaluation a := by
-  -- SORRY: F3 of Fig. 7 of the draft. Requires a fixed-point induction
-  -- of the form `⟨X⟩ * (a^E)∗ ≤ ⟨X * (a^E)∗⟩ * (a^E)∗` via star
-  -- induction on `(a^E)∗`, followed by careful bookkeeping to fold
-  -- the trailing Δ̄. Estimated 60-100 lines when set up cleanly.
+/-- Prop 29 (equational form): `a^⇓ = Δ̄ ⊔ ⟨a^⇓⟩ * a * a^⇓`. Placed
+here (before F3) so that F3 can use it. The `sorry` reflects that this
+requires Lemma A.6 (the LFP characterisation) — the `(≤)` direction
+via `bigStepEvaluation_unfold_le` uses `⟨a^E⟩`, and `a^E ≤ a^⇓` fails
+in general (`a^E` need not end at a value), so bridging to `⟨a^⇓⟩`
+demands the LFP framework. -/
+theorem bigStepEvaluation_fixpoint {a : α} (_hgip : GIP a) :
+    bigStepEvaluation a
+      = (introductionCoreflexive : α)
+          ⊔ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a := by
   sorry
 
-/-- **F4**: If `b` is closed under `Δ_κ`, `a * -`, and `⟨-⟩ * -`,
-then `a^⇓ ≤ b`. Induction principle for `a^⇓`, following from Lemma
-A.6 of the draft's appendix (`a^⇓` = least solution). -/
-theorem bigStepEvaluation_induction {a b : α} (_hgip : GIP a)
+/-- Auxiliary: `a^⇓ * a^⇓ ≤ a^⇓`. Composing two big-step evaluations
+gives a big-step evaluation. Direct from the definition: the trailing
+`Δ̄` on the left absorbs the next `(a^E)∗` via
+`Δ̄ * (a^E)∗ ≤ Δ̄`, and `Δ̄ * Δ̄ = Δ̄`. Used by F3. -/
+theorem bigStepEvaluation_mul_self_le
+    {a : α} (hgip : GIP a) :
+    bigStepEvaluation a * bigStepEvaluation a ≤ bigStepEvaluation a := by
+  change ((oneStepEvaluation a)∗ * introductionCoreflexive)
+        * ((oneStepEvaluation a)∗ * introductionCoreflexive)
+      ≤ (oneStepEvaluation a)∗ * introductionCoreflexive
+  have key : (introductionCoreflexive : α) * (oneStepEvaluation a)∗
+              * introductionCoreflexive
+           ≤ (introductionCoreflexive : α) :=
+    calc (introductionCoreflexive : α) * (oneStepEvaluation a)∗ * introductionCoreflexive
+        ≤ (introductionCoreflexive : α) * introductionCoreflexive :=
+          mul_le_mul' (introductionCoreflexive_mul_star_oneStepEvaluation_le hgip) le_rfl
+      _ = introductionCoreflexive := introductionCoreflexive_mul_self
+  calc ((oneStepEvaluation a)∗ * introductionCoreflexive)
+          * ((oneStepEvaluation a)∗ * introductionCoreflexive)
+      = (oneStepEvaluation a)∗
+          * (introductionCoreflexive * (oneStepEvaluation a)∗
+              * introductionCoreflexive) := by
+        rw [mul_assoc, ← mul_assoc (introductionCoreflexive : α)]
+    _ ≤ (oneStepEvaluation a)∗ * introductionCoreflexive :=
+        mul_le_mul' le_rfl key
+
+/-- **F3**: `⟨a^⇓⟩ * a^⇓ ≤ a^⇓`. If a term's major slot big-step
+evaluates to a value, and the resulting elimination form big-step
+evaluates, then the whole term big-step evaluates.
+
+Proved from `bigStepEvaluation_fixpoint` (still `sorry`ed below): unfold
+the right `a^⇓` via its fixed-point equation, kill the `⟨a^⇓⟩ * Δ̄`
+summand by intro/elim orthogonality, and fold `⟨a^⇓⟩ * ⟨a^⇓⟩` into
+`⟨a^⇓ * a^⇓⟩ ≤ ⟨a^⇓⟩` (by `majorProjection_compositionality` +
+`bigStepEvaluation_mul_self_le`), landing back in the fixpoint's
+elim-summand. -/
+theorem majorProjection_bigStepEvaluation_mul_bigStepEvaluation_le
+    {a : α} (hgip : GIP a) :
+    majorProjection (bigStepEvaluation a) * bigStepEvaluation a
+      ≤ bigStepEvaluation a := by
+  have hfix := bigStepEvaluation_fixpoint hgip
+  have hfold : majorProjection (bigStepEvaluation a * bigStepEvaluation a)
+      ≤ majorProjection (bigStepEvaluation a) :=
+    majorProjection_monotonicity (bigStepEvaluation_mul_self_le hgip)
+  -- Substitute the right a^⇓ via the fixed-point equation, then bound.
+  calc majorProjection (bigStepEvaluation a) * bigStepEvaluation a
+      = majorProjection (bigStepEvaluation a)
+          * ((introductionCoreflexive : α)
+              ⊔ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a) :=
+        congrArg (fun x => majorProjection (bigStepEvaluation a) * x) hfix
+    _ = majorProjection (bigStepEvaluation a) * introductionCoreflexive
+          ⊔ majorProjection (bigStepEvaluation a)
+              * (majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a) :=
+        Quantale.mul_sup_distrib
+    _ ≤ (⊥ : α)
+          ⊔ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a := by
+        refine sup_le_sup ?_ ?_
+        · exact majorProjection_mul_introductionCoreflexive_le_bot _
+        · calc majorProjection (bigStepEvaluation a)
+                  * (majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a)
+              = (majorProjection (bigStepEvaluation a)
+                    * majorProjection (bigStepEvaluation a)) * a * bigStepEvaluation a := by
+                rw [← mul_assoc, ← mul_assoc]
+            _ = majorProjection (bigStepEvaluation a * bigStepEvaluation a)
+                    * a * bigStepEvaluation a := by
+                rw [majorProjection_compositionality]
+            _ ≤ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a :=
+                mul_le_mul' (mul_le_mul' hfold le_rfl) le_rfl
+    _ = majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a :=
+        bot_sup_eq _
+    _ ≤ (introductionCoreflexive : α)
+          ⊔ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a :=
+        le_sup_right
+    _ = bigStepEvaluation a := hfix.symm
+
+/-- **F4**: For a closed rule `a`, if `b` is closed under `Δ_κ`, `a * -`,
+and `⟨-⟩ * -`, then `a^⇓ ≤ b`. Induction principle for `a^⇓`, from Lemma
+A.6 of the draft's appendix (which characterises `a^⇓`, for closed `a`,
+as the least solution of `x = Δ_κ ∨ a·x ∨ ⟨x⟩·x`).
+
+Note: the closedness hypothesis on `a` is *essential*. Without it, the
+statement is false: `Δ_κ ≤ b` does not entail `Δ̄ ≤ b`, yet
+`a^⇓ = (a^E)∗ * Δ̄` starts (via `1 ≤ (a^E)∗`) with the full `Δ̄`
+rather than `Δ_κ`. Closedness lets one sharpen `Δ̄` to `Δ_κ` inside
+the reductive chain (Prop. 5.7 of the draft). -/
+theorem bigStepEvaluation_induction {a b : α} (_hgip : GIP a) (_hcl : SRA.IsClosed a)
     (_hDκ : (valueCoreflexive : α) ≤ b)
     (_ha : a * b ≤ b)
     (_hproj : majorProjection b * b ≤ b) :
     bigStepEvaluation a ≤ b := by
   -- SORRY: F4 of Fig. 7. This is the LFP induction principle from
-  -- Lemma A.6, which characterises `a^⇓` as the least solution of
-  -- `x = Δ_κ ∨ a; x ∨ ⟨x⟩; x` for closed rules. Its proof involves
-  -- star induction combined with residuation. Estimated 80-120 lines.
+  -- Lemma A.6, which characterises `a^⇓`, for closed `a`, as the least
+  -- solution of `x = Δ_κ ∨ a·x ∨ ⟨x⟩·x`. Its proof requires the
+  -- equivalence between the operational definition
+  -- `a^⇓ = (a^E)∗ * Δ̄` and the LFP characterisation, which itself
+  -- goes through Prop. 5.7 of the draft (`□(a^E) = (□a)^E`) — an
+  -- `IsClosedFun`-style transfer of `□` across the recursor's LFP
+  -- (available in `SRA/Modality.lean` via `box_lfp`, but requiring
+  -- the recursor to be a closed function). Estimated 80-120 lines
+  -- once the closed-transfer machinery is set up.
   sorry
 
 /-! ### Proposition 29
@@ -485,34 +611,28 @@ theorem bigStepEvaluation_unfold_le {a : α} (hgip : GIP a) :
         rw [← sup_assoc, sup_idem]
 
 /-- Proposition 29 (≥ direction): `Δ̄ ⊔ ⟨a^⇓⟩ * a * a^⇓ ≤ a^⇓`.
-The `Δ̄` part is trivial (`1 ≤ (a^E)∗`); the `⟨a^⇓⟩ * a * a^⇓ ≤ a^⇓`
-part is the genuine content, and requires reasoning about how the
-elimination-major slot of `a^⇓` composes with the trailing `a * a^⇓`
-to remain inside a single big-step run. -/
-theorem bigStepEvaluation_unfold_ge {a : α} (_hgip : GIP a) :
+The `Δ̄` part is trivial (`1 ≤ (a^E)∗`); the elim-part collapses to
+`⟨a^⇓⟩ * a^⇓` via F2 (`a * a^⇓ ≤ a^⇓`) and lands in `a^⇓` via F3.
+Conditional on F3 (still `sorry`ed above). -/
+theorem bigStepEvaluation_unfold_ge {a : α} (hgip : GIP a) :
     (introductionCoreflexive : α)
         ⊔ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a
       ≤ bigStepEvaluation a := by
-  -- SORRY: this is the substantive direction of Proposition 29. The
-  -- inclusion Δ̄ ≤ a^⇓ is trivial from `star_reflexivity`; the
-  -- inclusion `⟨a^⇓⟩ * a * a^⇓ ≤ a^⇓` needs a fixed-point argument
-  -- on a^⇓ showing that "descent into major, then a-step, then
-  -- big-step" is itself a big-step. The paper (Prop 29) sketches
-  -- this via the least-fixed-point characterisation of a^*; a full
-  -- Lean proof would be ~50–100 lines.
-  sorry
-
-/-- Proposition 29 (equational form): `a^⇓ = Δ̄ ⊔ ⟨a^⇓⟩ * a * a^⇓`.
-Follows from `bigStepEvaluation_unfold_le` and
-`bigStepEvaluation_unfold_ge`, plus `⟨a^E⟩ ≤ ⟨a^⇓⟩`
-which itself would require `a^E ≤ a^⇓` — another gap in the current
-infrastructure. -/
-theorem bigStepEvaluation_fixpoint {a : α} (_hgip : GIP a) :
-    bigStepEvaluation a
-      = (introductionCoreflexive : α)
-          ⊔ majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a := by
-  -- SORRY: as above.
-  sorry
+  refine sup_le ?_ ?_
+  · -- Δ̄ = 1 * Δ̄ ≤ (a^E)∗ * Δ̄ = a^⇓.
+    change (introductionCoreflexive : α)
+      ≤ (oneStepEvaluation a)∗ * introductionCoreflexive
+    calc (introductionCoreflexive : α)
+        = 1 * introductionCoreflexive := (one_mul _).symm
+      _ ≤ (oneStepEvaluation a)∗ * introductionCoreflexive :=
+          mul_le_mul' (LeanTra.Algebra.star_reflexivity _) le_rfl
+  · -- ⟨a^⇓⟩ * a * a^⇓ ≤ ⟨a^⇓⟩ * a^⇓ ≤ a^⇓  (F2 then F3).
+    calc majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a
+        = majorProjection (bigStepEvaluation a) * (a * bigStepEvaluation a) := mul_assoc _ _ _
+      _ ≤ majorProjection (bigStepEvaluation a) * bigStepEvaluation a :=
+          mul_le_mul' le_rfl (rule_mul_bigStepEvaluation_le hgip)
+      _ ≤ bigStepEvaluation a :=
+          majorProjection_bigStepEvaluation_mul_bigStepEvaluation_le hgip
 
 /-- Closed refinement of Proposition 29: for closed `a`,
 `a^⇓ = Δ_κ ⊔ ⟨a^⇓⟩ * a * a^⇓`, i.e. Δ̄ can be sharpened to `Δ_κ`. -/
@@ -547,22 +667,46 @@ mis-readings of the LICS'26 sketch dropped it, but without it the
 inequality is algebraically false (LHS produces pairs (elim, intro),
 RHS produces pairs (elim, elim), giving disjoint endpoints). -/
 
-/-- **Inversion lemma** (Prop. A.9 of the draft's appendix). For a
-closed rule `a` satisfying the closed inversion principle,
-`⟨b⟩ * a^⇓ ≤ ⟨b * a^⇓⟩ * a^⇓`: a big-step evaluation of an elimination
-form with major slot in `b` factors through an intermediate stage in
-which the major slot has itself been big-step evaluated, followed by
-a final big-step of the resulting term. -/
-theorem inversion_bigStep {a b : α} (_hgip : GIP a)
+/-- **Inversion lemma** (Prop. A.9 of the draft's appendix). For any
+rule `a` satisfying `GIP`, `⟨b⟩ * a^⇓ ≤ ⟨b * a^⇓⟩ * a^⇓`: a big-step
+evaluation of an elimination form with major slot in `b` factors
+through an intermediate stage in which the major slot has itself been
+big-step evaluated, followed by a final big-step of the resulting
+term.
+
+The proof unfolds `a^⇓` via its fixed-point equation (Prop. 29),
+kills the `⟨b⟩ * Δ̄` summand by intro/elim orthogonality, and folds
+the remaining `⟨b⟩ * ⟨a^⇓⟩ * a * a^⇓` via `⟨_⟩` compositionality and
+F2. Conditional on `bigStepEvaluation_fixpoint` (still `sorry`ed
+above); needs neither closed inversion nor closedness of `a`. -/
+theorem inversion_bigStep {a b : α} (hgip : GIP a)
     (_hinv : ClosedInversionPrinciple a) :
     majorProjection b * bigStepEvaluation a
       ≤ majorProjection (b * bigStepEvaluation a) * bigStepEvaluation a := by
-  -- SORRY: Prop. A.9 of the draft's appendix. The proof uses the
-  -- closed inversion principle (Def. A.7) together with the closed
-  -- form of Prop. 29 (`a^⇓ = Δ_κ ∨ ⟨a^⇓⟩ * a * a^⇓`) via a fixed-point
-  -- argument on a^⇓. Estimated 40–60 lines once
-  -- `bigStepEvaluation_fixpoint_closed` is available.
-  sorry
+  -- Unfold a^⇓ once via its fixed-point equation:
+  --   a^⇓ = Δ̄ ⊔ ⟨a^⇓⟩ * a * a^⇓.
+  conv_lhs => rw [bigStepEvaluation_fixpoint hgip]
+  rw [Quantale.mul_sup_distrib]
+  refine sup_le ?_ ?_
+  · -- ⟨b⟩ * Δ̄ ≤ ⊥ ≤ ⟨b * a^⇓⟩ * a^⇓.
+    calc majorProjection b * (introductionCoreflexive : α)
+        ≤ (⊥ : α) := majorProjection_mul_introductionCoreflexive_le_bot _
+      _ ≤ majorProjection (b * bigStepEvaluation a) * bigStepEvaluation a :=
+          bot_le
+  · -- ⟨b⟩ * (⟨a^⇓⟩ * a * a^⇓)
+    --   = ⟨b * a^⇓⟩ * a * a^⇓  (⟨_⟩ compositionality)
+    --   ≤ ⟨b * a^⇓⟩ * a^⇓      (F2 on the trailing a * a^⇓).
+    calc majorProjection b
+            * (majorProjection (bigStepEvaluation a) * a * bigStepEvaluation a)
+        = (majorProjection b * majorProjection (bigStepEvaluation a))
+            * a * bigStepEvaluation a := by
+          rw [← mul_assoc, ← mul_assoc]
+      _ = majorProjection (b * bigStepEvaluation a) * a * bigStepEvaluation a := by
+          rw [majorProjection_compositionality]
+      _ = majorProjection (b * bigStepEvaluation a) * (a * bigStepEvaluation a) := by
+          rw [mul_assoc]
+      _ ≤ majorProjection (b * bigStepEvaluation a) * bigStepEvaluation a :=
+          mul_le_mul' le_rfl (rule_mul_bigStepEvaluation_le hgip)
 
 /-! ### Step 2 — Determinism at the reduction level
 
