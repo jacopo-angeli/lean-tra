@@ -1,5 +1,5 @@
 /-
-Master's thesis — Lean 4 formalisation of Term Relation Algebras.
+Master's thesis: Lean 4 formalisation of Term Relation Algebras.
 Author: Jacopo Angeli.
 -/
 module
@@ -14,173 +14,46 @@ public import LeanTra.Metatheory.GentzenPrinciples
 public import Mathlib.Algebra.BigOperators.Fin
 
 /-!
-# The (untyped) λ-calculus as a second-order SRA instance
+# The untyped λ-calculus as a second-order SRA instance
 
-Second-order counterpart of `Instances/FirstOrder/*`, specialised to
-the binding signature of the λ-calculus (`lam : (1)`, `app : (0,0)`).
-The purpose of the file is threefold:
+The abstract confluence theorems of the thesis live at the level of
+Structural Relation Algebras and speak only of relations, substitution
+and structural compatibility; their point is that once a term structure
+is packaged as an SRA, the same argument delivers a confluence result
+whatever the syntax happens to be. To make this promise tangible we
+take the untyped λ-calculus, build the SRA structure by hand, and read
+confluence of β-reduction off the abstract bridge theorem. The
+λ-calculus is chosen because it is the smallest binder-carrying syntax
+in which every ingredient of the framework has to do real work
+(capture-avoiding substitution, the algebra of contexts, compatibility
+under term formation, the Gentzen principles), and because
+β-confluence is the classical benchmark against which any algebraic
+account of rewriting must be measured.
 
-* to exhibit an `SRA` instance on a genuine binder-carrying syntax;
-* to package the operational-decomposition data (`introduction`,
-  `elimination`) so that the metatheory of
-  `SRA/OperationalDecomposition` applies verbatim;
-* to derive confluence of parallel β-reduction as an instance of the
-  `local_confluence` bridge theorem (`Metatheory/Confluence/Local.lean`)
-  from the four rule-only conditions `IsSubstitutiveAtIdentity`,
-  `IsDeterministic`, `GIP`, `GCP` — all four proved here directly.
+The file is organised in four sections. Section 1 fixes the syntax and
+its equational theory of substitution; Section 2 installs the
+relational algebra on top of it; Section 3 builds the SRA operations
+and discharges the sixteen axioms of the class; Section 4 splits the
+structural refinement into an introduction/elimination pair, defines
+β-reduction, checks the four rule-level Gentzen-local hypotheses, and
+cashes them into confluence of parallel β via the bridge theorem. Each
+section is preceded by a docstring that explains what has to happen
+there and why.
 
-## Contents
-
-Four logical sections, one file.
-
-### Section 1 — Terms
-
-* `Lam n` — well-scoped untyped λ-terms with `n` free variables.
-* `liftRen`, `liftSubst` — lifting a renaming or substitution through
-  one binder.
-* `ren`, `subst`, `subst0`, `close` — capture-avoiding renaming,
-  simultaneous substitution, its `β`-shaped single-variable
-  specialisation, and the weakening of a closed term into an
-  arbitrary arity.
-* Equational theory: `ren_ren`, `ren_id`, `subst_ren`, `ren_subst`,
-  `subst_comp`, `subst_id`, `subst_var_eq_ren`, together with the
-  four lift-commutation lemmas `liftRen_comp`, `liftSubst_liftRen`,
-  `liftRen_liftSubst`, `liftSubst_comp` that thread them through the
-  `lam` cases of the two structural inductions.
-
-### Section 2 — Renaming-closed context-indexed relations
-
-* `SynRel` — a family of binary relations on `Lam ·`, one per arity,
-  uniformly closed under `Fin n → Fin m` renamings.
-* The involutive-quantale layer: `Mul`, `One`, `CompleteLattice`,
-  `IsQuantale`, `IsInvolutiveQuantale` — all pointwise per arity.
-
-### Section 3 — SRA operations and their axioms
-
-* `varDiag`, `scr` (two clauses — `lam` and `app`), `subst`, `j`.
-* The sixteen SRA axioms. Fourteen are proved directly by term-level
-  computation. The two remaining oplaxity laws — `subst_scr_oplaxity`
-  and `subst_introduction_oplaxity` — are false at `ψ = ⊥` in the
-  well-scoped de Bruijn model and are bundled into a single
-  `axiom nominalFSP : NominalFSPGaps` local to this file. See the
-  dedicated docstring at that point for the full analysis, and
-  (D-Lam-3) below for the top-level rationale.
-* `instSRA : SRA SynRel` — the typeclass instance.
-
-### Section 4 — Operational decomposition and β-reduction
-
-* `introduction` and `elimination` — the `lam`-clause and `app`-clause
-  of `scr`, packaged as separate operations so that
-  `SRA/OperationalDecomposition.lean` applies.
-* The thirteen operational-decomposition axioms, twelve proved
-  directly; the last, `subst_introduction_oplaxity`, is the second
-  projection of `nominalFSP` for the same reason as its `scr`
-  counterpart.
-* `instOperationalDecomposition : OperationalDecomposition SynRel`.
-* `betaRule` — the β-rewrite relation, at every arity.
-* `betaRule_isReduction` and the four Gentzen-local hypotheses
-  `betaRule_isSubstitutiveAtIdentity`, `betaRule_isDeterministic`,
-  `betaRule_gip`, `betaRule_gcp` — none of them appeal to
-  `nominalFSP`.
-* `betaRule_local_confluent` — confluence of parallel β, discharged
-  via `local_confluence`.
-* `betaRule_confluent_orthogonal` — the alternative orthogonality
-  route, conditional on `IsOrthogonal betaRule`.
-
-## Design decisions
-
-### (D-Lam-1) `Fin n`-indexed de Bruijn syntax
-
-`Lam n : Type 0` for every `n`, so no universe bump propagates into
-`SynRel`; the `lam` case recurses at `Lam (n+1)`, and α-equivalence is
-*definitional*. This is the second-order counterpart of (D1) in
-`Instances/FirstOrder/Terms.lean` (contexts-as-types): both avoid
-capture-avoidance bookkeeping at the cost of an explicit renaming
-transport whenever an arity changes.
-
-*Alternative rejected.* A nominal presentation on named α-quotients
-(à la Isabelle/Nominal) would give a carrier that satisfies the
-unguarded `subst_scr_oplaxity` and `subst_introduction_oplaxity`
-directly at `ψ = ⊥` — but implementing the finite-support
-infrastructure in stock Lean 4 is a substantial project in itself,
-orthogonal to the metatheory the thesis is about. (D-Lam-3) below
-documents the price paid for choosing de Bruijn instead.
-
-### (D-Lam-2) `Fin.cases` for lifted maps
-
-Renamings `Fin n → Fin m` lift under one binder to
-`Fin (n+1) → Fin (m+1)` via `Fin.cases`, sending the fresh index `0`
-to itself and shifting the rest by `Fin.succ`. Substitutions lift
-analogously, weakening the images by `Fin.succ`. The four
-lift-commutation lemmas — `liftRen_comp`, `liftSubst_liftRen`,
-`liftRen_liftSubst`, `liftSubst_comp` — are stated with the exact
-shape the `lam` cases of `ren_ren`, `ren_subst`, `subst_ren`, and
-`subst_comp` respectively need. Each is one `Fin.cases` split away
-from `rfl`.
-
-### (D-Lam-3) The Nominal-FSP gap, packaged as a local axiom
-
-Two of the SRA/OD axioms — `subst_scr_oplaxity` on the `scr`-side and
-`subst_introduction_oplaxity` on the operational-decomposition side —
-are literally false at `ψ = ⊥` in the raw well-scoped de Bruijn
-model. The closed pair `(λx.x, λx.x)` inhabits the LHS via vacuous
-substitution obligations (the source context is empty, so the
-pointwise `ψ`-obligation is vacuously satisfied). The RHS, on the
-other hand, requires the `lam`-body slot to be `ψ`-related at the
-freshly-bound position; at `ψ = ⊥` no pair whatsoever is
-`ψ`-related, so the RHS is uninhabited.
-
-The standard nominal treatment of second-order syntax (raw terms up
-to α-equivalence, equivariant finitely supported relations) discharges
-these two statements via the **Finite Support Principle**: the bound
-variable is chosen fresh for the substitution's support, so the
-fictitious obligation on `(var 0, var 0)` never arises. Formalising
-that discharge here would require implementing the full nominal-set
-infrastructure — freshness, support, equivariance, α-quotients — a
-separate project.
-
-We therefore bundle the two problematic statements into a single
-`Prop`-valued structure `NominalFSPGaps` and postulate one Lean
-`axiom nominalFSP : NominalFSPGaps` **at the point of use, local to
-this file**. Every downstream result (`instSRA`,
-`instOperationalDecomposition`, `betaRule_local_confluent`,
-`betaRule_confluent_orthogonal`) is otherwise `sorry`-free, and the
-axiom trace at the bottom of the file makes the dependency
-explicit. The three other "FSP-shaped" facts —
-`subst_associativity` (both directions),
-`elimination_join_preservation` (split slot-by-slot into `_left` and
-`_right`), and `box_elimination_oplaxity` — are proved directly
-without appeal to the axiom.
-
-Alongside the unguarded versions used by the class instances, the
-file also contains **guarded versions** of the same two statements,
-`subst_scr_oplaxity_guarded` and `subst_introduction_oplaxity_guarded`,
-which take an extra hypothesis `Δη ≤ ψ` and are proved directly. Their
-axiom trace contains only `[propext, Quot.sound]`, mechanically
-certifying that the extra hypothesis suffices to close the gap in
-the de Bruijn model. The guard is satisfied at every real call site
-downstream (typically `ψ = Δ` or `ψ = a⇛`).
-
-*Honest caveat.* As stated (without a `Δη ≤ ψ` guard), the two
-bundled statements would need the FSP argument to be sound; the
-axiom therefore asserts a fact that is *not* provable in extensional
-Lean under the raw well-scoped model. Every use in the metatheory
-happens to instantiate `ψ` with a relation containing the identity,
-so the failure is invisible to downstream reasoning — but this is a
-semantic accident of usage patterns, not a compensating theorem.
-
-### (D-Lam-4) No signature parameter
-
-The λ-calculus has a fixed binding signature (`lam : (1)`,
-`app : (0,0)`), so `lam` and `app` are hard-coded constructors of
-`Lam`. This is the second-order dual of the deliberate genericity of
-`Instances/FirstOrder/Terms.lean`'s `Signature`: there, the point
-was to accommodate arbitrary first-order signatures; here, the
-point is to specialise to a concrete second-order example.
+The overall shape is that of a case study. The syntax is concrete and
+the axiom-checking is honest hand-computation; but every step above the
+SRA interface is imported from the abstract theory without
+modification, and the classical result, Church–Rosser for parallel β,
+falls out as an application. The file exhibits, in one place, how a
+real binder-carrying calculus is fitted to the framework and where the
+price of doing so shows up.
 
 ## References
 
-Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.* LICS 2026.
+Francesco Gavazzo. *An Algebraic Approach to Formal System Metatheory.*
+LICS 2026. In particular the bridge theorem for confluence from local
+conditions and the Gentzen Inversion and Conservation Principles used
+throughout.
 -/
 @[expose] public section
 
@@ -189,12 +62,14 @@ open LeanTra.Algebra
 
 namespace LeanTra.Instances.Lambda
 
-/-! ## Section 1 — Terms
+/-! ## Section 1: Terms
 
-Well-scoped λ-terms using de Bruijn indices, renaming, substitution,
-and their equational theory. Every proof is by induction on the term
-with the target arity generalised so that the `lam` case has the
-right IH available. -/
+The first task is to fix a syntax. We choose a well-scoped de Bruijn
+presentation, indexing terms by the number of free variables available
+to them (`Lam n`). This choice is deliberate: by turning the binding
+discipline into an arithmetic on natural numbers we make α-equivalence
+*definitional* (two terms are equal iff their underlying trees are
+equal) and avoid ever having to reason about freshness of names. -/
 
 /-- Well-scoped untyped λ-terms with `n` free variables. -/
 inductive Lam : Nat → Type where
@@ -211,10 +86,24 @@ variable {n m k : Nat}
 
 /-! ### Lifted maps at binders
 
-`liftRen` sends the freshly-bound index (`Fin.mk 0`) to itself and
-shifts all other images by `Fin.succ`. `liftSubst` does the same for
-substitutions, weakening each image by `Fin.succ`. Both are used
-uniformly in the `lam` cases of `ren` and `subst` respectively. -/
+The price of the de Bruijn presentation is that renamings and
+substitutions must be lifted explicitly whenever they cross a binder,
+and this is what `liftRen` and `liftSubst` do. Once these lifts are in
+place, the whole equational theory of substitution developed below
+reduces to a handful of lift-commutation lemmas (`liftRen_comp`,
+`liftSubst_liftRen`, `liftRen_liftSubst`, `liftSubst_comp`) that
+thread the routine inductions through their `lam` cases; a nominal
+presentation would finesse this bookkeeping at the cost of dragging in
+an infrastructure of finitely-supported sets that is a development
+project in its own right. Every equational-theory proof further down
+in the section goes by induction on the term with the target arity
+generalised, so that the `lam` case has the right induction hypothesis
+available.
+
+Concretely, `liftRen` sends the freshly-bound index (`Fin.mk 0`) to
+itself and shifts all other images by `Fin.succ`; `liftSubst` does the
+same for substitutions, weakening each image by `Fin.succ`. Both are
+used uniformly in the `lam` cases of `ren` and `subst` respectively. -/
 
 /-- Lift a renaming across one binder. -/
 def liftRen (f : Fin n → Fin m) : Fin (n + 1) → Fin (m + 1) :=
@@ -239,7 +128,18 @@ def subst : {n m : Nat} → Lam n → (Fin n → Lam m) → Lam m
   | _, _, app t s,  τ => app (t.subst τ) (s.subst τ)
   | _, _, lam t,    τ => lam (t.subst (liftSubst τ))
 
-/-! ### Reduction lemmas — the `simp`-normal shapes. -/
+/-! ### Reduction lemmas, the `simp`-normal shapes
+
+The six lemmas below simply restate the defining equations of `ren`
+and `subst` as named theorems, one per constructor of `Lam`. Their
+proof is `rfl` in every case, so mathematically they add nothing;
+their purpose is to be picked up by Lean's rewrite tactic `simp`,
+which uses them as automatic rewrite rules. From that point on, any
+proof that traverses a term will canonicalise expressions like
+`(app t s).ren f` into `app (t.ren f) (s.ren f)` without our having
+to unfold the definition of `ren` by hand every time. This is the
+standard Lean idiom for exposing the computational content of a
+recursive definition to the proof automation. -/
 
 /-- `simp`-normal shape of `ren` on a variable. -/
 @[simp] theorem ren_var (x : Fin n) (f : Fin n → Fin m) :
@@ -265,13 +165,20 @@ def subst : {n m : Nat} → Lam n → (Fin n → Lam m) → Lam m
 @[simp] theorem subst_lam (t : Lam (n + 1)) (τ : Fin n → Lam m) :
     (lam t).subst τ = lam (t.subst (liftSubst τ)) := rfl
 
-/-! ### Commutation lemmas for the lifts
+/-! ### Equational theory of `ren` and `subst`
 
-`liftRen_comp` is the functoriality of `liftRen` under composition of
-renamings, used in every `lam`-case of a two-renaming law.
-`liftSubst_liftRen` and `liftRen_liftSubst` handle the two mixed
-`ren`/`subst` commutations under a binder. `liftSubst_comp` is the
-substitution counterpart of `liftRen_comp`, used in `subst_comp`. -/
+This is the section that turns the two recursive definitions above
+into a genuine algebra of substitution. What lives here is the
+standard package of laws every substitution operation must satisfy:
+composition of renamings (`ren_ren`), identity renaming (`ren_id`),
+the two mixed laws relating renaming and substitution (`subst_ren`,
+`ren_subst`), the fact that variables act as a right unit
+(`subst_id`), and Kleisli associativity of substitution
+(`subst_comp`). Downstream everything, from the SRA axioms in
+Section 3 to the four rule-level conditions on β in Section 4, is
+proved by unfolding definitions with `simp` and rewriting along these
+six laws; without them we would have to re-do the `lam`-case
+gymnastics every single time. -/
 
 /-- Functoriality of `liftRen`: composing two renaming lifts equals the lift
 of the composite. Threaded through the `lam` case of `ren_ren`. -/
@@ -417,19 +324,26 @@ theorem subst_comp : ∀ {n m k : Nat} (t : Lam n) (τ : Fin n → Lam m)
       funext i; exact liftSubst_comp τ θ i
     rw [ih, hmap]
 
-/-! ### Single-variable substitution — the shape of β.
+/-! ### Derived operations: `subst0` and `close`
 
-`subst0 t s = t.subst (Fin.cases s var)`: replace the outermost bound
-variable of `t` by `s` and leave the rest of the indices intact. -/
+Two specialisations of `subst` and `ren` are singled out because they
+are the exact shapes the later sections consume. `subst0` is the
+one-variable substitution that gives β-reduction its right-hand side:
+the β-rule of Section 4 will read `app (lam t) s ↦ subst0 t s`, so
+this operation is not a piece of general infrastructure but the actual
+substitution shape of the calculus we are formalising. `close` goes
+the other way: it takes a term with no free variables (`Lam 0`) and
+injects it into an arbitrary context by weakening along the empty
+renaming `Fin 0 → Fin n`, together with the small lemma `ren_close`
+saying that further renamings act trivially on such an injection.
+Closed terms and their weakening are what the closed-value modality
+`j` of Section 3 picks up, so this pair of definitions is the concrete
+raw material on which two of the SRA operations of the file will be
+built. -/
 
 /-- Single-variable substitution: replace `Fin 0` in `t` by `s`. -/
 def subst0 (t : Lam (n + 1)) (s : Lam n) : Lam n :=
   t.subst (Fin.cases s var)
-
-/-! ### Closed terms and their weakening.
-
-`Lam 0` is the type of closed terms. `close n t₀` weakens a closed
-term into an arity-`n` context via the unique map `Fin 0 → Fin n`. -/
 
 /-- Weakening of a closed term into arity `n`. -/
 def close (n : Nat) (t : Lam 0) : Lam n := t.ren (Fin.elim0)
@@ -445,13 +359,21 @@ theorem ren_close (n m : Nat) (t : Lam 0) (f : Fin n → Fin m) :
 
 end Lam
 
-/-! ## Section 2 — Renaming-closed context-indexed relations
+/-! ## Section 2: Renaming-closed context-indexed relations
 
-The SRA carrier. `SynRel` is a family of relations on `Lam ·`, indexed
-by arity, uniformly closed under renaming (i.e. along any `Fin n →
-Fin m`). Composition, joins, meets, and the involution are all
-per-arity; the involutive-quantale layer is discharged exactly as in
-the first-order case, but at `Type 0` (no universe bump). -/
+With the syntax fixed we build the relational layer that will carry
+the SRA structure. An SRA does not speak of terms directly but of
+*arity-indexed families of relations between terms*, closed under
+renaming: this is what `SynRel` records, a family of binary relations
+on `Lam n`, one per arity, uniformly closed along any renaming
+`Fin n → Fin m`. On top of `SynRel` we install the involutive-quantale
+operations pointwise per arity: join and meet from set-theoretic union
+and intersection, multiplication from relational composition, unit
+from the diagonal, and involution from converse. Nothing here is
+subtle; the point is simply that the abstract algebra of the SRA
+framework has an obvious model on the syntactic side, and everything
+reduces to standard facts about binary relations, discharged at
+`Type 0` so that no universe bump propagates upward. -/
 
 /-- A *syntax relation*: a family of binary relations on `Lam n`, one
 per arity, uniformly closed under renaming. -/
@@ -472,18 +394,36 @@ at every arity and every pair of terms. -/
   have hrel : r = r' := by funext n t s; exact propext (h n t s)
   subst hrel; rfl
 
-/-! ### Order and pointwise lattice operations -/
+/-! ### The pointwise complete lattice
+
+The first algebraic layer on `SynRel` is the order structure. The
+whole thing is inherited from `Prop` pointwise: `φ ≤ ψ` is defined as
+containment at every arity and every pair of terms, `⊤` and `⊥` as
+the always-true and always-false relations, binary and set-indexed
+join and meet as union and intersection of relations at each arity.
+Ren-closure travels for free through each of these constructions,
+which is why every instance below carries a tiny two-line
+`ren_closed` proof and no more. What follows those definitions is a
+handful of `simp`-normal shape lemmas that expose the underlying
+`∀`/`∃`/`∧`/`∨` structure to the tactic layer, and the
+`instCompleteLattice` instance that packages everything into the
+typeclass the abstract framework consumes: the SRA definition demands
+a complete lattice on the carrier because that is what makes fixpoint
+constructions (Howe-style closures in particular) well-defined. The
+proofs of the lattice axioms are elementary, mostly a single `intro`
+followed by a projection or an elimination on the pointwise
+`∨`/`∧`. -/
 
 /-- Pointwise `≤`. -/
 instance instLE : LE SynRel :=
   ⟨fun φ ψ => ∀ n (t s : Lam n), φ.rel n t s → ψ.rel n t s⟩
 
-/-- Pointwise `⊤` — every pair related at every arity. -/
+/-- Pointwise `⊤`, every pair related at every arity. -/
 instance instTop : Top SynRel := ⟨{
   rel := fun _ _ _ => True
   ren_closed := by intros; trivial }⟩
 
-/-- Pointwise `⊥` — no pair related. -/
+/-- Pointwise `⊥`, no pair related. -/
 instance instBot : Bot SynRel := ⟨{
   rel := fun _ _ _ => False
   ren_closed := by intros _ _ _ _ _ h; exact h.elim }⟩
@@ -550,8 +490,6 @@ theorem biSup_rel {α : Type*} {s : Set α} {f : α → SynRel}
   simp only [iSup_rel]
   exact ⟨fun ⟨a, ha, h⟩ => ⟨a, ha, h⟩, fun ⟨a, ha, h⟩ => ⟨a, ha, h⟩⟩
 
-/-! ### Complete lattice -/
-
 /-- Pointwise complete lattice structure on `SynRel`. -/
 instance instCompleteLattice : CompleteLattice SynRel where
   le := (· ≤ ·)
@@ -580,7 +518,24 @@ instance instCompleteLattice : CompleteLattice SynRel where
   bot := ⊥
   bot_le _ _ _ _ h := h.elim
 
-/-! ### Composition, identity, quantale, involution -/
+/-! ### Composition, identity, quantale, involution
+
+Above the lattice we install the multiplicative and involutive
+structure that turns `SynRel` into an *involutive quantale*, the
+carrier the SRA framework actually asks for. Multiplication is
+relational composition (`(φ * ψ).rel n t v` iff there is an
+intermediate `u` with `φ` on the left and `ψ` on the right), the unit
+is the identity relation (equality at every arity), and the
+involution is converse (`φᵒ` swaps the two sides). The quantale law
+saying that composition distributes over arbitrary joins on both
+sides holds essentially by construction: unfolding the definitions
+turns it into "an existential over a disjunction is a disjunction of
+existentials". The involution laws are equally routine but for the
+same reason worth checking explicitly, since the SRA metatheory
+manipulates converse freely. Together the four instances close the
+involutive-quantale structure and unlock the layer of laws
+(`Algebra.InvolutiveQuantale`) on which the SRA operations of Section
+3 will be defined. -/
 
 /-- Pointwise relational composition. -/
 instance instMul : Mul SynRel := ⟨fun φ ψ => {
@@ -590,7 +545,7 @@ instance instMul : Mul SynRel := ⟨fun φ ψ => {
     obtain ⟨u, htu, huv⟩ := h
     exact ⟨u.ren f, φ.ren_closed f htu, ψ.ren_closed f huv⟩ }⟩
 
-/-- The identity relation — equality at every arity. -/
+/-- The identity relation, equality at every arity. -/
 instance instOne : One SynRel := ⟨{
   rel := fun _ t s => t = s
   ren_closed := by intros _ _ f _ _ h; exact congrArg (Lam.ren · f) h }⟩
@@ -661,17 +616,28 @@ instance instIsInvolutiveQuantale : IsInvolutiveQuantale SynRel where
     · rintro ⟨u, hψ, hφ⟩; exact ⟨u, hφ, hψ⟩
   converse_monotonicity h n t s h' := h n s t h'
 
-/-! ## Section 3 — SRA operations and their axioms
+/-! ## Section 3: SRA operations and their axioms
 
-The four `SRA` data — `varDiag`, `scr`, `subst`, `j` — and their
-sixteen defining axioms, culminating in `instSRA : SRA SynRel`. The
-`scr` operation is split into two clauses to reflect the second-order
-signature: a `lam`-clause that recurses at `Lam (n+1)` (bound-variable
-extension) and an `app`-clause at the current arity. That split is
-what forces `subst_scr_oplaxity` — and, symmetrically,
-`subst_introduction_oplaxity` in Section 4 — to be discharged via
-`nominalFSP`; see (D-Lam-3) in the module docstring and the dedicated
-docstring at the axiom declaration below for the full analysis. -/
+The heart of the file is the definition of the SRA operations and the
+verification of their sixteen defining axioms, culminating in
+`instSRA : SRA SynRel`. Four operations are needed. The diagonal
+`varDiag` collects the equality on variables. The structural refinement
+`scr` propagates a family of relations through the two term
+constructors, so that `scr φ` relates `lam t` to `lam s` whenever `t`
+and `s` are `φ`-related, and analogously for `app`; it is split into
+two clauses to reflect the second-order signature, a `lam`-clause that
+recurses at `Lam (n+1)` and an `app`-clause at the current arity.
+Substitution `subst φ ψ` composes a relation on terms with a relation
+on substitutions, delivering the standard fact that if `φ` relates `t`
+and `s` and `ψ` relates two substitutions position by position then
+the substituted terms are related. Finally `j` witnesses the finitary
+join-preservation properties that the involutive quantale demands.
+Fourteen of the sixteen axioms are direct computations by induction on
+terms and pattern-matching on renamings and substitutions; the two
+remaining "oplaxity" laws, `subst_scr_oplaxity` on the `scr`-side and,
+symmetrically, `subst_introduction_oplaxity` in Section 4, resist a
+direct proof for a reason that is a genuine artefact of the de Bruijn
+presentation and is discussed at length below. -/
 
 /-- `Δη`: pairs of the same variable. -/
 def varDiag : SynRel := {
@@ -703,7 +669,7 @@ def scr (φ : SynRel) : SynRel := {
       · exact φ.ren_closed f hφ₁
       · exact φ.ren_closed f hφ₂ }
 
-/-- Relation substitution — same shape as the first-order case. -/
+/-- Relation substitution, same shape as the first-order case. -/
 def subst (φ ψ : SynRel) : SynRel := {
   rel := fun m u v =>
     ∃ (n : Nat) (t s : Lam n) (τ σ : Fin n → Lam m),
@@ -751,7 +717,21 @@ def j : SynRel := {
     (j : SynRel).rel n t s ↔
       t = s ∧ ∃ t₀ : Lam 0, t = Lam.close n t₀ := Iff.rfl
 
-/-! ### The easy axioms -/
+/-! ### The easy axioms
+
+Grouped here are the SRA axioms whose proof requires no genuine
+insight, only a straightforward unfolding of the definitions of
+`scr`, `subst`, and the involutive-quantale operations. Monotonicity
+of `scr` and of `subst` in its second argument follows from the fact
+that both are defined by an existential over a `φ`-obligation, so a
+larger `φ` produces a larger existential. The commutation laws with
+converse (`scr` and `subst`) are pattern-matches on the two clauses
+of `scr` and a symmetric renaming of witnesses in `subst`. Join
+preservation of `subst` in its first argument, the symmetry and
+co-transitivity of the diagonal `varDiag`, and the orthogonality of
+`varDiag` with `scr` (variables and compound terms are disjoint) all
+close in the same style. Nothing here scales the wall of binders yet;
+that is the job of the harder axioms further down. -/
 
 /-- SRA axiom: monotonicity of `scr`. -/
 theorem scr_monotonicity {φ ψ : SynRel} (h : φ ≤ ψ) : scr φ ≤ scr ψ := by
@@ -807,7 +787,7 @@ theorem varDiag_cotransitivity : (varDiag : SynRel) ≤ varDiag * varDiag := by
   intro n t s ⟨x, ht, hs⟩
   exact ⟨Lam.var x, ⟨x, ht, rfl⟩, ⟨x, rfl, hs⟩⟩
 
-/-- SRA axiom: variables and compound terms are disjoint —
+/-- SRA axiom: variables and compound terms are disjoint,
 `varDiag * scr φ ≤ ⊥`. -/
 theorem varDiag_scr_orthogonality (φ : SynRel) :
     (varDiag : SynRel) * scr φ ≤ ⊥ := by
@@ -816,7 +796,26 @@ theorem varDiag_scr_orthogonality (φ : SynRel) :
   · cases hu
   · cases hu
 
-/-! ### Unit laws for substitution -/
+/-! ### Unit laws for substitution
+
+The two axioms saying that the diagonal on variables acts as a
+two-sided unit for the relational substitution operator:
+`subst varDiag ψ = ψ` and `subst φ varDiag = φ`. Together they are
+the analogue, at the level of relations, of the classical fact that
+substituting the identity substitution leaves a term unchanged; and
+they are what lets the abstract SRA theory treat `subst` as a real
+"substitution-shaped" operation. The left unit falls out immediately
+by unfolding: the `varDiag` obligation on the first argument forces
+the two substituted terms to be syntactically `var x`, and the
+remaining pointwise `ψ`-obligation reduces to `ψ` itself. The right
+unit is the delicate one, because the `varDiag` obligation on the
+argument substitutions only tells us that each `τ x` and `σ x` are
+*equal variables*, i.e. of the form `var (ρ x)` for some common `ρ`.
+Extracting `ρ` uses classical choice and then the auxiliary lemma
+`subst_var_eq_ren` (proved locally by induction on the term) collapses
+substituting by such a "variable-valued" map into a renaming; ren-
+closure of `φ` then closes the case. The lemma lives here rather
+than up in Section 1 because this is the only place it is used. -/
 
 /-- SRA axiom: `varDiag` is a left unit for `subst`. -/
 theorem subst_varDiag_unit_left (ψ : SynRel) : subst varDiag ψ = ψ := by
@@ -868,7 +867,20 @@ theorem subst_varDiag_unit_right (φ : SynRel) : subst φ varDiag = φ := by
            (Lam.subst_id u).symm, (Lam.subst_id v).symm, hφ,
            fun x => ⟨x, rfl, rfl⟩⟩
 
-/-! ### `scr` and composition -/
+/-! ### `scr` and composition
+
+The interaction laws between the structural refinement `scr` and the
+relational composition `*`, plus the associativity of `subst` and the
+oplaxity of its interaction with composition. The key law is
+`scr (φ * ψ) = scr φ * scr ψ`: propagating a composite relation
+through a constructor is the same as composing the two structural
+propagations. Together with `subst_associativity` and the oplax
+inequality `subst φ ψ * subst φ' ψ' ≤ subst (φ * φ') (ψ * ψ')`, these
+express that `scr` and `subst` are compatible with the monoidal
+structure of the quantale in the expected way. The proofs are longer
+than in the "easy" block only because a case analysis on the two
+clauses of `scr` has to be threaded through the composition witness,
+but each case is still a mechanical unfolding. -/
 
 /-- SRA axiom: `scr` preserves composition. -/
 theorem scr_compositionality (φ ψ : SynRel) :
@@ -943,10 +955,27 @@ def elimination (a b : SynRel) : SynRel := {
 
 /-! ### The Nominal-FSP gap, packaged as a local axiom
 
-The top-level rationale is (D-Lam-3) in the module docstring; this
-block is the detailed accounting. Two axioms of the SRA/OD layer fail
-to close in the well-scoped de Bruijn representation without an
-additional binder-side hypothesis:
+The two "oplaxity" laws left over from Section 3 refuse to be proved
+directly at their strongest instantiation, and the obstruction is
+entirely a symptom of the de Bruijn presentation: at the trivial
+argument relation `ψ = ⊥` there is a vacuously satisfied left-hand
+side involving closed identity terms which nonetheless requires, on
+the right, that the freshly bound variable be related to itself under
+an empty relation, which is impossible. In the nominal tradition this
+gap is closed by the Finite Support Principle, which chooses the bound
+name outside the support of the substitution and thereby dodges the
+fictitious obligation. Rather than build the full nominal apparatus we
+take an honest shortcut: we state the two problematic laws as an
+explicit local `axiom nominalFSP`, we prove strictly guarded variants
+of the same statements (under the extra hypothesis `Δη ≤ ψ`, which is
+verified at every real call site), and we let the axiom trace at the
+end of the file make the dependency completely visible. This is
+the one place where the formalisation departs from a `sorry`-free
+discipline, and it does so in a controlled way that isolates the
+departure to a single named assumption whose meaning is well
+understood. The rest of this block is the detailed accounting. Two
+axioms of the SRA/OD layer fail to close in the well-scoped de Bruijn
+representation without an additional binder-side hypothesis:
 
 * `subst_scr_oplaxity`: at the `lam` clause of `scr`, the freshly-bound
   index at position `Fin.mk 0` of the extended context becomes `var 0`
@@ -975,15 +1004,15 @@ this obstruction via the **Finite Support Principle (FSP)**: on the
 variable of the outer `λ` is chosen fresh for the support of `ψ`, so
 the fictitious `(var 0, var 0)` obligation never appears. Formalising
 that argument requires a full nominal-set infrastructure (freshness,
-support, α-quotients, equivariance) — a separate project we defer.
+support, α-quotients, equivariance), a separate project we defer.
 
 Instead: the two problematic statements are grouped into
 `NominalFSPGaps` and postulated jointly as `axiom nominalFSP`. The
 axiom is **local to this file**; the axiom trace at the bottom
 records the dependency of every downstream theorem on it. The three
-other FSP-shaped facts — `subst_associativity`'s (≥) direction,
+other FSP-shaped facts (`subst_associativity`'s (≥) direction,
 `elimination_join_preservation` split slot-by-slot, and
-`box_elimination_oplaxity` — are proved directly. -/
+`box_elimination_oplaxity`) are proved directly. -/
 
 /-- The two algebraic facts on `SynRel` whose formalisation would
 require the nominal Finite Support Principle. Grouped so that the SRA
@@ -1033,7 +1062,7 @@ apply at `ψ = ⊥` at all.
 `Metatheory/Confluence/ParallelReduction.lean` and `SRA/Howe.lean`)
 instantiates `ψ` with a relation containing the identity (typically
 `ψ = Δ` or `ψ = a⇛`); the guard is therefore satisfied at every real
-call site. This is the technical content of (D-Lam-3)'s remark that
+call site. This is the technical content of the remark above that
 the failure at `ψ = ⊥` is invisible to downstream reasoning: a
 guarded formulation of the class axiom would suffice for every use,
 and the guarded proofs below discharge it. -/
@@ -1169,7 +1198,7 @@ theorem subst_compositionality_oplax (φ φ' ψ ψ' : SynRel) :
   · exact ⟨n, t, w, τ, μ, rfl, rfl, hφ, hψ⟩
   · exact ⟨n, w, s, μ, σ, rfl, rfl, hφ', hψ'⟩
 
-/-- SRA axiom: fixed-point law `varDiag ⊔ scr 1 = 1` — every term is
+/-- SRA axiom: fixed-point law `varDiag ⊔ scr 1 = 1`, every term is
 either a variable or a compound. -/
 theorem cr_fixpoint : (varDiag ⊔ scr 1 : SynRel) = 1 := by
   ext n t s
@@ -1190,7 +1219,7 @@ theorem cr_fixpoint : (varDiag ⊔ scr 1 : SynRel) = 1 := by
     | lam t _ =>
       exact Or.inr (Or.inl ⟨t, t, rfl, rfl, rfl⟩)
 
-/-- SRA axiom: structural induction — `varDiag ⊔ scr φ ≤ φ` implies
+/-- SRA axiom: structural induction, `varDiag ⊔ scr φ ≤ φ` implies
 `1 ≤ φ`. -/
 theorem cr_induction {φ : SynRel} (h : varDiag ⊔ scr φ ≤ φ) : 1 ≤ φ := by
   intro n t s (heq : t = s)
@@ -1222,7 +1251,7 @@ theorem j_cotransitivity : (j : SynRel) ≤ j * j := by
   obtain ⟨_, t₀, ht⟩ := h
   exact ⟨t₀, ht⟩
 
-/-- SRA axiom: closed terms and variables are disjoint —
+/-- SRA axiom: closed terms and variables are disjoint,
 `j * varDiag ≤ ⊥`. -/
 theorem j_varDiag_orthogonality : (j : SynRel) * varDiag ≤ ⊥ := by
   intro n t v ⟨u, ⟨htu, t₀, hcls⟩, ⟨x, huvar, _⟩⟩
@@ -1233,7 +1262,20 @@ theorem j_varDiag_orthogonality : (j : SynRel) * varDiag ≤ ⊥ := by
   | app _ _ => cases hcls
   | lam _ => cases hcls
 
-/-! ### The SRA instance -/
+/-! ### The SRA instance
+
+The point at which all the preceding work becomes usable. Everything
+above amounts to sixteen theorems named `varDiag_symmetry`,
+`scr_compositionality`, `subst_associativity`, and so on; here we
+bind them to the corresponding fields of the `SRA` typeclass so that
+`instSRA : SRA SynRel` is inhabited. From this line onward, every
+abstract lemma stated in the `SRA` layer of the framework applies
+directly to `SynRel`, without any further manual work: this is the
+interface between the concrete syntactic world of `Lam` and the
+abstract metatheory of Term Relation Algebras. The instance itself
+is pure typeclass assembly and carries no mathematical content, but
+its existence is what makes the whole file a genuine instance of the
+framework rather than a parallel development. -/
 
 /-- The syntax relations on well-scoped λ-terms form an `SRA`. -/
 instance instSRA : SRA SynRel where
@@ -1262,15 +1304,27 @@ instance instSRA : SRA SynRel where
   j_cotransitivity := j_cotransitivity
   j_varDiag_orthogonality := j_varDiag_orthogonality
 
-/-! ## Section 4 — Operational decomposition and β-reduction
+/-! ## Section 4: Operational decomposition and β-reduction
 
-The operational-decomposition axioms, the corresponding typeclass
-instance, and the β-rewrite rule with the four Gentzen-local
-hypotheses required by `local_confluence`. The two operations
-`introduction` and `elimination` are defined in Section 3 (so that
-`NominalFSPGaps` can reference them); what remains here is their
-thirteen axioms, the `OperationalDecomposition` instance, and the
-β-side content. -/
+Once the SRA instance is in place, we specialise the machinery of
+`SRA/OperationalDecomposition.lean` by splitting the structural
+refinement `scr` into an *introduction* component (the `lam`-clause,
+carrying constructors) and an *elimination* component (the `app`-clause,
+carrying destructors). The two operations themselves are
+defined already in Section 3, so that `NominalFSPGaps` can reference
+them; what happens here is that the split is turned into an
+`OperationalDecomposition` typeclass instance, which is precisely what
+allows the Gentzen principles of `Metatheory/GentzenPrinciples.lean`
+to be stated at all: those principles talk about how a rewrite rule
+interacts with introduction and elimination forms, and they can be
+formulated only on a syntax that has been decomposed in this way.
+Twelve of the thirteen accompanying axioms are again direct
+computations; the thirteenth is the same nominal-FSP obligation as
+before and is discharged from the same local axiom. With the instance
+in hand the section then introduces β-reduction as a `SynRel`,
+verifies the four rule-level Gentzen-local hypotheses required by the
+bridge theorem, and finally cashes them into confluence of parallel β
+via `LeanTra.Confluence.local_confluence`. -/
 
 /-- `scr = introduction ⊔ elimination` on the diagonal. -/
 theorem scr_decomposition (a : SynRel) : (SRA.scr a : SynRel) = introduction a ⊔ elimination a a := by
@@ -1281,13 +1335,19 @@ theorem scr_decomposition (a : SynRel) : (SRA.scr a : SynRel) = introduction a �
 
 /-! ### OperationalDecomposition axioms
 
-The `OperationalDecomposition` class axioms, mirroring the shape of
-the corresponding `scr` laws but split into a constructor part
-(`introduction`, `lam` only) and a destructor part (`elimination`,
-`app` only). `subst_introduction_oplaxity` carries the same binder
-obstruction as `subst_scr_oplaxity` and is discharged through the
-second projection of `nominalFSP`; all other twelve are proved
-directly. -/
+The thirteen axioms of the `OperationalDecomposition` class. They
+mirror the shape of the corresponding `scr` laws from Section 3, but
+split slot by slot into a constructor part (`introduction`, which
+only sees the `lam` clause) and a destructor part (`elimination`,
+which only sees the `app` clause). Monotonicity, join preservation,
+compositionality, and the various converse-commutations reappear in
+the two-slot form; the key new axiom is `scr_decomposition`, which
+records that `scr` really is the join of introduction and
+elimination on the diagonal. Twelve of the thirteen close by direct
+term-level computation exactly as their `scr`-counterparts did; the
+thirteenth, `subst_introduction_oplaxity`, inherits the same binder
+obstruction as `subst_scr_oplaxity` and is discharged from the
+second projection of the local `nominalFSP` axiom. -/
 
 /-- OD axiom: `introduction` preserves arbitrary joins. -/
 theorem introduction_join_preservation (𝒮 : Set SynRel) : introduction (sSup 𝒮) = sSup (introduction '' 𝒮) := by
@@ -1364,19 +1424,19 @@ theorem elimination_converse_commutation (a b : SynRel) :
   · rintro ⟨t₁, t₂, s₁, s₂, rfl, rfl, ha, hb⟩
     exact ⟨s₁, s₂, t₁, t₂, rfl, rfl, ha, hb⟩
 
-/-- OD axiom: `introduction 1 ≤ 1` — the introduction of equal bodies is
+/-- OD axiom: `introduction 1 ≤ 1`, the introduction of equal bodies is
 equality. -/
 theorem introduction_unit_oplaxity : (introduction 1 : SynRel) ≤ 1 := by
   rintro n t s ⟨t', s', rfl, rfl, (heq : t' = s')⟩
   exact congrArg Lam.lam heq
 
-/-- OD axiom: `elimination 1 1 ≤ 1` — the application of equals to equals
+/-- OD axiom: `elimination 1 1 ≤ 1`, the application of equals to equals
 is equality. -/
 theorem elimination_unit_oplaxity : (elimination 1 1 : SynRel) ≤ 1 := by
   rintro n t s ⟨t₁, t₂, s₁, s₂, rfl, rfl, (h₁ : t₁ = s₁), (h₂ : t₂ = s₂)⟩
   exact congrArg₂ Lam.app h₁ h₂
 
-/-- OD axiom: introductions and eliminations are orthogonal —
+/-- OD axiom: introductions and eliminations are orthogonal,
 `introduction a * elimination b c ≤ ⊥`. -/
 theorem introduction_elimination_orthogonality (a b c : SynRel) :
     introduction a * elimination b c ≤ ⊥ := by
@@ -1463,7 +1523,17 @@ theorem box_elimination_oplaxity (a b : SynRel) :
       refine ⟨s₁, ⟨t₁, ⟨rfl, u₀₁, ht₁_eq.symm⟩, ha⟩,
                     ⟨rfl, v₀₁, hs₁_eq.symm⟩⟩
 
-/-! ### OperationalDecomposition instance -/
+/-! ### OperationalDecomposition instance
+
+The counterpart of `instSRA` for the operational-decomposition layer:
+the thirteen axioms above are bundled into
+`instOperationalDecomposition : OperationalDecomposition SynRel`, so
+that every abstract lemma stated over the class becomes applicable to
+`SynRel`. In particular this is what makes the Gentzen principles
+`GIP` and `GCP` of `Metatheory/GentzenPrinciples.lean` statable on
+`betaRule` in the next sub-section: those principles are defined only
+for carriers that carry an `OperationalDecomposition`, and would be
+inexpressible without it. -/
 
 /-- The syntax relations on λ-terms carry an `OperationalDecomposition`
 structure, splitting `scr` into `introduction` (the `lam` clause) and
@@ -1488,10 +1558,14 @@ instance instOperationalDecomposition : OperationalDecomposition SynRel where
 
 /-! ### β-reduction
 
-The rewrite rule proper. We prove `IsReduction` and the four
-Gentzen-local hypotheses of `local_confluence` (substitutivity at
-identity, determinism, GIP, GCP); confluence follows unconditionally
-from the bridge theorem. -/
+β-reduction is introduced as `betaRule`: an arity-indexed relation
+that fires whenever its left-hand side is a genuine β-redex, i.e. an
+application of a λ-abstraction. Its first property, the one that
+qualifies it as a *reduction* in the sense of
+`Metatheory/Confluence/ParallelReduction.lean`, is that its left-hand
+side is never a variable, so parallel reduction commutes with
+substitution. That single fact is proved here; the four remaining
+rule-level hypotheses live in the next sub-section. -/
 
 /-- β-reduction: at every arity, the pair `(app (lam t) s, subst0 t s)`. -/
 def betaRule : SynRel := {
@@ -1526,11 +1600,23 @@ theorem betaRule_isReduction :
 
 /-! ### Local hypotheses for β
 
-The four rule-only conditions of `LeanTra.Confluence.local_confluence`.
-Each speaks only about `betaRule` (no parallel reduction in the
-statements), and all four are proved directly by term-level
-computation. This is the whole point of the local formulation: none of
-the four leaks into the SRA sorries. -/
+Four rule-level properties remain to be checked, and the point of the
+whole local formulation is that all four are visibly local: each
+speaks only about `betaRule` itself, and none of them mentions parallel
+reduction. First, `betaRule` is *substitutive at identity*
+(`IsSubstitutiveAtIdentity`), which says that its base substitution
+instance is bounded by itself: pre-composing β with a substitution
+does not conjure β-redexes that were not already present. Second, β is
+*deterministic on the nose* (`IsDeterministic`): two β-reducts of the
+same term agree, because both are determined by the outermost
+`app (lam ·) ·` whose sub-parts are unique. Third, β satisfies the
+*Gentzen Inversion Principle* (`GIP`), which says that β can fire only
+after its inspected argument holds a constructor, a `lam` in the
+major slot of the application. Fourth, β satisfies the *Gentzen
+Conservation Principle* (`GCP`), which says that firing β commutes
+with substitution up to the appropriate relational bound. All four are
+proved here by direct term-level computation, and none of them leaks
+into the `nominalFSP` axiom. -/
 
 /-- β is substitutive at the identity: `β⟦Δ⟧ ≤ β`.  If a β-redex can
 be exhibited as a substitution-instance of another β-redex with
@@ -1578,7 +1664,7 @@ theorem betaRule_isDeterministic :
 
 /-- Gentzen Inversion for β: every β-step factors on the left through
 `ε(ι Δ, Δ)`, an elimination whose major slot holds an introduction
-form. The redex is `app (lam t) s` — an `app` with `lam t` in the
+form. The redex is `app (lam t) s`, an `app` with `lam t` in the
 major slot, `s` in the minor. -/
 theorem betaRule_gip : LeanTra.Metatheory.GIP (betaRule : SynRel) := by
   change (betaRule : SynRel)
@@ -1610,7 +1696,7 @@ theorem betaRule_gcp : LeanTra.Metatheory.GCP (betaRule : SynRel) := by
   have hs12 : s₁ = Lam.lam tβ ∧ s₂ = sβ := (Lam.app.injEq _ _ _ _).mp h_app
   obtain ⟨rfl, rfl⟩ := hs12
   -- Now hcr : (SRA.cr x).rel n t₁ (lam tβ).
-  -- Cases on hcr — either varDiag (impossible against a lam) or scr,
+  -- Cases on hcr, either varDiag (impossible against a lam) or scr,
   -- and scr's lam clause is the only surviving shape.
   rcases hcr with ⟨y, _, hly⟩ | ⟨t₁', ly, ht₁_eq, hly, hbody⟩
                 | ⟨_, _, _, _, _, hlam_eq_app, _, _⟩
@@ -1634,12 +1720,15 @@ theorem betaRule_gcp : LeanTra.Metatheory.GCP (betaRule : SynRel) := by
 
 /-! ### Confluence of parallel β-reduction, via `local_confluence`
 
-The bridge theorem `LeanTra.Confluence.local_confluence` combines the
-five local rule conditions above to conclude `IsConfluent (parRed
-betaRule)`. Every ingredient — the SRA/OD instance, the bridge theorem,
-and the four Gentzen-local hypotheses — is discharged unconditionally,
-so `betaRule_local_confluent` depends only on `[propext,
-Classical.choice, Quot.sound]`. -/
+The payoff. Once the five rule-level facts above are in hand, the
+bridge theorem `LeanTra.Confluence.local_confluence` of
+`Metatheory/Confluence/Local.lean` applies verbatim and yields
+confluence of parallel β-reduction: whenever a term rewrites in two
+different ways under `parRed betaRule`, the two results can be joined
+by another pair of parallel reductions. No further hand-computation on
+terms is needed; the argument is entirely inside the abstract theory,
+and the only work that happened in this file is the discharge of its
+hypotheses. -/
 
 /-- Unconditional confluence of parallel β-reduction. -/
 theorem betaRule_local_confluent :
@@ -1653,11 +1742,17 @@ theorem betaRule_local_confluent :
 
 /-! ### Alternative route: via orthogonality
 
-Kept as an alternative confluence route: `IsOrthogonal betaRule` is
-taken as a hypothesis (its second conjunct mentions `parRed betaRule`,
-so it is not local). -/
+As a secondary demonstration we record the same conclusion reached
+along the alternative route that assumes *orthogonality* of the rule
+directly. Orthogonality is not a local condition: its second conjunct
+mentions `parRed betaRule` itself, so verifying it would require
+reasoning about the very object the theorem is about, and it is
+therefore taken as an unproved hypothesis here. The two routes share
+nothing except the SRA instance, and their coexistence in one file is
+a small piece of evidence that the abstract framework really does
+modularise the confluence argument. -/
 
-/-- Confluence via orthogonality — needs `IsOrthogonal` as a hypothesis. -/
+/-- Confluence via orthogonality, needs `IsOrthogonal` as a hypothesis. -/
 theorem betaRule_confluent_orthogonal
     (horth : LeanTra.Confluence.IsOrthogonal (betaRule : SynRel)) :
     LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed (betaRule : SynRel)) :=
@@ -1674,7 +1769,7 @@ tail of `Instances/FirstOrder/SRA.lean`. Every downstream theorem
 depends on the three standard Lean-prelude axioms `propext`,
 `Classical.choice`, `Quot.sound`; the single non-standard axiom is
 `LeanTra.Instances.Lambda.SynRel.nominalFSP`, whose scope is
-analysed in (D-Lam-3).
+analysed in the block-level docstring at its declaration in Section 3.
 
 Note on the four Gentzen-local hypotheses. Their statements
 (`betaRule_isSubstitutiveAtIdentity`, `betaRule_isDeterministic`,
@@ -1683,12 +1778,12 @@ proved by term-level computation, with no *semantic* dependence on
 `nominalFSP`. The trace nonetheless records the axiom for three of
 them, because their statements unfold against the SRA/OD
 notation (`SRA.subst`, `SRA.cr`, `OperationalDecomposition.elimination`,
-…) which Lean elaborates through `instSRA` / `instOperationalDecomposition`
-— and those instances do carry the axiom. Only
+…) which Lean elaborates through `instSRA` / `instOperationalDecomposition`,
+and those instances do carry the axiom. Only
 `betaRule_isDeterministic`, whose statement uses only the quantale
 layer (`·ᵒ * · ≤ 1`), stays clean at `[propext, Quot.sound]`. This
 is an elaboration-side artefact of typeclass resolution, not a
-mathematical dependence — the four local proofs go through in a
+mathematical dependence: the four local proofs go through in a
 guarded-axiom setting without change. -/
 
 #check @LeanTra.Instances.Lambda.SynRel.instSRA
