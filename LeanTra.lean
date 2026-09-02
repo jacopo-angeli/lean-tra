@@ -1,12 +1,12 @@
 import LeanTra.Algebra.InvolutiveQuantale
 import LeanTra.Algebra.KleeneStar
+import LeanTra.Algebra.Diamond
 import LeanTra.SRA.Basic
 import LeanTra.SRA.Howe
 import LeanTra.SRA.Modality
 import LeanTra.SRA.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Evaluation
-import LeanTra.Algebra.Diamond
 import LeanTra.Metatheory.Confluence.ParallelReduction
 import LeanTra.Metatheory.Confluence.Orthogonal
 import LeanTra.Metatheory.Confluence.Local
@@ -15,3 +15,4 @@ import LeanTra.Instances.FirstOrder.Relations
 import LeanTra.Instances.FirstOrder.SRA
 import LeanTra.Instances.FirstOrder.Confluence
 import LeanTra.Instances.Toy
+import LeanTra.Instances.SecondOrder.Lambda
