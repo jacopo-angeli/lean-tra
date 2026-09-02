@@ -176,7 +176,12 @@ instance instOperationalDecomposition : OperationalDecomposition Toy where
   introduction_compositionality _ _ := propext ⟨fun h => ⟨h, h⟩, fun ⟨h, _⟩ => h⟩
   introduction_converse_commutation _ := rfl
   introduction_unit_oplaxity := fun h => h.elim
-  elimination_join_preservation s := by
+  elimination_join_preservation_left s b := by
+    refine le_antisymm False.elim ?_
+    refine sSup_le ?_
+    rintro _ ⟨_, _, rfl⟩
+    exact le_refl _
+  elimination_join_preservation_right a s := by
     refine le_antisymm False.elim ?_
     refine sSup_le ?_
     rintro _ ⟨_, _, rfl⟩
