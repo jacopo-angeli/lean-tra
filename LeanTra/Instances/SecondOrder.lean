@@ -1765,7 +1765,7 @@ end LeanTra.Instances.Lambda
 /-! ## Axiom trace
 
 Explicit `#check` and `#print axioms` on the main results, cf. the
-tail of `Instances/FirstOrder/SRA.lean`. Every downstream theorem
+tail of `Instances/FirstOrder.lean`. Every downstream theorem
 depends on the three standard Lean-prelude axioms `propext`,
 `Classical.choice`, `Quot.sound`; the single non-standard axiom is
 `LeanTra.Instances.Lambda.SynRel.nominalFSP`, whose scope is

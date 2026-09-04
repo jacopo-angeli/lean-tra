@@ -251,7 +251,7 @@ have any non-trivial content: on a two-element carrier the compatible
 refinement and the whole operational-decomposition layer are forced to
 collapse, so no substantive propagation through term structure is being
 tested. That job is delegated to the term-model instances in
-`Instances/FirstOrder/` and `Instances/SecondOrder/Lambda.lean`, where
+`Instances/FirstOrder.lean` and `Instances/SecondOrder.lean`, where
 `scr` really does propagate a relation through the constructors of a
 genuine signature and `j` really does isolate closed terms. This file has
 the complementary role: not to check that the axioms *say something*, but
