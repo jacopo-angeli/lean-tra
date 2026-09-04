@@ -10,9 +10,6 @@ import LeanTra.Metatheory.Evaluation
 import LeanTra.Metatheory.Confluence.ParallelReduction
 import LeanTra.Metatheory.Confluence.Orthogonal
 import LeanTra.Metatheory.Confluence.Local
-import LeanTra.Instances.FirstOrder.Terms
-import LeanTra.Instances.FirstOrder.Relations
-import LeanTra.Instances.FirstOrder.SRA
-import LeanTra.Instances.FirstOrder.Confluence
+import LeanTra.Instances.FirstOrder
 import LeanTra.Instances.Consistency
-import LeanTra.Instances.SecondOrder.Lambda
+import LeanTra.Instances.SecondOrder
