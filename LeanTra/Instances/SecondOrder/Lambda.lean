@@ -1566,7 +1566,7 @@ theorem betaRule_isSubstitutiveAtIdentity :
 agree, because both are determined by the outermost `app (lam ·) ·`
 whose sub-parts are unique. -/
 theorem betaRule_isDeterministic :
-    LeanTra.Confluence.IsDeterministic (betaRule : SynRel) := by
+    LeanTra.Algebra.IsDeterministic (betaRule : SynRel) := by
   change ((betaRule : SynRel)ᵒ * betaRule) ≤ 1
   rintro n u v ⟨w, ⟨t, s, hw, rfl⟩, ⟨t', s', hw', rfl⟩⟩
   -- w = app (lam t) s = app (lam t') s'; conclude t = t' and s = s'.

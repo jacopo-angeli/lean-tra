@@ -52,11 +52,13 @@ variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
 
 
-/-! ### The two properties
+/-! ### The three properties
 
 `IsConfluent` is not a separate notion: it is `IsDiamond` applied to the
 reflexive-transitive closure. Stating it that way is what lets the whole
-development be a single lemma about `IsDiamond` plus one closure step. -/
+development be a single lemma about `IsDiamond` plus one closure step.
+`IsDeterministic` is the degenerate diamond in which the common reduct
+is reached in zero steps: it makes `a` a partial function. -/
 
 /-- The diamond property: `aᵒ * a ≤ a * aᵒ`. Two terms reachable from a
 common source in one `a`-step each have a common reduct, again in one
@@ -65,6 +67,9 @@ def IsDiamond (a : α) : Prop := aᵒ * a ≤ a * aᵒ
 /-- Confluence: the diamond property of `a∗`. The Church–Rosser property,
 with "one step" replaced by "any number of steps" on all four sides. -/
 def IsConfluent (a : α) : Prop := IsDiamond (a∗)
+/-- Determinism: `aᵒ * a ≤ 1`. Any two `a`-rewrites of the same source
+agree, so `a` relates each term to at most one other. -/
+def IsDeterministic (a : α) : Prop := aᵒ * a ≤ 1
 
 
 

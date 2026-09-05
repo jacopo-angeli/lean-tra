@@ -166,8 +166,12 @@ abbrev majorProjection (a : α) : α := ε( a, Δ )
 /-! ### Derived laws
 
 Monotonicity of both operations, from join preservation instantiated at a
-two-element set; and the mirror of the orthogonality axiom, which is
-assumed in one order only and recovered in the other by converse. -/
+two-element set; the mirror of the orthogonality axiom, which is
+assumed in one order only and recovered in the other by converse; and
+the calculus of the two coreflexives and of the major projection —
+idempotence and self-conversion of `ι Δ`, fusion, converse and
+monotonicity of `⟨·⟩ = ε(·, Δ)`, the orthogonality `⟨a⟩ * ι Δ ≤ ⊥`,
+and the collapse `⟨ι Δ⟩ ≤ Δ`. -/
 
 /-- `introduction` is monotone. -/
 theorem introduction_monotonicity ⦃a b : α⦄ (h : a ≤ b) : ι a ≤ ι b := by
@@ -199,5 +203,54 @@ theorem elimination_introduction_orthogonality (a b c : α) : ε(b, c) * ι a �
       ← OperationalDecomposition.introduction_converse_commutation,
       ← OperationalDecomposition.elimination_converse_commutation]
   exact OperationalDecomposition.introduction_elimination_orthogonality _ _ _
+
+/-- The introduction coreflexive is idempotent under composition. -/
+theorem introductionCoreflexive_mul_self :
+    (introductionCoreflexive : α) * introductionCoreflexive = introductionCoreflexive := by
+  change ι (1 : α) * ι 1 = ι 1
+  rw [← OperationalDecomposition.introduction_compositionality, one_mul]
+
+/-- The introduction coreflexive is symmetric under converse. -/
+@[simp] theorem introductionCoreflexive_converse :
+    (introductionCoreflexive : α)ᵒ = introductionCoreflexive := by
+  change (ι (1 : α))ᵒ = ι 1
+  rw [← OperationalDecomposition.introduction_converse_commutation,
+      IsInvolutiveQuantale.converse_one]
+
+/-- `⟨·⟩` is monotone. -/
+theorem majorProjection_monotonicity ⦃a b : α⦄ (h : a ≤ b) :
+    majorProjection a ≤ majorProjection b :=
+  elimination_monotonicity h le_rfl
+
+/-- `⟨·⟩` fuses under composition: `⟨a⟩ * ⟨b⟩ = ⟨a * b⟩`. Instance of
+`elimination_compositionality` with the minor slot at the unit. -/
+theorem majorProjection_compositionality (a b : α) :
+    majorProjection a * majorProjection b = majorProjection (a * b) := by
+  change ε(a, (1 : α)) * ε(b, 1) = ε(a * b, 1)
+  rw [← OperationalDecomposition.elimination_compositionality, one_mul]
+
+/-- `⟨·⟩` commutes with converse: `⟨a⟩ᵒ = ⟨aᵒ⟩`. -/
+@[simp] theorem majorProjection_converse (a : α) :
+    (majorProjection a)ᵒ = majorProjection aᵒ := by
+  change (ε(a, (1 : α)))ᵒ = ε(aᵒ, 1)
+  rw [← OperationalDecomposition.elimination_converse_commutation,
+      IsInvolutiveQuantale.converse_one]
+
+/-- A major projection followed by the introduction coreflexive is empty:
+`⟨a⟩ * ι Δ ≤ ⊥`. Instance of the mirrored orthogonality. -/
+theorem majorProjection_mul_introductionCoreflexive_le_bot (a : α) :
+    majorProjection a * (introductionCoreflexive : α) ≤ ⊥ :=
+  elimination_introduction_orthogonality 1 a 1
+
+/-- `⟨ι Δ⟩ ≤ Δ`: two elimination forms whose major slots hold one and
+the same introduction form are one and the same term. Combines the unit
+oplaxity of both operations. -/
+theorem majorProjection_introductionCoreflexive_le_one :
+    majorProjection (introductionCoreflexive : α) ≤ 1 :=
+  calc majorProjection (introductionCoreflexive : α)
+      ≤ majorProjection 1 :=
+        majorProjection_monotonicity
+          OperationalDecomposition.introduction_unit_oplaxity
+    _ ≤ 1 := OperationalDecomposition.elimination_unit_oplaxity
 
 end OperationalDecomposition

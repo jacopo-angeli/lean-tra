@@ -58,7 +58,8 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 
 /-! ### Predicates on rules
 
-Three inequalities on the rule alone, used only in the theorem below.
+Two inequalities on the rule alone, used only in the theorem below,
+alongside `IsDeterministic` from `Algebra/Diamond.lean`.
 `IsSubstitutiveAtIdentity` and `IsDeterministic` are the local
 counterparts of the two orthogonality conjuncts; `IsStruct` is the
 intermediate condition on `(a, b)` that the diamond argument actually
@@ -66,10 +67,6 @@ consumes, and that the Gentzen principles discharge at `b = (a⇛)ᵒ`. -/
 
 /-- `a⟦Δ⟧ ≤ a`: the base substitution instance is bounded by the rule. -/
 def IsSubstitutiveAtIdentity (a : α) : Prop := SRA.subst a 1 ≤ a
-
-/-- `aᵒ * a ≤ Δ`: the rule is deterministic on the nose, i.e. any two
-`a`-rewrites of the same term agree. -/
-def IsDeterministic (a : α) : Prop := aᵒ * a ≤ 1
 
 /-- `~b * a ≤ a * b⟦b⟧`: a strict compatible refinement of `b` standing
 in front of the rule can be pushed past it, at the cost of substituting
