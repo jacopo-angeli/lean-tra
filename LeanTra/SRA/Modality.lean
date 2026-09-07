@@ -308,12 +308,12 @@ Two statements about `□` that are neither proved nor part of the class.
 
 `IsSubstJClosed` below asserts that substituting by `j` yields a closed
 relation. It holds in the term model
-(`Instances.FirstOrder.SynRel.substJClosed`) but is not derivable from
+(`Instances.PeanoArithmetic.SynRel.substJClosed`) but is not derivable from
 the axioms, and nothing consumes it yet; it is recorded as a candidate
 rather than assumed.
 
 The exact multiplicativity `□(a * b) ≤ □a * □b` is *refuted* in the term
-model, by `Instances.FirstOrder.SynRel.not_box_mul_le_mul_box`. Only the
+model, by `Instances.PeanoArithmetic.SynRel.not_box_mul_le_mul_box`. Only the
 lax half above survives under `□ := j * · * j`. This is expected to block
 a direct application of `box_lfp` to an evaluation recursor, which is why
 the evaluation development does not use it. -/

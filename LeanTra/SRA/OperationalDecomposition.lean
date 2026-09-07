@@ -91,17 +91,29 @@ class OperationalDecomposition (α : Type u)
   `a`-related and whose minor arguments are pairwise `b`-related. -/
   elimination : α → α → α
 
-  /-- `introduction` preserves arbitrary joins. -/
-  protected introduction_join_preservation (s : Set α) : introduction (sSup s) = sSup (introduction '' s)
+  /-- `introduction` preserves arbitrary non-empty joins. The empty case
+  is excluded because it would forbid nullary constructors: a zero-arity
+  intro form `c` has no premises, so `introduction φ` relates `c` to `c`
+  independently of `φ`, and `introduction ⊥` would then differ from `⊥`.
+  The paper only asks for ω-cocontinuity (Def. 6, page 11); non-empty
+  joins is the strongest form compatible with nullary intro forms. -/
+  protected introduction_join_preservation (s : Set α) (hs : s.Nonempty) :
+      introduction (sSup s) = sSup (introduction '' s)
   /-- `introduction` preserves composition. -/
   protected introduction_compositionality (a b : α) : introduction (a * b) = introduction a * introduction b
   /-- `introduction` preserves converse. -/
   protected introduction_converse_commutation (a : α) : introduction (aᵒ) = (introduction a)ᵒ
 
-  /-- `elimination` preserves arbitrary joins in the major (left) slot. -/
-  protected elimination_join_preservation_left (s : Set α) (b : α) : elimination (sSup s) b = sSup ((fun a => elimination a b) '' s)
-  /-- `elimination` preserves arbitrary joins in the minor (right) slot. -/
-  protected elimination_join_preservation_right (a : α) (s : Set α) : elimination a (sSup s) = sSup ((fun b => elimination a b) '' s)
+  /-- `elimination` preserves arbitrary non-empty joins in the major (left)
+  slot. See `introduction_join_preservation` for why the empty case is
+  excluded. -/
+  protected elimination_join_preservation_left (s : Set α) (hs : s.Nonempty) (b : α) :
+      elimination (sSup s) b = sSup ((fun a => elimination a b) '' s)
+  /-- `elimination` preserves arbitrary non-empty joins in the minor (right)
+  slot. See `introduction_join_preservation` for why the empty case is
+  excluded. -/
+  protected elimination_join_preservation_right (a : α) (s : Set α) (hs : s.Nonempty) :
+      elimination a (sSup s) = sSup ((fun b => elimination a b) '' s)
   /-- `elimination` preserves composition, slot by slot. -/
   protected elimination_compositionality (a a' b b' : α) : elimination (a * a') (b * b') = elimination a b * elimination a' b'
   /-- `elimination` preserves converse, slot by slot. -/
@@ -177,6 +189,7 @@ and the collapse `⟨ι Δ⟩ ≤ Δ`. -/
 theorem introduction_monotonicity ⦃a b : α⦄ (h : a ≤ b) : ι a ≤ ι b := by
   have hsup : a ⊔ b = b := sup_of_le_right h
   have hs := OperationalDecomposition.introduction_join_preservation (α := α) {a, b}
+    ⟨a, Set.mem_insert _ _⟩
   rw [Set.image_pair, sSup_pair, sSup_pair, hsup] at hs
   exact le_sup_left.trans hs.ge
 /-- `elimination` is monotone in each slot. -/
@@ -184,13 +197,15 @@ theorem elimination_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b �
   -- Monotone in the left slot via left join preservation.
   have hleft : ε(a, b) ≤ ε(a', b) := by
     have hsup_a : a ⊔ a' = a' := sup_of_le_right ha
-    have h := OperationalDecomposition.elimination_join_preservation_left (α := α) {a, a'} b
+    have h := OperationalDecomposition.elimination_join_preservation_left (α := α) {a, a'}
+      ⟨a, Set.mem_insert _ _⟩ b
     rw [Set.image_pair, sSup_pair, sSup_pair, hsup_a] at h
     exact le_sup_left.trans h.ge
   -- Monotone in the right slot via right join preservation.
   have hright : ε(a', b) ≤ ε(a', b') := by
     have hsup_b : b ⊔ b' = b' := sup_of_le_right hb
     have h := OperationalDecomposition.elimination_join_preservation_right (α := α) a' {b, b'}
+      ⟨b, Set.mem_insert _ _⟩
     rw [Set.image_pair, sSup_pair, sSup_pair, hsup_b] at h
     exact le_sup_left.trans h.ge
   exact hleft.trans hright

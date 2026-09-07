@@ -11,9 +11,6 @@ import LeanTra.Metatheory.Determinism
 import LeanTra.Metatheory.Confluence.ParallelReduction
 import LeanTra.Metatheory.Confluence.Orthogonal
 import LeanTra.Metatheory.Confluence.Local
-import LeanTra.Instances.FirstOrder.Terms
-import LeanTra.Instances.FirstOrder.Relations
-import LeanTra.Instances.FirstOrder.SRA
-import LeanTra.Instances.FirstOrder.Confluence
-import LeanTra.Instances.Toy
-import LeanTra.Instances.SecondOrder.Lambda
+import LeanTra.Instances.PeanoArithmetic
+import LeanTra.Instances.Consistency
+import LeanTra.Instances.LambdaCalculus
