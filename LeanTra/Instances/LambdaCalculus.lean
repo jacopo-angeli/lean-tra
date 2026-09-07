@@ -1541,11 +1541,11 @@ structure, splitting `scr` into `introduction` (the `lam` clause) and
 instance instOperationalDecomposition : OperationalDecomposition SynRel where
   introduction := introduction
   elimination := elimination
-  introduction_join_preservation := introduction_join_preservation
+  introduction_join_preservation s _ := introduction_join_preservation s
   introduction_compositionality := introduction_compositionality
   introduction_converse_commutation := introduction_converse_commutation
-  elimination_join_preservation_left := elimination_join_preservation_left
-  elimination_join_preservation_right := elimination_join_preservation_right
+  elimination_join_preservation_left s _ b := elimination_join_preservation_left s b
+  elimination_join_preservation_right a s _ := elimination_join_preservation_right a s
   elimination_compositionality := elimination_compositionality
   elimination_converse_commutation := elimination_converse_commutation
   introduction_unit_oplaxity := introduction_unit_oplaxity

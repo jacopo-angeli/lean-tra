@@ -10,6 +10,6 @@ import LeanTra.Metatheory.Evaluation
 import LeanTra.Metatheory.Confluence.ParallelReduction
 import LeanTra.Metatheory.Confluence.Orthogonal
 import LeanTra.Metatheory.Confluence.Local
-import LeanTra.Instances.FirstOrder
+import LeanTra.Instances.PeanoArithmetic
 import LeanTra.Instances.Consistency
-import LeanTra.Instances.SecondOrder
+import LeanTra.Instances.LambdaCalculus
