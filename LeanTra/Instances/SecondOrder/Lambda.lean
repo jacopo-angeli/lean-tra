@@ -10,6 +10,7 @@ public import LeanTra.SRA.Modality
 public import LeanTra.Metatheory.Confluence.ParallelReduction
 public import LeanTra.Metatheory.Confluence.Local
 public import LeanTra.Metatheory.Confluence.Orthogonal
+public import LeanTra.Metatheory.Determinism
 public import LeanTra.Metatheory.GentzenPrinciples
 public import Mathlib.Algebra.BigOperators.Fin
 
@@ -1663,6 +1664,22 @@ theorem betaRule_confluent_orthogonal
     LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed (betaRule : SynRel)) :=
   LeanTra.Confluence.othogonality_confluence betaRule_isReduction horth
 
+/-! ### Determinism of big-step β-evaluation
+
+Direct instantiation of `LeanTra.Metatheory.determinism` on `betaRule`:
+its two hypotheses `GIP` and `IsDeterministic` are `betaRule_gip` and
+`betaRule_isDeterministic` above, and neither depends on parallel
+reduction or on `nominalFSP`. -/
+
+/-- Big-step β-evaluation is deterministic (up to introduction forms):
+`(β^⇓)ᵒ * β^⇓ ≤ Δ̄`. Two big-step β-evaluations of the same term
+agree, and their common canonical form has a constructor in head. -/
+theorem betaRule_bigStep_isDeterministic :
+    (LeanTra.Metatheory.bigStepEvaluation (betaRule : SynRel))ᵒ
+        * LeanTra.Metatheory.bigStepEvaluation (betaRule : SynRel)
+      ≤ (OperationalDecomposition.introductionCoreflexive : SynRel) :=
+  LeanTra.Metatheory.determinism betaRule_gip betaRule_isDeterministic
+
 end SynRel
 
 end LeanTra.Instances.Lambda
@@ -1696,6 +1713,7 @@ guarded-axiom setting without change. -/
 #check @LeanTra.Instances.Lambda.SynRel.betaRule_isReduction
 #check @LeanTra.Instances.Lambda.SynRel.betaRule_local_confluent
 #check @LeanTra.Instances.Lambda.SynRel.betaRule_confluent_orthogonal
+#check @LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_isDeterministic
 
 #print axioms LeanTra.Instances.Lambda.SynRel.instSRA
 #print axioms LeanTra.Instances.Lambda.SynRel.instOperationalDecomposition
@@ -1704,6 +1722,7 @@ guarded-axiom setting without change. -/
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_gip
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_gcp
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_local_confluent
+#print axioms LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_isDeterministic
 
 -- The two guarded forms are provable directly in this file: their
 -- axiom traces do NOT contain `nominalFSP`.
