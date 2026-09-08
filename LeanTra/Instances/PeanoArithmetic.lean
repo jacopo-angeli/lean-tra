@@ -12,6 +12,7 @@ public import LeanTra.SRA.Modality
 public import LeanTra.SRA.OperationalDecomposition
 public import LeanTra.Metatheory.GentzenPrinciples
 public import LeanTra.Metatheory.Confluence.Local
+public import LeanTra.Metatheory.Determinism.BigStep
 
 /-!
 # Peano arithmetic as a first-order term-relation algebra
@@ -1985,6 +1986,97 @@ theorem rule_confluent :
     rule_gip
     rule_gcp
 
+/-! ### Determinism of big-step evaluation
+
+The metatheorem `LeanTra.Determinism.bigStep_determinism` concludes
+`(a^⇓)ᵒ * a^⇓ ≤ Δκ` from `GIP`, `IsClosed` and `IsDeterministic` of
+the rule. Plain `rule` does not satisfy `IsClosed`: it fires between
+open terms too — e.g. `plus zero (var x)` with `x` free reduces to
+`var x`. The natural instantiation is on the closed part of the
+rule, `SRA.box rule`, which relates only closed terms; its three
+hypotheses are discharged here. `IsClosed (SRA.box rule)` is
+`SRA.box_isClosed`. `IsDeterministic (SRA.box rule)` follows from
+`rule_isDeterministic` and `SRA.box_le`. `GIP (SRA.box rule)` is
+proved directly by the same four-way case analysis as `rule_gip`,
+adapted to carry the closedness bookkeeping through the two `j`
+factors of `SRA.box`. The final theorem `rule_bigStep_determinism`
+is then a one-line application of the metatheorem. -/
+
+/-- Gentzen inversion for the closed part of the rule: every closed
+step factors on the left through an elimination with an introduction
+form in the major slot, with the closedness of the source preserved.
+Same four-case argument as `rule_gip`, threading closedness through
+the two `j` factors of `SRA.box`. -/
+theorem rule_boxed_gip : LeanTra.Metatheory.GIP (SRA.box (rule : SynRel)) := by
+  rintro Γ t s ⟨w, ⟨w', ⟨rfl, t₀, ht_close⟩, hrule⟩, ⟨rfl, s₀, hs_close⟩⟩
+  -- Preserve `hs`/`hs'`/etc. as equational hypotheses instead of substituting
+  -- them away: the plus-zero and mult-zero cases have `s = n` with `n` and `s`
+  -- both fresh, and Lean's `subst` heuristic on that pair renames the surviving
+  -- variable in a way that makes the term-level witness unreadable.
+  rcases hrule with ⟨n, rfl, hs⟩
+                  | ⟨x, y, rfl, rfl⟩
+                  | ⟨n, rfl, hs⟩
+                  | ⟨x, y, rfl, rfl⟩
+  · -- plus-zero: source `plus zero n`, target `n` (via `hs : s = n`).
+    refine ⟨Tm.plus Tm.zero n,
+            Or.inl ⟨Tm.zero, Tm.zero, n, n, rfl, rfl,
+                    Or.inl ⟨rfl, rfl⟩, rfl⟩,
+            ⟨n,
+              ⟨Tm.plus Tm.zero n, ⟨rfl, t₀, ht_close⟩,
+                Or.inl ⟨n, rfl, rfl⟩⟩,
+              ⟨hs.symm, s₀, hs.symm ▸ hs_close⟩⟩⟩
+  · -- plus-succ: source `plus (succ x) y`, target `succ (plus x y)`.
+    exact ⟨Tm.plus (Tm.succ x) y,
+           Or.inl ⟨Tm.succ x, Tm.succ x, y, y, rfl, rfl,
+                   Or.inr ⟨x, x, rfl, rfl, rfl⟩, rfl⟩,
+           ⟨Tm.succ (Tm.plus x y),
+             ⟨Tm.plus (Tm.succ x) y, ⟨rfl, t₀, ht_close⟩,
+               Or.inr (Or.inl ⟨x, y, rfl, rfl⟩)⟩,
+             ⟨rfl, s₀, hs_close⟩⟩⟩
+  · -- mult-zero: source `mult zero n`, target `zero` (via `hs : s = zero`).
+    refine ⟨Tm.mult Tm.zero n,
+            Or.inr ⟨Tm.zero, Tm.zero, n, n, rfl, rfl,
+                    Or.inl ⟨rfl, rfl⟩, rfl⟩,
+            ⟨Tm.zero,
+              ⟨Tm.mult Tm.zero n, ⟨rfl, t₀, ht_close⟩,
+                Or.inr (Or.inr (Or.inl ⟨n, rfl, rfl⟩))⟩,
+              ⟨hs.symm, s₀, hs.symm ▸ hs_close⟩⟩⟩
+  · -- mult-succ: source `mult (succ x) y`, target `plus (mult x y) y`.
+    exact ⟨Tm.mult (Tm.succ x) y,
+           Or.inr ⟨Tm.succ x, Tm.succ x, y, y, rfl, rfl,
+                   Or.inr ⟨x, x, rfl, rfl, rfl⟩, rfl⟩,
+           ⟨Tm.plus (Tm.mult x y) y,
+             ⟨Tm.mult (Tm.succ x) y, ⟨rfl, t₀, ht_close⟩,
+               Or.inr (Or.inr (Or.inr ⟨x, y, rfl, rfl⟩))⟩,
+             ⟨rfl, s₀, hs_close⟩⟩⟩
+
+/-- The closed part of the rule is deterministic: `(□r)ᵒ * □r ≤ 1`.
+Immediate from `rule_isDeterministic` and the deflationarity `□a ≤ a`
+on both sides. -/
+theorem rule_boxed_isDeterministic :
+    LeanTra.Algebra.IsDeterministic (SRA.box (rule : SynRel)) := by
+  change ((SRA.box (rule : SynRel))ᵒ * SRA.box rule) ≤ 1
+  calc (SRA.box (rule : SynRel))ᵒ * SRA.box rule
+      ≤ (rule : SynRel)ᵒ * SRA.box rule :=
+        mul_le_mul' (IsInvolutiveQuantale.converse_monotonicity (SRA.box_le _)) le_rfl
+    _ ≤ (rule : SynRel)ᵒ * rule :=
+        mul_le_mul' le_rfl (SRA.box_le _)
+    _ ≤ 1 := rule_isDeterministic
+
+/-- **Determinism of big-step Peano-arithmetic evaluation.** For the
+closed part of the four-rule reduction system,
+`(r^⇓)ᵒ * r^⇓ ≤ Δκ`. Direct instantiation of
+`LeanTra.Determinism.bigStep_determinism` at `SRA.box rule`, with
+the three hypotheses discharged just above. -/
+theorem rule_bigStep_determinism :
+    (LeanTra.Determinism.bigStepEvaluation (SRA.box (rule : SynRel)))ᵒ
+        * LeanTra.Determinism.bigStepEvaluation (SRA.box rule)
+      ≤ (OperationalDecomposition.valueCoreflexive : SynRel) :=
+  LeanTra.Determinism.bigStep_determinism
+    rule_boxed_gip
+    (SRA.box_isClosed _)
+    rule_boxed_isDeterministic
+
 end SynRel
 
 end LeanTra.Instances.PeanoArithmetic
@@ -2013,3 +2105,4 @@ instance is closed.
 #print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_gip
 #print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_gcp
 #print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_confluent
+#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_bigStep_determinism

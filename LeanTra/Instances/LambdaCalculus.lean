@@ -10,7 +10,7 @@ public import LeanTra.SRA.Modality
 public import LeanTra.Metatheory.Confluence.ParallelReduction
 public import LeanTra.Metatheory.Confluence.Local
 public import LeanTra.Metatheory.Confluence.Orthogonal
-public import LeanTra.Metatheory.Determinism
+public import LeanTra.Metatheory.Determinism.BigStep
 public import LeanTra.Metatheory.GentzenPrinciples
 public import Mathlib.Algebra.BigOperators.Fin
 
@@ -1761,19 +1761,68 @@ theorem betaRule_confluent_orthogonal
 
 /-! ### Determinism of big-step β-evaluation
 
-Direct instantiation of `LeanTra.Metatheory.determinism` on `betaRule`:
-its two hypotheses `GIP` and `IsDeterministic` are `betaRule_gip` and
-`betaRule_isDeterministic` above, and neither depends on parallel
-reduction or on `nominalFSP`. -/
+The metatheorem `LeanTra.Determinism.bigStep_determinism` concludes
+`(a^⇓)ᵒ * a^⇓ ≤ Δκ` from `GIP`, `IsClosed` and `IsDeterministic` of
+the rule. Plain `betaRule` does not satisfy `IsClosed`: it fires
+between open terms too. The natural instantiation is on the closed
+part of β, `□ betaRule`, which relates only closed terms; its three
+hypotheses are discharged here. `IsClosed (□ betaRule)` is
+`SRA.box_isClosed`. `IsDeterministic (□ betaRule)` follows from
+`betaRule_isDeterministic` and `SRA.box_le`. `GIP (□ betaRule)` is
+proved directly by the same term-level argument as `betaRule_gip`,
+adapted to carry the closedness bookkeeping through the two `j`
+factors of `SRA.box`. The final theorem
+`betaRule_bigStep_determinism` is then a one-line application of
+the metatheorem. -/
 
-/-- Big-step β-evaluation is deterministic (up to introduction forms):
-`(β^⇓)ᵒ * β^⇓ ≤ Δ̄`. Two big-step β-evaluations of the same term
-agree, and their common canonical form has a constructor in head. -/
-theorem betaRule_bigStep_isDeterministic :
-    (LeanTra.Metatheory.bigStepEvaluation (betaRule : SynRel))ᵒ
-        * LeanTra.Metatheory.bigStepEvaluation (betaRule : SynRel)
-      ≤ (OperationalDecomposition.introductionCoreflexive : SynRel) :=
-  LeanTra.Metatheory.determinism betaRule_gip betaRule_isDeterministic
+/-- Gentzen inversion for closed β: every closed β-step factors on
+the left through an elimination with an introduction form in the
+major slot, with the closedness of the source preserved. Same
+argument as `betaRule_gip`, threading closedness through the two `j`
+factors of `SRA.box`. -/
+theorem betaRule_boxed_gip :
+    LeanTra.Metatheory.GIP (SRA.box (betaRule : SynRel)) := by
+  change (SRA.box (betaRule : SynRel))
+       ≤ OperationalDecomposition.elimination
+           (OperationalDecomposition.introduction 1) 1 * SRA.box betaRule
+  rintro n u v ⟨w, ⟨w', ⟨rfl, u₀, hu_close⟩, t, s, hu_eq, rfl⟩,
+                    ⟨rfl, v₀, hw_close⟩⟩
+  subst hu_eq
+  refine ⟨Lam.app (Lam.lam t) s, ?_, ?_⟩
+  · -- Redex-shape witness at (u, u) ∈ ε(ι Δ, Δ).
+    refine ⟨Lam.lam t, s, Lam.lam t, s, rfl, rfl, ?_, rfl⟩
+    exact ⟨t, t, rfl, rfl, rfl⟩
+  · -- Repackage the original hypothesis as `j * β * j`.
+    refine ⟨Lam.subst0 t s,
+            ⟨Lam.app (Lam.lam t) s, ⟨rfl, u₀, hu_close⟩,
+              t, s, rfl, rfl⟩,
+            ⟨rfl, v₀, hw_close⟩⟩
+
+/-- Closed β is deterministic: `(□β)ᵒ * □β ≤ 1`. Immediate from
+`betaRule_isDeterministic` and the deflationarity `□a ≤ a` on both
+sides. -/
+theorem betaRule_boxed_isDeterministic :
+    LeanTra.Algebra.IsDeterministic (SRA.box (betaRule : SynRel)) := by
+  change ((SRA.box (betaRule : SynRel))ᵒ * SRA.box betaRule) ≤ 1
+  calc (SRA.box (betaRule : SynRel))ᵒ * SRA.box betaRule
+      ≤ (betaRule : SynRel)ᵒ * SRA.box betaRule :=
+        mul_le_mul' (IsInvolutiveQuantale.converse_monotonicity (SRA.box_le _)) le_rfl
+    _ ≤ (betaRule : SynRel)ᵒ * betaRule :=
+        mul_le_mul' le_rfl (SRA.box_le _)
+    _ ≤ 1 := betaRule_isDeterministic
+
+/-- **Determinism of big-step β-evaluation.** For the closed part of
+β, `(β^⇓)ᵒ * β^⇓ ≤ Δκ`. Direct instantiation of
+`LeanTra.Determinism.bigStep_determinism` at `SRA.box betaRule`, with
+the three hypotheses discharged just above. -/
+theorem betaRule_bigStep_determinism :
+    (LeanTra.Determinism.bigStepEvaluation (SRA.box (betaRule : SynRel)))ᵒ
+        * LeanTra.Determinism.bigStepEvaluation (SRA.box betaRule)
+      ≤ (OperationalDecomposition.valueCoreflexive : SynRel) :=
+  LeanTra.Determinism.bigStep_determinism
+    betaRule_boxed_gip
+    (SRA.box_isClosed _)
+    betaRule_boxed_isDeterministic
 
 end SynRel
 
@@ -1808,7 +1857,7 @@ guarded-axiom setting without change. -/
 #check @LeanTra.Instances.Lambda.SynRel.betaRule_isReduction
 #check @LeanTra.Instances.Lambda.SynRel.betaRule_local_confluent
 #check @LeanTra.Instances.Lambda.SynRel.betaRule_confluent_orthogonal
-#check @LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_isDeterministic
+#check @LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_determinism
 
 #print axioms LeanTra.Instances.Lambda.SynRel.instSRA
 #print axioms LeanTra.Instances.Lambda.SynRel.instOperationalDecomposition
@@ -1817,7 +1866,7 @@ guarded-axiom setting without change. -/
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_gip
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_gcp
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_local_confluent
-#print axioms LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_isDeterministic
+#print axioms LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_determinism
 
 -- The two guarded forms are provable directly in this file: their
 -- axiom traces do NOT contain `nominalFSP`.
