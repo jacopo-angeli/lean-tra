@@ -77,9 +77,11 @@ def IsStruct (a b : α) : Prop := SRA.scr b * a ≤ a * SRA.subst b b
 
 The single theorem the file exists to prove. Its five hypotheses are all
 conditions on the rule; parallel reduction occurs only in the
-conclusion. The proof runs in three stages, marked by the separators
-inside it: rearranging the hypotheses, discharging `IsStruct a ((a⇛)ᵒ)`
-from the Gentzen principles, and running the diamond argument. -/
+conclusion. The proof runs in five stages, marked by the separators
+inside it: rearranging the hypotheses, staging the diamond as a
+post-fixed point, discharging `IsStruct a ((a⇛)ᵒ)` from the Gentzen
+principles, commuting the rule past `~B`, and closing the two branches
+of the inductive step. -/
 
 theorem local_confluence {a : α}
     (h1 : IsReduction a)

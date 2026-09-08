@@ -46,10 +46,10 @@ of the rule depends only on the outermost operator of the term and on
 the outermost shape of its operands, and is parametric in everything
 below. This is the algebraic form of what proof theory calls harmony.
 
-The closed inversion principle strengthens the first one. It asks that
-the inspected slot hold not merely a constructor but a value, that is a
-closed one: beta may contract app(λx.x, s) but not app(λx.y, s) with
-y free.
+The reference also has a *closed* inversion principle strengthening the
+first one: it asks that the inspected slot hold not merely a constructor
+but a value, that is a closed one. No result in this development needs
+it, so only the two principles above are declared.
 
 ## References
 

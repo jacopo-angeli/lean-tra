@@ -208,7 +208,7 @@ The reflexive-transitive closure of one-step, followed by a compulsory
 *value* — a closed canonical form. The final filter is
 `valueCoreflexive = □Δ̄`, so a big-step run counts only if it ends at a
 closed introduction; this is what pins the semantics to closed
-endpoints and matches the paper's Theorem 31 conclusion. -/
+endpoints. -/
 
 /-- Big-step evaluation: any number of one-step evaluations, then a
 closed canonical form. -/

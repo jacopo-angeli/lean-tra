@@ -10,13 +10,13 @@ public import LeanTra.SRA.OperationalDecomposition
 /-!
 # Consistency of the `SRA` and `OperationalDecomposition` axioms
 
-The class `SRA` bundles sixteen axioms and `OperationalDecomposition` extends
-it with thirteen more. Any such axiomatic theory carries the risk of being
+The class `SRA` bundles twenty axioms and `OperationalDecomposition` extends
+it with fourteen more. Any such axiomatic theory carries the risk of being
 *inconsistent*: a hidden interaction between the axioms could force `⊥ = ⊤`
 on every carrier, after which every theorem stated over the class would hold
 vacuously and the entire development would be worthless. This file rules that
 possibility out mechanically, by exhibiting a concrete algebra on which every
-one of the twenty-nine axioms is directly discharged. A first-order theory
+one of the thirty-four axioms is directly discharged. A first-order theory
 that has a model cannot derive a contradiction, so producing such an
 inhabitant is a proof of consistency in the strict logical sense. The rest
 of the file follows the natural order of that construction: fix the carrier,
@@ -157,7 +157,7 @@ instance instSRA : SRA Toy where
   subst_varDiag_unit_right _ := propext ⟨And.left, fun h => ⟨h, trivial⟩⟩
   subst_associativity _ _ _ :=
     propext ⟨fun h => ⟨h.1.1, h.1.2, h.2⟩, fun h => ⟨⟨h.1, h.2.1⟩, h.2.2⟩⟩
-  subst_scr_oplaxity _ _ := fun ⟨h, _⟩ => h
+  subst_scr_oplaxity _ _ _ := fun ⟨h, _⟩ => h
   cr_fixpoint :=
     propext ⟨fun _ => trivial, fun _ => Or.inl trivial⟩
   cr_induction _ h := fun _ => h (Or.inl trivial)
@@ -183,8 +183,8 @@ carrier. On `Toy` they coexist, so no such contradiction can exist. As with
 the `SRA` instance, the derived operations (`introductionCoreflexive`,
 `eliminationCoreflexive`, `valueCoreflexive`, the evaluation recursors) all
 collapse to `⊥`, so no operational content is exercised; that job is left to
-the concrete term models in `Instances/FirstOrder/` and
-`Instances/SecondOrder/`. -/
+the concrete term models in `Instances/PeanoArithmetic.lean` and
+`Instances/LambdaCalculus.lean`. -/
 instance instOperationalDecomposition : OperationalDecomposition Toy where
   introduction _ := False
   elimination _ _ := False
@@ -212,7 +212,7 @@ instance instOperationalDecomposition : OperationalDecomposition Toy where
   introduction_elimination_orthogonality _ _ _ := fun ⟨h, _⟩ => h
   scr_decomposition _ :=
     propext ⟨fun h => Or.inl h, fun h => h.elim (fun h => h) (fun h => h)⟩
-  subst_introduction_oplaxity _ _ := fun ⟨h, _⟩ => h
+  subst_introduction_oplaxity _ _ _ := fun ⟨h, _⟩ => h
   subst_elimination_oplaxity _ _ _ := fun ⟨h, _⟩ => h
   box_elimination_oplaxity _ _ := fun h => h.1.1
 
@@ -251,7 +251,7 @@ have any non-trivial content: on a two-element carrier the compatible
 refinement and the whole operational-decomposition layer are forced to
 collapse, so no substantive propagation through term structure is being
 tested. That job is delegated to the term-model instances in
-`Instances/FirstOrder.lean` and `Instances/SecondOrder.lean`, where
+`Instances/PeanoArithmetic.lean` and `Instances/LambdaCalculus.lean`, where
 `scr` really does propagate a relation through the constructors of a
 genuine signature and `j` really does isolate closed terms. This file has
 the complementary role: not to check that the axioms *say something*, but

@@ -13,8 +13,8 @@ public import LeanTra.Algebra.Diamond
 The confluence-of-orthogonal-reduction theorem of the reference, stated
 here as: for a reduction `a` whose base substitution instances collapse
 on overlaps and whose interaction with the strict compatible refinement
-of parallel reduction stays inside a substituted converse, `(a⇛)∗` is
-confluent.
+of parallel reduction stays inside a substituted converse, `a⇛` is
+confluent: `(a⇛)∗` has the diamond property.
 
 Orthogonality is a condition on the rule and on its parallel reduction.
 Its first conjunct says two `a⟦Δ⟧`-rewrites of the same term differ only

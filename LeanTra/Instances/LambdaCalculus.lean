@@ -34,9 +34,9 @@ account of rewriting must be measured.
 The file is organised in four sections. Section 1 fixes the syntax and
 its equational theory of substitution; Section 2 installs the
 relational algebra on top of it; Section 3 builds the SRA operations
-and discharges the sixteen axioms of the class; Section 4 splits the
+and discharges the twenty axioms of the class; Section 4 splits the
 structural refinement into an introduction/elimination pair, defines
-β-reduction, checks the four rule-level Gentzen-local hypotheses, and
+β-reduction, checks the five rule-level local hypotheses, and
 cashes them into confluence of parallel β via the bridge theorem. Each
 section is preceded by a docstring that explains what has to happen
 there and why.
@@ -176,7 +176,7 @@ the two mixed laws relating renaming and substitution (`subst_ren`,
 `ren_subst`), the fact that variables act as a right unit
 (`subst_id`), and Kleisli associativity of substitution
 (`subst_comp`). Downstream everything, from the SRA axioms in
-Section 3 to the four rule-level conditions on β in Section 4, is
+Section 3 to the five rule-level conditions on β in Section 4, is
 proved by unfolding definitions with `simp` and rewriting along these
 six laws; without them we would have to re-do the `lam`-case
 gymnastics every single time. -/
@@ -620,7 +620,7 @@ instance instIsInvolutiveQuantale : IsInvolutiveQuantale SynRel where
 /-! ## Section 3: SRA operations and their axioms
 
 The heart of the file is the definition of the SRA operations and the
-verification of their sixteen defining axioms, culminating in
+verification of their twenty defining axioms, culminating in
 `instSRA : SRA SynRel`. Four operations are needed. The diagonal
 `varDiag` collects the equality on variables. The structural refinement
 `scr` propagates a family of relations through the two term
@@ -633,12 +633,13 @@ on substitutions, delivering the standard fact that if `φ` relates `t`
 and `s` and `ψ` relates two substitutions position by position then
 the substituted terms are related. Finally `j` witnesses the finitary
 join-preservation properties that the involutive quantale demands.
-Fourteen of the sixteen axioms are direct computations by induction on
-terms and pattern-matching on renamings and substitutions; the two
-remaining "oplaxity" laws, `subst_scr_oplaxity` on the `scr`-side and,
-symmetrically, `subst_introduction_oplaxity` in Section 4, resist a
-direct proof for a reason that is a genuine artefact of the de Bruijn
-presentation and is discussed at length below. -/
+All twenty axioms are direct computations by induction on terms and
+pattern-matching on renamings and substitutions; the two "oplaxity"
+laws `subst_scr_oplaxity` and `subst_introduction_oplaxity` are
+proved under the class-level guard `Δη ≤ ψ` (`Δη ≤ b`), and the
+unguarded form of the first is refuted below in
+`not_subst_scr_oplaxity_unguarded`, for reasons intrinsic to the de
+Bruijn presentation and explained where those theorems live. -/
 
 /-- `Δη`: pairs of the same variable. -/
 def varDiag : SynRel := {
@@ -914,10 +915,11 @@ theorem scr_compositionality (φ ψ : SynRel) :
 
 /-! ### Introduction / elimination operations
 
-The two `OperationalDecomposition` operations are defined here (rather
-than in Section 4) because the `NominalFSPGaps` structure below
-references them. Their axioms (join preservation, compositionality,
-orthogonality, …) stay in Section 4. -/
+The two `OperationalDecomposition` operations are defined here so
+that `subst_scr_oplaxity`'s block-level docstring and refutation can
+reference them alongside the `scr` side of the story. Their axioms
+(join preservation, compositionality, orthogonality, …) stay in
+Section 4. -/
 
 /-- Introduction forms: `(lam t, lam s)` with `a`-related bodies. -/
 def introduction (a : SynRel) : SynRel := {
@@ -954,127 +956,71 @@ def elimination (a b : SynRel) : SynRel := {
       t = Lam.app t₁ t₂ ∧ s = Lam.app s₁ s₂
       ∧ a.rel n t₁ s₁ ∧ b.rel n t₂ s₂ := Iff.rfl
 
-/-! ### The Nominal-FSP gap, packaged as a local axiom
+/-! ### The `subst_scr_oplaxity` guard, and why the unguarded form fails
 
-The two "oplaxity" laws left over from Section 3 refuse to be proved
-directly at their strongest instantiation, and the obstruction is
-entirely a symptom of the de Bruijn presentation: at the trivial
-argument relation `ψ = ⊥` there is a vacuously satisfied left-hand
-side involving closed identity terms which nonetheless requires, on
-the right, that the freshly bound variable be related to itself under
-an empty relation, which is impossible. In the nominal tradition this
-gap is closed by the Finite Support Principle, which chooses the bound
-name outside the support of the substitution and thereby dodges the
-fictitious obligation. Rather than build the full nominal apparatus we
-take an honest shortcut: we state the two problematic laws as an
-explicit local `axiom nominalFSP`, we prove strictly guarded variants
-of the same statements (under the extra hypothesis `Δη ≤ ψ`, which is
-verified at every real call site), and we let the axiom trace at the
-end of the file make the dependency completely visible. This is
-the one place where the formalisation departs from a `sorry`-free
-discipline, and it does so in a controlled way that isolates the
-departure to a single named assumption whose meaning is well
-understood. The rest of this block is the detailed accounting. Two
-axioms of the SRA/OD layer fail to close in the well-scoped de Bruijn
-representation without an additional binder-side hypothesis:
+The class field `SRA.subst_scr_oplaxity` takes an extra hypothesis
+`Δη ≤ ψ`; this section explains why, and records a
+machine-checked refutation of the unguarded statement in the
+well-scoped de Bruijn model of this file.
 
-* `subst_scr_oplaxity`: at the `lam` clause of `scr`, the freshly-bound
-  index at position `Fin.mk 0` of the extended context becomes `var 0`
-  on both endpoints of the pointwise `ψ`-obligation of `subst`; if `ψ`
-  does not relate `var 0` to itself (e.g. `ψ = ⊥`), the obligation
-  cannot be discharged and the LHS is inhabited by pairs whose RHS
-  witness is missing.
-* `subst_introduction_oplaxity`: the same obstruction, transported
-  from `scr` to the `introduction` slot of the
-  `OperationalDecomposition` layer.
+The obstruction is entirely a symptom of the de Bruijn presentation.
+At the `lam` clause of `scr`, the pointwise `ψ`-obligation of
+substitution reaches the freshly-bound index `Fin.mk 0` of the
+extended context, at which both lifted substitutions equal
+`var 0`; the obligation on that position therefore reduces to
+`ψ.rel _ (var 0) (var 0)`. If `ψ` does not relate `var 0` to
+itself — the extreme case being `ψ = ⊥` — the obligation cannot be
+discharged, and the LHS is inhabited by pairs (specifically the
+closed-identity pair below) whose RHS witness is missing.
 
 The concrete counterexample. Take `φ := ⊤`, `ψ := ⊥`, and consider
 the pair `(t, s) := (λx.x, λx.x)` at arity `0`. The LHS
 `subst (scr ⊤) ⊥` is inhabited via the decomposition `n₀ = 0`,
 `t = λx.x`, `s = λx.x`, `τ = σ = elim0`, `hscr : scr ⊤ 0 (λx.x, λx.x)`
 (the `lam` clause of `scr` at `⊤` is satisfied vacuously since `⊤`
-holds everywhere), and the pointwise `ψ`-obligation is vacuously true
-because `Fin 0` is empty. The RHS `scr (subst ⊤ ⊥)` at the same pair
-requires `(subst ⊤ ⊥).rel 1 (var 0) (var 0)`, which unfolds to
-`∃ n, t, s, τ, σ, var 0 = t.subst τ ∧ var 0 = s.subst σ ∧ …
-   ∧ ∀ x, ⊥.rel 1 (τ x) (σ x)`, and the last conjunct is unsatisfiable.
+holds everywhere), and the pointwise `ψ`-obligation is vacuously
+true because `Fin 0` is empty. The RHS `scr (subst ⊤ ⊥)` at the
+same pair requires `(subst ⊤ ⊥).rel 1 (var 0) (var 0)`, which
+unfolds to `∃ n, t, s, τ, σ, var 0 = t.subst τ ∧ var 0 = s.subst σ
+∧ … ∧ ∀ x, ⊥.rel 1 (τ x) (σ x)`; the last conjunct forces `n = 0`,
+and then `var 0 = t.subst τ` with `t : Lam 0` and empty `τ` is
+ruled out by `subst_closed_ne_var` (a substituted closed term is
+never a variable, since `t : Lam 0` cannot be `var`).
 
-The standard nominal treatment of second-order syntax discharges
-this obstruction via the **Finite Support Principle (FSP)**: on the
-α-quotient with equivariant finitely-supported relations, the bound
-variable of the outer `λ` is chosen fresh for the support of `ψ`, so
-the fictitious `(var 0, var 0)` obligation never appears. Formalising
-that argument requires a full nominal-set infrastructure (freshness,
-support, α-quotients, equivariance), a separate project we defer.
+The class field's guard `Δη ≤ ψ` excludes this counterexample from
+the premise (at `ψ = ⊥`, the guard is unsatisfiable, since `Δη` is
+inhabited by every `(var x, var x)`), and supplies the missing
+ingredient at every other `ψ`: the fresh-position obligation
+`ψ.rel _ (var 0) (var 0)` follows from `Δη ≤ ψ` and the `varDiag`
+witness `⟨0, rfl, rfl⟩`; the `Fin.succ j` positions are discharged
+by `ψ.ren_closed` applied to the original ψ-obligation.
 
-Instead: the two problematic statements are grouped into
-`NominalFSPGaps` and postulated jointly as `axiom nominalFSP`. The
-axiom is **local to this file**; the axiom trace at the bottom
-records the dependency of every downstream theorem on it. The three
-other FSP-shaped facts (`subst_associativity`'s (≥) direction,
-`elimination_join_preservation` split slot-by-slot, and
-`box_elimination_oplaxity`) are proved directly. -/
-
-/-- The two algebraic facts on `SynRel` whose formalisation would
-require the nominal Finite Support Principle. Grouped so that the SRA
-and `OperationalDecomposition` instances can be built by projection
-from a single opaque witness `nominalFSP`. -/
-structure NominalFSPGaps : Prop where
-  /-- Oplaxness of relation substitution on the strict compatible
-  refinement `scr`, including under binders. False at `ψ = ⊥` in
-  this model; see the block-level docstring above. -/
-  subst_scr_oplaxity : ∀ (φ ψ : SynRel), subst (scr φ) ψ ≤ scr (subst φ ψ)
-  /-- Oplaxness of relation substitution on the `introduction` slot
-  of the operational-decomposition layer. Same binder-side
-  obstruction as `subst_scr_oplaxity`; see the block-level docstring
-  above. -/
-  subst_introduction_oplaxity : ∀ (a b : SynRel), subst (introduction a) b ≤ introduction (subst a b)
-
-/-- The two `NominalFSPGaps` statements, postulated as a single
-opaque axiom local to this file. The two projections
-`nominalFSP.subst_scr_oplaxity` and
-`nominalFSP.subst_introduction_oplaxity` are the SRA/OD axioms that
-the well-scoped de Bruijn model cannot discharge on its own; every
-other axiom is proved directly below. The dependency is confined to
-this file and appears explicitly in the axiom trace of
-`betaRule_local_confluent`. -/
-axiom nominalFSP : NominalFSPGaps
-
-/-! ### Guarded oplaxity laws
-
-The two oplaxity statements above are the ones the well-scoped model
-cannot prove *unconditionally*, but the following observation makes
-the picture cleaner: **the same statements, guarded by the extra
-hypothesis `Δη ≤ ψ`, are provable directly in this file, without any
-appeal to `nominalFSP`.**
-
-The guard supplies the missing ingredient: on the freshly-bound
-position of the extended context, the lifted substitution is `var 0`
-on both endpoints, so the pointwise ψ-obligation reduces to
-`ψ.rel (n+1) (var 0) (var 0)`. If `Δη ≤ ψ`, that obligation follows
-from the `varDiag` witness `⟨0, rfl, rfl⟩`; the remaining `Fin.succ j`
-positions are discharged by `ψ.ren_closed` applied to the original
-ψ-obligation. The (unguarded) counterexample is thereby excluded from
-the premise: at `ψ = ⊥`, `Δη ≤ ⊥` is unsatisfiable (as `Δη` is
-inhabited by every `(var x, var x)`), so the guarded law does not
-apply at `ψ = ⊥` at all.
-
-**Every use of the unguarded law in the metatheory** (see e.g.
+Every use of the law in the abstract metatheory (see
 `Metatheory/Confluence/ParallelReduction.lean` and `SRA/Howe.lean`)
 instantiates `ψ` with a relation containing the identity (typically
-`ψ = Δ` or `ψ = a⇛`); the guard is therefore satisfied at every real
-call site. This is the technical content of the remark above that
-the failure at `ψ = ⊥` is invisible to downstream reasoning: a
-guarded formulation of the class axiom would suffice for every use,
-and the guarded proofs below discharge it. -/
+`ψ = Δ` or `ψ = a⇛`); the guard is therefore satisfied at every
+real call site. The first-order model in `PeanoArithmetic.lean`
+proves the same law without the guard, because that syntax has no
+binders and the fresh-position obligation never appears; the guard
+is vacuous there. -/
+
+/-- A substitution of a closed term is never a variable: `t : Lam 0` can
+only be built from `app` or `lam` (never `var`, since `Fin 0` is empty),
+and both of these are preserved by `subst`, so `t.subst τ` is never
+`Lam.var x`. Key ingredient of `not_subst_scr_oplaxity_unguarded`. -/
+theorem subst_closed_ne_var {m : Nat} (t : Lam 0) (τ : Fin 0 → Lam m) (x : Fin m) :
+    t.subst τ ≠ Lam.var x := by
+  cases t with
+  | var i => exact i.elim0
+  | app _ _ => intro h; cases h
+  | lam _ => intro h; cases h
 
 /-- Auxiliary: on the extended context `Fin (n+1)`, a lifted
 substitution pair inherits its `ψ`-obligations from the underlying
 pair via `ren_closed` on the `Fin.succ` positions, and from the
 guard `Δη ≤ ψ` on the freshly-bound position (where both lifted
 substitutions equal `var 0`). Used identically by
-`subst_scr_oplaxity_guarded` and `subst_introduction_oplaxity_guarded`
-below. -/
+`subst_scr_oplaxity` and `subst_introduction_oplaxity` below. -/
 private theorem subst_liftSubst_ren_succ_of_le
     (ψ : SynRel) {n m : Nat}
     (τ σ : Fin n → Lam m) (hψ : ∀ x, ψ.rel m (τ x) (σ x))
@@ -1093,14 +1039,15 @@ private theorem subst_liftSubst_ren_succ_of_le
     change ψ.rel (m + 1) ((τ j).ren Fin.succ) ((σ j).ren Fin.succ)
     exact ψ.ren_closed Fin.succ (hψ j)
 
-/-- Guarded `subst_scr_oplaxity`: with the extra hypothesis
-`Δη ≤ ψ`, the oplaxity of substitution on `scr` is provable directly
-in the de Bruijn model, without appeal to `nominalFSP`. Every use in
-the metatheory (see block-level docstring above) instantiates `ψ`
-with a relation containing the identity, so the guarded form
-suffices; the unguarded `subst_scr_oplaxity` below is retained only
-to fit the shape of the `SRA` class field. -/
-theorem subst_scr_oplaxity_guarded (φ ψ : SynRel) (hvar : varDiag ≤ ψ) :
+/-- `SRA.subst_scr_oplaxity` in this model: with the guard `Δη ≤ ψ`,
+substituting into a strict compatible refinement refines the strict
+refinement of the substitution. Proof splits on the two clauses of
+`scr` (the `lam` clause uses `subst_liftSubst_ren_succ_of_le` to lift
+the ψ-obligation across the extra binder; the `app` clause inherits
+the ψ-obligation unchanged). The unguarded form is refuted below
+(`not_subst_scr_oplaxity_unguarded`); the block-level docstring
+records the counterexample. -/
+theorem subst_scr_oplaxity (φ ψ : SynRel) (hvar : varDiag ≤ ψ) :
     subst (scr φ) ψ ≤ scr (subst φ ψ) := by
   rintro m u v ⟨n, u₀, v₀, τ, σ, rfl, rfl, hscr, hψ⟩
   rcases hscr with ⟨t', s', rfl, rfl, hφ⟩
@@ -1119,11 +1066,25 @@ theorem subst_scr_oplaxity_guarded (φ ψ : SynRel) (hvar : varDiag ≤ ψ) :
     · exact ⟨n, t₁, s₁, τ, σ, rfl, rfl, hφ₁, hψ⟩
     · exact ⟨n, t₂, s₂, τ, σ, rfl, rfl, hφ₂, hψ⟩
 
-/-- Unguarded `subst_scr_oplaxity`, as required by the `SRA` class
-field. Discharged via `nominalFSP`; see `subst_scr_oplaxity_guarded`
-above for the guarded form that is provable directly. -/
-theorem subst_scr_oplaxity (φ ψ : SynRel) : subst (scr φ) ψ ≤ scr (subst φ ψ) :=
-  nominalFSP.subst_scr_oplaxity φ ψ
+/-- Refutation of the unguarded form. The pair `(λx.x, λx.x)` at
+arity `0` lies in `subst (scr ⊤) ⊥` but not in `scr (subst ⊤ ⊥)`;
+see the block-level docstring above for the argument, and
+`subst_closed_ne_var` for the structural lemma the closing case
+relies on. -/
+theorem not_subst_scr_oplaxity_unguarded :
+    ¬ ∀ φ ψ : SynRel, subst (scr φ) ψ ≤ scr (subst φ ψ) := by
+  intro h
+  have hL : (subst (scr ⊤) ⊥).rel 0 (Lam.lam (Lam.var 0)) (Lam.lam (Lam.var 0)) :=
+    ⟨0, Lam.lam (Lam.var 0), Lam.lam (Lam.var 0), Fin.elim0, Fin.elim0, rfl, rfl,
+     Or.inl ⟨Lam.var 0, Lam.var 0, rfl, rfl, trivial⟩, fun x => x.elim0⟩
+  rcases h ⊤ ⊥ 0 _ _ hL with ⟨t', _, ht, _, hsub⟩ | ⟨_, _, _, _, ht, _, _, _⟩
+  · have heq : Lam.var 0 = t' := Lam.lam.inj ht
+    subst heq
+    obtain ⟨n, t, _, τ, _, hu, _, _, hψ⟩ := hsub
+    cases n with
+    | zero => exact subst_closed_ne_var t τ 0 hu.symm
+    | succ n => exact (hψ 0).elim
+  · cases ht
 
 theorem subst_associativity (φ ψ χ : SynRel) :
     subst (subst φ ψ) χ = subst φ (subst ψ χ) := by
@@ -1266,7 +1227,7 @@ theorem j_varDiag_orthogonality : (j : SynRel) * varDiag ≤ ⊥ := by
 /-! ### The SRA instance
 
 The point at which all the preceding work becomes usable. Everything
-above amounts to sixteen theorems named `varDiag_symmetry`,
+above amounts to twenty theorems named `varDiag_symmetry`,
 `scr_compositionality`, `subst_associativity`, and so on; here we
 bind them to the corresponding fields of the `SRA` typeclass so that
 `instSRA : SRA SynRel` is inhabited. From this line onward, every
@@ -1311,21 +1272,22 @@ Once the SRA instance is in place, we specialise the machinery of
 `SRA/OperationalDecomposition.lean` by splitting the structural
 refinement `scr` into an *introduction* component (the `lam`-clause,
 carrying constructors) and an *elimination* component (the `app`-clause,
-carrying destructors). The two operations themselves are
-defined already in Section 3, so that `NominalFSPGaps` can reference
-them; what happens here is that the split is turned into an
-`OperationalDecomposition` typeclass instance, which is precisely what
-allows the Gentzen principles of `Metatheory/GentzenPrinciples.lean`
-to be stated at all: those principles talk about how a rewrite rule
-interacts with introduction and elimination forms, and they can be
-formulated only on a syntax that has been decomposed in this way.
-Twelve of the thirteen accompanying axioms are again direct
-computations; the thirteenth is the same nominal-FSP obligation as
-before and is discharged from the same local axiom. With the instance
-in hand the section then introduces β-reduction as a `SynRel`,
-verifies the four rule-level Gentzen-local hypotheses required by the
-bridge theorem, and finally cashes them into confluence of parallel β
-via `LeanTra.Confluence.local_confluence`. -/
+carrying destructors). The two operations themselves are already
+defined in Section 3, alongside the `subst_scr_oplaxity` block whose
+docstring covers both sides of the story; what happens here is that
+the split is turned into an `OperationalDecomposition` typeclass
+instance, which is precisely what allows the Gentzen principles of
+`Metatheory/GentzenPrinciples.lean` to be stated at all: those
+principles talk about how a rewrite rule interacts with introduction
+and elimination forms, and they can be formulated only on a syntax
+that has been decomposed in this way. All fourteen accompanying
+axioms are direct computations; the `subst_introduction_oplaxity`
+one carries the same `Δη ≤ b` guard as `subst_scr_oplaxity` in
+Section 3 and for the same reason. With the instance in hand the
+section then introduces β-reduction as a `SynRel`, verifies the five
+rule-level local hypotheses required by the bridge theorem, and
+finally cashes them into confluence of parallel β via
+`LeanTra.Confluence.local_confluence`. -/
 
 /-- `scr = introduction ⊔ elimination` on the diagonal. -/
 theorem scr_decomposition (a : SynRel) : (SRA.scr a : SynRel) = introduction a ⊔ elimination a a := by
@@ -1336,7 +1298,7 @@ theorem scr_decomposition (a : SynRel) : (SRA.scr a : SynRel) = introduction a �
 
 /-! ### OperationalDecomposition axioms
 
-The thirteen axioms of the `OperationalDecomposition` class. They
+The fourteen axioms of the `OperationalDecomposition` class. They
 mirror the shape of the corresponding `scr` laws from Section 3, but
 split slot by slot into a constructor part (`introduction`, which
 only sees the `lam` clause) and a destructor part (`elimination`,
@@ -1344,11 +1306,10 @@ which only sees the `app` clause). Monotonicity, join preservation,
 compositionality, and the various converse-commutations reappear in
 the two-slot form; the key new axiom is `scr_decomposition`, which
 records that `scr` really is the join of introduction and
-elimination on the diagonal. Twelve of the thirteen close by direct
-term-level computation exactly as their `scr`-counterparts did; the
-thirteenth, `subst_introduction_oplaxity`, inherits the same binder
-obstruction as `subst_scr_oplaxity` and is discharged from the
-second projection of the local `nominalFSP` axiom. -/
+elimination on the diagonal. All fourteen close by direct term-level
+computation; `subst_introduction_oplaxity` carries the same
+`Δη ≤ b` guard as `subst_scr_oplaxity` in Section 3, for the same
+binder-side reason. -/
 
 /-- OD axiom: `introduction` preserves arbitrary joins. -/
 theorem introduction_join_preservation (𝒮 : Set SynRel) : introduction (sSup 𝒮) = sSup (introduction '' 𝒮) := by
@@ -1445,24 +1406,18 @@ theorem introduction_elimination_orthogonality (a b c : SynRel) :
                 ⟨_, _, _, _, hu', _, _, _⟩⟩
   exact absurd (hu.symm.trans hu') (by intro h; cases h)
 
-/-- Guarded `subst_introduction_oplaxity`: with the extra hypothesis
-`Δη ≤ b`, the oplaxity of substitution on `introduction` is provable
-directly, without appeal to `nominalFSP`. Same structural argument
-as `subst_scr_oplaxity_guarded`, restricted to the `lam` clause. -/
-theorem subst_introduction_oplaxity_guarded (a b : SynRel) (hvar : varDiag ≤ b) :
+/-- `OperationalDecomposition.subst_introduction_oplaxity` in this
+model: with the guard `Δη ≤ b`, substituting into an introduction
+form refines an introduction. Same structural argument as
+`subst_scr_oplaxity`, restricted to the `lam` clause; the guard is
+required for the same binder-side reason. -/
+theorem subst_introduction_oplaxity (a b : SynRel) (hvar : varDiag ≤ b) :
     subst (introduction a) b ≤ introduction (subst a b) := by
   rintro m u v ⟨n, u₀, v₀, τ, σ, rfl, rfl, ⟨t', s', rfl, rfl, ha⟩, hψ⟩
   refine ⟨t'.subst (Lam.liftSubst τ), s'.subst (Lam.liftSubst σ), rfl, rfl, ?_⟩
   exact ⟨n + 1, t', s', Lam.liftSubst τ, Lam.liftSubst σ,
          rfl, rfl, ha,
          subst_liftSubst_ren_succ_of_le b τ σ hψ hvar⟩
-
-/-- Unguarded `subst_introduction_oplaxity`, as required by the
-`OperationalDecomposition` class field. Discharged via
-`nominalFSP`; see `subst_introduction_oplaxity_guarded` above for
-the guarded form provable directly. -/
-theorem subst_introduction_oplaxity (a b : SynRel) : subst (introduction a) b ≤ introduction (subst a b) :=
-  nominalFSP.subst_introduction_oplaxity a b
 
 /-- OD axiom: oplaxness of `subst` on the `elimination` slot. -/
 theorem subst_elimination_oplaxity (a₁ a₂ b : SynRel) :
@@ -1527,7 +1482,7 @@ theorem box_elimination_oplaxity (a b : SynRel) :
 /-! ### OperationalDecomposition instance
 
 The counterpart of `instSRA` for the operational-decomposition layer:
-the thirteen axioms above are bundled into
+the fourteen axioms above are bundled into
 `instOperationalDecomposition : OperationalDecomposition SynRel`, so
 that every abstract lemma stated over the class becomes applicable to
 `SynRel`. In particular this is what makes the Gentzen principles
@@ -1601,7 +1556,8 @@ theorem betaRule_isReduction :
 
 /-! ### Local hypotheses for β
 
-Four rule-level properties remain to be checked, and the point of the
+Four rule-level properties remain to be checked (the fifth,
+`betaRule_isReduction`, is proved just above), and the point of the
 whole local formulation is that all four are visibly local: each
 speaks only about `betaRule` itself, and none of them mentions parallel
 reduction. First, `betaRule` is *substitutive at identity*
@@ -1616,8 +1572,7 @@ after its inspected argument holds a constructor, a `lam` in the
 major slot of the application. Fourth, β satisfies the *Gentzen
 Conservation Principle* (`GCP`), which says that firing β commutes
 with substitution up to the appropriate relational bound. All four are
-proved here by direct term-level computation, and none of them leaks
-into the `nominalFSP` axiom. -/
+proved here by direct term-level computation. -/
 
 /-- β is substitutive at the identity: `β⟦Δ⟧ ≤ β`.  If a β-redex can
 be exhibited as a substitution-instance of another β-redex with
@@ -1831,26 +1786,9 @@ end LeanTra.Instances.Lambda
 /-! ## Axiom trace
 
 Explicit `#check` and `#print axioms` on the main results, cf. the
-tail of `Instances/FirstOrder.lean`. Every downstream theorem
-depends on the three standard Lean-prelude axioms `propext`,
-`Classical.choice`, `Quot.sound`; the single non-standard axiom is
-`LeanTra.Instances.Lambda.SynRel.nominalFSP`, whose scope is
-analysed in the block-level docstring at its declaration in Section 3.
-
-Note on the four Gentzen-local hypotheses. Their statements
-(`betaRule_isSubstitutiveAtIdentity`, `betaRule_isDeterministic`,
-`betaRule_gip`, `betaRule_gcp`) speak only about `betaRule` and are
-proved by term-level computation, with no *semantic* dependence on
-`nominalFSP`. The trace nonetheless records the axiom for three of
-them, because their statements unfold against the SRA/OD
-notation (`SRA.subst`, `SRA.cr`, `OperationalDecomposition.elimination`,
-…) which Lean elaborates through `instSRA` / `instOperationalDecomposition`,
-and those instances do carry the axiom. Only
-`betaRule_isDeterministic`, whose statement uses only the quantale
-layer (`·ᵒ * · ≤ 1`), stays clean at `[propext, Quot.sound]`. This
-is an elaboration-side artefact of typeclass resolution, not a
-mathematical dependence: the four local proofs go through in a
-guarded-axiom setting without change. -/
+tail of `Instances/PeanoArithmetic.lean`. Every trace below shows a
+subset of the three standard Lean-prelude axioms `propext`,
+`Classical.choice`, `Quot.sound`; no non-standard axiom is used. -/
 
 #check @LeanTra.Instances.Lambda.SynRel.instSRA
 #check @LeanTra.Instances.Lambda.SynRel.instOperationalDecomposition
@@ -1861,14 +1799,12 @@ guarded-axiom setting without change. -/
 
 #print axioms LeanTra.Instances.Lambda.SynRel.instSRA
 #print axioms LeanTra.Instances.Lambda.SynRel.instOperationalDecomposition
+#print axioms LeanTra.Instances.Lambda.SynRel.betaRule_isReduction
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_isSubstitutiveAtIdentity
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_isDeterministic
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_gip
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_gcp
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_local_confluent
+#print axioms LeanTra.Instances.Lambda.SynRel.betaRule_confluent_orthogonal
 #print axioms LeanTra.Instances.Lambda.SynRel.betaRule_bigStep_determinism
-
--- The two guarded forms are provable directly in this file: their
--- axiom traces do NOT contain `nominalFSP`.
-#print axioms LeanTra.Instances.Lambda.SynRel.subst_scr_oplaxity_guarded
-#print axioms LeanTra.Instances.Lambda.SynRel.subst_introduction_oplaxity_guarded
+#print axioms LeanTra.Instances.Lambda.SynRel.not_subst_scr_oplaxity_unguarded

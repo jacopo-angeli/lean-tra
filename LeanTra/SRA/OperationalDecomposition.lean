@@ -23,7 +23,7 @@ express that distinction without committing to a term representation.
 Where `SRA` only knows that a relation can be lifted one layer of term
 structure, via `~·`, this class says what that layer is made of: a
 constructor part and a destructor part, and nothing else. It is the
-setting in which Gentzen's inversion and commutation principles can be
+setting in which Gentzen's inversion and conservation principles can be
 stated algebraically, and therefore the layer on which the metatheory
 rests.
 
@@ -39,7 +39,7 @@ pairwise `b`-related.
 
 Both are morphisms of the ambient structure: each preserves arbitrary
 joins, composition and converse — three axioms for `introduction`, and
-three for `elimination`, taken slot by slot (6). Both are oplax on the
+four for `elimination`, whose join-preservation is taken slot by slot (7). Both are oplax on the
 unit (2). They are orthogonal: a constructor and a destructor never meet,
 so their composite is `⊥` (1). Together they exhaust the strict
 compatible refinement, `~a = ιa ⊔ ε(a, a)`, which is
@@ -131,8 +131,17 @@ class OperationalDecomposition (α : Type u)
   constructor part and its destructor part, and into nothing else. -/
   protected scr_decomposition (a : α) : SRA.scr a = introduction a ⊔ elimination a a
 
-  /-- Substitution distributes, oplaxly, over `introduction`. -/
-  protected subst_introduction_oplaxity (a b : α) : SRA.subst (introduction a) b ≤ introduction (SRA.subst a b)
+  /-- Substitution distributes, oplaxly, over `introduction`, under the
+  guard `Δη ≤ b`. Same binder-side obstruction as
+  `SRA.subst_scr_oplaxity`: substituting under an `introduction` form
+  crosses a binder, and the pointwise `b`-obligation forces the
+  freshly-bound variable to be `b`-related to itself, which the guard
+  supplies. Without the guard the law is refuted in the second-order
+  λ-calculus model. At first order the guard is vacuous. Every use in
+  the abstract development instantiates `b` with a relation containing
+  the identity. -/
+  protected subst_introduction_oplaxity (a b : α) (hb : SRA.varDiag ≤ b) :
+      SRA.subst (introduction a) b ≤ introduction (SRA.subst a b)
   /-- Substitution distributes, oplaxly, over `elimination`, slot by slot. -/
   protected subst_elimination_oplaxity (a₁ a₂ b : α) : SRA.subst (elimination a₁ a₂) b ≤ elimination (SRA.subst a₁ b) (SRA.subst a₂ b)
 

@@ -38,6 +38,11 @@ completeness of the lattice supplies.
   its own candidates and the adjunction follows from join-preservation of
   substitution in its first argument.
 
+One assumption is weakened rather than dropped: the oplaxity of
+substitution over compatible refinement carries the guard `Δη ≤ b`,
+absent from Definition 6, because the unguarded form fails in the
+well-scoped higher-order term model (see `subst_scr_oplaxity` below).
+
 The class below therefore assumes strictly less than Definition 6. The
 closure constant `j`, and the modality derived from it, have no
 counterpart there.
@@ -72,14 +77,14 @@ follow from the axioms above:
   hold on variables;
 * `□a := j * a * j`, the closure modality — the pairs of `a` whose two
   endpoints are closed. Its laws are theorems in
-  `Metatheory/Modality.lean`.
+  `SRA/Modality.lean`.
 
 One law of `□` does not follow: `(□a)⟦b⟧ ≤ □a`. No condition
 on `j` alone yields it through the oplax `subst_compositionality_oplax`,
-and the first-order term model of `Instances/FirstOrder`, where `j` is
+and the first-order term model of `Instances/PeanoArithmetic`, where `j` is
 the identity on closed terms, exhibits a relation and a substituent for
 which it fails. The obstruction and the counterexample are recorded in
-the *Investigation* block of `Metatheory/Modality.lean`. It is therefore
+the *Investigation* block of `SRA/Modality.lean`. It is therefore
 absent from the class rather than assumed.
 
 ## Derived laws
@@ -149,7 +154,7 @@ open scoped IsInvolutiveQuantale
 compatible refinement `~·`, relation substitution `·⟦·⟧`, and the closure
 constant `j`, together with their defining axioms. The closure modality
 `□` is derived below as `j * · * j`, and its laws are proved in
-`Metatheory/Modality.lean`. -/
+`SRA/Modality.lean`. -/
 class SRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] where
   /-- The variable co-equivalence `Δη`: the relation that holds between two
   terms exactly when they are the same variable. -/
@@ -201,10 +206,20 @@ class SRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvo
   /-- Substitution is associative: substituting into a substitution is the
   same as substituting once with the composed substitution. -/
   protected subst_associativity (a b c : α) : subst (subst a b) c = subst a (subst b c)
-  /-- Substitution is compatible with term structure: `(~a)⟦b⟧ ≤ ~(a⟦b⟧)`,
-  i.e. substituting into a strict compatible refinement refines the strict
-  refinement of the substitution. -/
-  protected subst_scr_oplaxity (a b : α) : subst (scr a) b ≤ scr (subst a b)
+  /-- Substitution is compatible with term structure, under the guard
+  `Δη ≤ b`: `(~a)⟦b⟧ ≤ ~(a⟦b⟧)` whenever the substituent relates every
+  variable to itself. The guard is what makes the law provable in models
+  with binders: substituting under a binder sends the freshly-bound
+  variable to itself, and the pointwise `b`-obligation of relation
+  substitution then requires that variable to be `b`-related to itself,
+  which the guard supplies. Without the guard the law is refuted in the
+  second-order λ-calculus model (see `LambdaCalculus.lean`,
+  `not_subst_scr_oplaxity_unguarded`). At first order the guard is
+  vacuous — the underlying syntax has no binders — but stating the class
+  field with the guard costs nothing there. Every use of this law in the
+  abstract development instantiates `b` with a relation containing the
+  identity, so the guard is always satisfied at call sites. -/
+  protected subst_scr_oplaxity (a b : α) (hb : varDiag ≤ b) : subst (scr a) b ≤ scr (subst a b)
   /-- Fixed-point law for `⌃·`: the identity is a fixed point of compatible
   refinement, i.e. any term equals itself either as a variable or by having
   pairwise equal sub-terms. Stated as `Δη ⊔ ~Δ = Δ` rather than `⌃Δ = Δ`,
@@ -371,12 +386,14 @@ theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : SRA.subst a b
 theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : SRA.subst a b ≤ SRA.subst a' b' :=
   (subst_monotonicity_left ha).trans (SRA.subst_monotonicity_right hb)
 
-/-- Substituting into a compatible refinement: `(⌃a)⟦b⟧ ≤ b ⊔ ⌃(a⟦b⟧)`. -/
-theorem subst_cr_oplaxity (a b : α) :
+/-- Substituting into a compatible refinement: `(⌃a)⟦b⟧ ≤ b ⊔ ⌃(a⟦b⟧)`,
+under the guard `Δη ≤ b`. Inherits the guard from
+`SRA.subst_scr_oplaxity`. -/
+theorem subst_cr_oplaxity (a b : α) (hb : SRA.varDiag ≤ b) :
     SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
   unfold SRA.cr
   rw [subst_join_preservation_binary_left, SRA.subst_varDiag_unit_left]
-  exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _).trans le_sup_right) b
+  exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _ hb).trans le_sup_right) b
 
 /-- Converse commutes with the base instance: `(a⟦Δ⟧)ᵒ = aᵒ⟦Δ⟧`. -/
 theorem subst_one_converse_commutation (a : α) :

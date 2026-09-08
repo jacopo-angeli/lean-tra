@@ -137,7 +137,7 @@ theorem varDiag_subst_one_orthogonality {a : α} (h : IsReduction a) : SRA.varDi
             rw [← scr_factorisation h, mul_one]
       _ ≤ SRA.subst (SRA.scr Δ) Δ * SRA.subst a Δ := SRA.subst_compositionality_oplax _ _ _ _
       _ ≤ SRA.scr (SRA.subst Δ Δ) * SRA.subst a Δ :=
-            mul_le_mul_left (SRA.subst_scr_oplaxity _ _) _
+            mul_le_mul_left (SRA.subst_scr_oplaxity _ _ SRA.varDiag_coreflexivity) _
       _ = SRA.scr Δ * SRA.subst a Δ := by rw [SRA.subst_one_one]
   calc SRA.varDiag * SRA.subst a Δ
       ≤ SRA.varDiag * (SRA.scr Δ * SRA.subst a Δ) := mul_le_mul_right key _
@@ -164,7 +164,7 @@ theorem parRed_substitutivity {a : α} (h : IsReduction a) : SRA.subst (parRed a
   · exact le_of_eq (SRA.subst_varDiag_unit_left _)
   · calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
         ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
-          SRA.subst_scr_oplaxity _ _
+          SRA.subst_scr_oplaxity _ _ (SRA.varDiag_coreflexivity.trans (parRed_reflexivity a))
       _ ≤ SRA.scr (parRed a) := SRA.scr_monotonicity (SRA.subst_le_iff.mpr le_rfl)
       _ ≤ SRA.cr (parRed a) := le_sup_right
       _ ≤ parRed a := parRed_compatibility a
@@ -183,6 +183,7 @@ theorem parRed_substitutivity {a : α} (h : IsReduction a) : SRA.subst (parRed a
           calc SRA.subst (SRA.scr (SRA.substResid (parRed a) (parRed a))) (parRed a)
               ≤ SRA.scr (SRA.subst (SRA.substResid (parRed a) (parRed a)) (parRed a)) :=
                 SRA.subst_scr_oplaxity _ _
+                  (SRA.varDiag_coreflexivity.trans (parRed_reflexivity a))
             _ ≤ SRA.scr (parRed a) :=
                 SRA.scr_monotonicity (SRA.subst_le_iff.mpr le_rfl)
             _ ≤ SRA.cr (parRed a) := le_sup_right

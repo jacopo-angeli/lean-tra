@@ -242,7 +242,8 @@ theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
     · exact subst_le_iff.mp (by rw [SRA.subst_varDiag_unit_left])
     · refine subst_le_iff.mp ?_
       calc SRA.subst (scr (substResid (1 : α) 1)) 1
-          ≤ scr (SRA.subst (substResid (1 : α) 1) 1) := SRA.subst_scr_oplaxity _ _
+          ≤ scr (SRA.subst (substResid (1 : α) 1) 1) :=
+            SRA.subst_scr_oplaxity _ _ varDiag_coreflexivity
         _ ≤ scr 1 := SRA.scr_monotonicity (subst_le_iff.mpr le_rfl)
         _ ≤ 1 := scr_unit_oplaxity
   · calc (1 : α)
@@ -261,7 +262,8 @@ theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
   refine one_le_of_cr_le ?_
   refine subst_le_iff.mp ?_
   calc SRA.subst (SRA.cr (SRA.substResid a a)) a
-      ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) := subst_cr_oplaxity _ _
+      ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) :=
+        subst_cr_oplaxity _ _ ((le_sup_left : SRA.varDiag ≤ SRA.cr a).trans h)
     _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_monotonicity (subst_le_iff.mpr le_rfl)) a
     _ ≤ a ⊔ a := sup_le_sup_left h a
     _ = a := sup_idem a

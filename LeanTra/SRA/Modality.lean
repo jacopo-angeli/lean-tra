@@ -205,7 +205,7 @@ below, via `subst_varDiag_unit_right` and `Δη ≤ Δ`. The bound one
 actually obtains is `□(a⟦b⟧)`, which is incomparable with `□a`.
 
 It is also false. In the context-indexed term model of
-`Instances/FirstOrder`, with `j` the identity on closed terms, take
+`Instances/PeanoArithmetic`, with `j` the identity on closed terms, take
 `a` to be the relation holding at every non-empty context and `b := ⊤`.
 At the empty context the left-hand side holds by instantiating the outer
 existential at a non-empty context, while the right-hand side reduces to
@@ -312,11 +312,12 @@ relation. It holds in the term model
 the axioms, and nothing consumes it yet; it is recorded as a candidate
 rather than assumed.
 
-The exact multiplicativity `□(a * b) ≤ □a * □b` is *refuted* in the term
-model, by `Instances.PeanoArithmetic.SynRel.not_box_mul_le_mul_box`. Only the
-lax half above survives under `□ := j * · * j`. This is expected to block
-a direct application of `box_lfp` to an evaluation recursor, which is why
-the evaluation development does not use it. -/
+The exact multiplicativity `□(a * b) ≤ □a * □b` is refuted on paper for
+the Peano model, and this refutation is not formalised — no theorem
+`not_box_mul_le_mul_box` exists in the file. Only the lax half above
+survives under `□ := j * · * j`. This is expected to block a direct
+application of `box_lfp` to an evaluation recursor, which is why the
+evaluation development does not use it. -/
 
 /-- Candidate axiom: substituting by `j` yields a closed relation. -/
 def IsSubstJClosed (α : Type*) [Monoid α] [CompleteLattice α]

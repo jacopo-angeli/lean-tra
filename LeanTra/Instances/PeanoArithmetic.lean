@@ -50,7 +50,7 @@ and its Kleisli-monad structure (`subst`, `ren`). Next we build
 `SynRel`, the involutive quantale of renaming-closed context-indexed
 binary relations on `Tm`, which is the algebraic carrier the SRA
 typeclass expects. On top of `SynRel` we define the four SRA
-operations `varDiag`, `scr`, `subst`, `j` and discharge their nineteen
+operations `varDiag`, `scr`, `subst`, `j` and discharge their twenty
 accompanying axioms, then package the result as `instance SRA SynRel`.
 We repeat the same discipline for the intro / elim decomposition of
 `scr`, defining `introduction` and `elimination` and discharging the
@@ -623,7 +623,7 @@ same outermost constructor with pairwise `φ`-related sub-terms), `subst`
 relations), and `j` (the closure constant, which relates a term to
 itself provided the term is the weakening of a closed term).
 
-Between the four operations the SRA class prescribes nineteen axioms,
+Between the four operations the SRA class prescribes twenty axioms,
 which we discharge in three passes ordered by technical difficulty. The
 first pass — monotonicity, commutation with converse, join-preservation
 in the second slot of `subst`, symmetry and co-transitivity of `varDiag`
@@ -1054,7 +1054,7 @@ from the definition, with the last one using that a closed term cannot
 be a variable.
 -/
 
-/-- The closure constant (paper: `Δ_κ`): relates `t` to itself provided
+/-- The closure constant (paper: `□Δ`): relates `t` to itself provided
 `t` is the weakening of some `t₀ : ClosedTm`. A coreflexive supported
 on the image of `Tm.close Γ : ClosedTm → Tm Γ`; the abstract `SRA.box`
 modality is built from it, and the four axioms below are the bare
@@ -1101,14 +1101,18 @@ end SynRel
 /-!
 The previous section did the work; here we simply collect it. The
 `instance SRA SynRel` declaration is a form-filling exercise: for each
-of the sixteen SRA fields we hand back the corresponding proof. From
-this point on, every abstract lemma proved against a generic `SRA α` —
-including the closure modality `SRA.box`, the combinator `SRA.cr`, and
-eventually the bridge theorem itself — becomes a concrete lemma about
-`SynRel`. The two lemmas that close the section are sanity checks:
+of the twenty SRA fields we hand back the corresponding proof. Peano
+has no binders, so the model proves `subst_scr_oplaxity` without the
+class-level `Δη ≤ b` guard (the field is `fun a b _ =>
+SynRel.subst_scr_oplaxity a b`); at the second-order level the guard
+does real work, see `LambdaCalculus.lean`. From this point on, every
+abstract lemma proved against a generic `SRA α` — including the
+closure modality `SRA.box`, the combinator `SRA.cr`, and eventually
+the bridge theorem itself — becomes a concrete lemma about `SynRel`.
+The two lemmas that close the section are sanity checks:
 `scr_top_ne_bot` witnesses that `SynRel` is non-degenerate, and
-`substJClosed` verifies `SRA.IsClosed (subst a j)`, a technical fact
-needed by `box_elimination_oplaxity` further down.
+`substJClosed` verifies `SRA.IsClosed (subst a j)`, recorded here but
+not consumed elsewhere.
 -/
 
 instance instSRA : SRA SynRel where
@@ -1128,7 +1132,7 @@ instance instSRA : SRA SynRel where
   subst_varDiag_unit_left := SynRel.subst_varDiag_unit_left
   subst_varDiag_unit_right := SynRel.subst_varDiag_unit_right
   subst_associativity := SynRel.subst_associativity
-  subst_scr_oplaxity := SynRel.subst_scr_oplaxity
+  subst_scr_oplaxity := fun a b _ => SynRel.subst_scr_oplaxity a b
   cr_fixpoint := SynRel.cr_fixpoint
   cr_induction := fun _ h => SynRel.cr_induction h
   j := SynRel.j
@@ -1585,7 +1589,7 @@ instance instOperationalDecomposition : OperationalDecomposition SynRel where
   elimination_unit_oplaxity := SynRel.elimination_unit_oplaxity
   introduction_elimination_orthogonality := SynRel.introduction_elimination_orthogonality
   scr_decomposition := SynRel.scr_decomposition
-  subst_introduction_oplaxity := SynRel.subst_introduction_oplaxity
+  subst_introduction_oplaxity := fun a b _ => SynRel.subst_introduction_oplaxity a b
   subst_elimination_oplaxity := SynRel.subst_elimination_oplaxity
   box_elimination_oplaxity := SynRel.box_elimination_oplaxity
 
@@ -2084,7 +2088,7 @@ end LeanTra.Instances.PeanoArithmetic
 /-!
 A discipline the whole project follows: every non-trivial result is
 followed by a `#print axioms` command. The list below runs through the
-fifteen main results of the file. Each depends only on some combination
+seventeen main results of the file. Each depends only on some combination
 of `propext`, `Classical.choice`, and `Quot.sound` — the three standard
 Lean 4 prelude axioms. No `sorryAx`, no opaque bridge assumption: the
 instance is closed.
