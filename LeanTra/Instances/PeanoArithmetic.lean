@@ -1704,7 +1704,7 @@ theorem rule_isSubstitutiveAtIdentity :
     · rw [ht]; simp
     · rw [hs]; simp
 
-theorem rule_isDeterministic : LeanTra.Confluence.IsDeterministic (rule : SynRel) := by
+theorem rule_isDeterministic : LeanTra.Algebra.IsDeterministic (rule : SynRel) := by
   change ((rule : SynRel)ᵒ * rule) ≤ 1
   rintro Γ t t' ⟨m, h1, h2⟩
   -- h1 : rule^o (t, m) = rule (m, t); h2 : rule (m, t').

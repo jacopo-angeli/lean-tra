@@ -70,9 +70,10 @@ run may end.
 @[expose] public section
 
 open scoped LeanTra.Algebra
+open LeanTra.Metatheory
 open OperationalDecomposition
 
-namespace LeanTra.Metatheory
+namespace LeanTra.Determinism
 
 variable {α : Type*}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [OperationalDecomposition α]
@@ -204,16 +205,18 @@ theorem oneStepEvaluation_induction {a x : α}
 /-! ### Big-step evaluation
 
 The reflexive-transitive closure of one-step, followed by a compulsory
-canonical form. The latter is what separates evaluation from reduction:
-a run counts only if it ends where a run may end. -/
+*value* — a closed canonical form. The final filter is
+`valueCoreflexive = □Δ̄`, so a big-step run counts only if it ends at a
+closed introduction; this is what pins the semantics to closed
+endpoints and matches the paper's Theorem 31 conclusion. -/
 
 /-- Big-step evaluation: any number of one-step evaluations, then a
-canonical form. -/
-def bigStepEvaluation (a : α) : α := (oneStepEvaluation a)∗ * introductionCoreflexive
+closed canonical form. -/
+def bigStepEvaluation (a : α) : α := (oneStepEvaluation a)∗ * valueCoreflexive
 
-end LeanTra.Metatheory
+end LeanTra.Determinism
 
-#print axioms LeanTra.Metatheory.majorDescent_fixpoint
-#print axioms LeanTra.Metatheory.majorDescent_induction
-#print axioms LeanTra.Metatheory.oneStepEvaluation_fixpoint
-#print axioms LeanTra.Metatheory.oneStepEvaluation_induction
+#print axioms LeanTra.Determinism.majorDescent_fixpoint
+#print axioms LeanTra.Determinism.majorDescent_induction
+#print axioms LeanTra.Determinism.oneStepEvaluation_fixpoint
+#print axioms LeanTra.Determinism.oneStepEvaluation_induction
