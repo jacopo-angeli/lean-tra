@@ -45,7 +45,7 @@ the way.
 -/
 @[expose] public section
 
-open scoped IsInvolutiveQuantale Quantale SRA
+open scoped IsInvolutiveQuantale Quantale TRA
 open LeanTra.Algebra
 open LeanTra.Metatheory
 open OperationalDecomposition
@@ -66,12 +66,12 @@ intermediate condition on `(a, b)` that the diamond argument actually
 consumes, and that the Gentzen principles discharge at `b = (a⇛)ᵒ`. -/
 
 /-- `a⟦Δ⟧ ≤ a`: the base substitution instance is bounded by the rule. -/
-def IsSubstitutiveAtIdentity (a : α) : Prop := SRA.subst a 1 ≤ a
+def IsSubstitutiveAtIdentity (a : α) : Prop := TRA.subst a 1 ≤ a
 
 /-- `~b * a ≤ a * b⟦b⟧`: a strict compatible refinement of `b` standing
 in front of the rule can be pushed past it, at the cost of substituting
 `b` into itself. -/
-def IsStruct (a b : α) : Prop := SRA.scr b * a ≤ a * SRA.subst b b
+def IsStruct (a b : α) : Prop := TRA.scr b * a ≤ a * TRA.subst b b
 
 /-! ### Confluence from local conditions
 
@@ -96,33 +96,33 @@ theorem local_confluence {a : α}
   -- pair turns `IsSubstitutiveAtIdentity` into the equation `a[Δ] = a`, which
   -- is what allows a condition stated on the rule to be applied to the
   -- summand that actually occurs in the fixed points of `a⇛` and `(a⇛)ᵒ`.
-  have hN1 : a ≤ SRA.subst a 1 := by
-    calc a = SRA.subst a SRA.varDiag := (SRA.subst_varDiag_unit_right a).symm
-      _ ≤ SRA.subst a 1 := SRA.subst_monotonicity_right SRA.varDiag_coreflexivity
-  have hN2 : SRA.subst a 1 = a := le_antisymm h2 hN1
-  have hN3 : ∀ t u : α, SRA.scr t * SRA.cr u = SRA.scr t * SRA.scr u := by
+  have hN1 : a ≤ TRA.subst a 1 := by
+    calc a = TRA.subst a TRA.varDiag := (TRA.subst_varDiag_unit_right a).symm
+      _ ≤ TRA.subst a 1 := TRA.subst_monotonicity_right TRA.varDiag_coreflexivity
+  have hN2 : TRA.subst a 1 = a := le_antisymm h2 hN1
+  have hN3 : ∀ t u : α, TRA.scr t * TRA.cr u = TRA.scr t * TRA.scr u := by
     intro t u
-    unfold SRA.cr
+    unfold TRA.cr
     rw [Quantale.mul_sup_distrib,
-        le_antisymm (SRA.scr_varDiag_orthogonality t) bot_le, bot_sup_eq]
-  have hN4 : aᵒ * SRA.varDiag = (⊥ : α) := by
-    have hL : SRA.varDiag * a = (⊥ : α) := h1
+        le_antisymm (TRA.scr_varDiag_orthogonality t) bot_le, bot_sup_eq]
+  have hN4 : aᵒ * TRA.varDiag = (⊥ : α) := by
+    have hL : TRA.varDiag * a = (⊥ : α) := h1
     have hc := congrArg IsInvolutiveQuantale.converse hL
-    rw [IsInvolutiveQuantale.converse_compositionality, SRA.varDiag_symmetry_eq,
+    rw [IsInvolutiveQuantale.converse_compositionality, TRA.varDiag_symmetry_eq,
         IsInvolutiveQuantale.converse_bot_strictness] at hc
     exact hc
   have hN5 : ∀ {b : α}, IsStruct a b →
-      aᵒ * SRA.scr (bᵒ) ≤ SRA.subst (bᵒ) (bᵒ) * aᵒ := by
+      aᵒ * TRA.scr (bᵒ) ≤ TRA.subst (bᵒ) (bᵒ) * aᵒ := by
     intro b h
-    have hL : SRA.scr b * a ≤ a * SRA.subst b b := h
+    have hL : TRA.scr b * a ≤ a * TRA.subst b b := h
     have hc := IsInvolutiveQuantale.converse_monotonicity hL
     rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_compositionality,
-        ← SRA.scr_converse_commutation, SRA.subst_converse_commutation] at hc
+        ← TRA.scr_converse_commutation, TRA.subst_converse_commutation] at hc
     exact hc
-  have hN6 : SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
+  have hN6 : TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
     have hL := parRed_substitutivity h1
     have hc := IsInvolutiveQuantale.converse_monotonicity hL
-    rw [SRA.subst_converse_commutation] at hc
+    rw [TRA.subst_converse_commutation] at hc
     exact hc
   -- The diamond as a post-fixed point
   --
@@ -132,26 +132,26 @@ theorem local_confluence {a : α}
   -- inductive step needs to know how `B` behaves under the compatible
   -- refinement and under composition with the rule on either side. The four
   -- facts below record that behaviour.
-  have hP1 : SRA.scr (parRed a * (parRed a)ᵒ)
-           = SRA.scr (parRed a) * SRA.scr ((parRed a)ᵒ) :=
-    SRA.scr_compositionality _ _
+  have hP1 : TRA.scr (parRed a * (parRed a)ᵒ)
+           = TRA.scr (parRed a) * TRA.scr ((parRed a)ᵒ) :=
+    TRA.scr_compositionality _ _
   have hP2 : (parRed a * (parRed a)ᵒ)ᵒ = parRed a * (parRed a)ᵒ := by
     rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity]
-  have hP3 : SRA.scr (parRed a * (parRed a)ᵒ) ≤ parRed a * (parRed a)ᵒ := by
+  have hP3 : TRA.scr (parRed a * (parRed a)ᵒ) ≤ parRed a * (parRed a)ᵒ := by
     rw [hP1]
     refine mul_le_mul' ?_ ?_
-    · calc SRA.scr (parRed a)
-          ≤ SRA.cr (parRed a) := by unfold SRA.cr; exact le_sup_right
+    · calc TRA.scr (parRed a)
+          ≤ TRA.cr (parRed a) := by unfold TRA.cr; exact le_sup_right
         _ ≤ parRed a := parRed_compatibility a
-    · calc SRA.scr ((parRed a)ᵒ)
-          ≤ SRA.cr ((parRed a)ᵒ) := by unfold SRA.cr; exact le_sup_right
+    · calc TRA.scr ((parRed a)ᵒ)
+          ≤ TRA.cr ((parRed a)ᵒ) := by unfold TRA.cr; exact le_sup_right
         _ ≤ (parRed a)ᵒ := parRed_converse_compatibility a
-  have hP4 : (aᵒ ⊔ 1) * SRA.cr ((parRed a)ᵒ) = (parRed a)ᵒ := by
-    have hnorm : ((1 : α) ⊔ SRA.subst aᵒ 1) = aᵒ ⊔ 1 := by
-      rw [← SRA.subst_one_converse_commutation a, hN2]
+  have hP4 : (aᵒ ⊔ 1) * TRA.cr ((parRed a)ᵒ) = (parRed a)ᵒ := by
+    have hnorm : ((1 : α) ⊔ TRA.subst aᵒ 1) = aᵒ ⊔ 1 := by
+      rw [← TRA.subst_one_converse_commutation a, hN2]
       exact sup_comm 1 aᵒ
     rw [← hnorm]
-    conv_rhs => rw [parRed_converse a, SRA.opHowe_fixpoint]
+    conv_rhs => rw [parRed_converse a, TRA.opHowe_fixpoint]
     rw [← parRed_converse a]
   -- Discharging the structural condition
   --
@@ -180,19 +180,19 @@ theorem local_confluence {a : α}
         ← OperationalDecomposition.introduction_converse_commutation,
         ← OperationalDecomposition.elimination_converse_commutation]
     exact OperationalDecomposition.introduction_elimination_orthogonality _ _ _
-  have hL2 : SRA.varDiag * (introductionCoreflexive : α) ≤ (⊥ : α) := by
-    calc SRA.varDiag * (introductionCoreflexive : α)
-        ≤ SRA.varDiag * SRA.scr 1 := by
+  have hL2 : TRA.varDiag * (introductionCoreflexive : α) ≤ (⊥ : α) := by
+    calc TRA.varDiag * (introductionCoreflexive : α)
+        ≤ TRA.varDiag * TRA.scr 1 := by
           refine mul_le_mul' le_rfl ?_
           rw [OperationalDecomposition.scr_decomposition]
           exact le_sup_left
-      _ ≤ ⊥ := SRA.varDiag_scr_orthogonality _
+      _ ≤ ⊥ := TRA.varDiag_scr_orthogonality _
   have hL3 : ∀ x : α,
-      SRA.cr x * (introductionCoreflexive : α) ≤ introduction x := by
+      TRA.cr x * (introductionCoreflexive : α) ≤ introduction x := by
     intro x
-    have hdecomp : SRA.cr x
-        = (SRA.varDiag ⊔ introduction x) ⊔ elimination x x := by
-      unfold SRA.cr
+    have hdecomp : TRA.cr x
+        = (TRA.varDiag ⊔ introduction x) ⊔ elimination x x := by
+      unfold TRA.cr
       rw [OperationalDecomposition.scr_decomposition, ← sup_assoc]
     rw [hdecomp, Quantale.sup_mul_distrib, Quantale.sup_mul_distrib]
     refine sup_le (sup_le ?_ ?_) ?_
@@ -219,10 +219,10 @@ theorem local_confluence {a : α}
       _ ≤ aᵒ * ⊥ :=
           mul_le_mul' le_rfl (hEI _ _ _)
       _ = ⊥ := Quantale.mul_bot
-  have hL5 : (parRed a)ᵒ * (introductionCoreflexive : α) ≤ SRA.cr ((parRed a)ᵒ) := by
+  have hL5 : (parRed a)ᵒ * (introductionCoreflexive : α) ≤ TRA.cr ((parRed a)ᵒ) := by
     conv_lhs => rw [← hP4]
     rw [mul_assoc]
-    calc (aᵒ ⊔ 1) * (SRA.cr ((parRed a)ᵒ) * (introductionCoreflexive : α))
+    calc (aᵒ ⊔ 1) * (TRA.cr ((parRed a)ᵒ) * (introductionCoreflexive : α))
         ≤ (aᵒ ⊔ 1) * introduction ((parRed a)ᵒ) :=
           mul_le_mul' le_rfl (hL3 _)
       _ = aᵒ * introduction ((parRed a)ᵒ)
@@ -230,18 +230,18 @@ theorem local_confluence {a : α}
           rw [Quantale.sup_mul_distrib]
       _ = aᵒ * introduction ((parRed a)ᵒ)
             ⊔ introduction ((parRed a)ᵒ) := by rw [one_mul]
-      _ ≤ SRA.cr ((parRed a)ᵒ) := by
+      _ ≤ TRA.cr ((parRed a)ᵒ) := by
           refine sup_le ?_ ?_
           · exact (hL4 _).trans bot_le
           · calc introduction ((parRed a)ᵒ)
-                ≤ SRA.scr ((parRed a)ᵒ) := by
+                ≤ TRA.scr ((parRed a)ᵒ) := by
                   rw [OperationalDecomposition.scr_decomposition]
                   exact le_sup_left
-              _ ≤ SRA.cr ((parRed a)ᵒ) := by
-                  unfold SRA.cr; exact le_sup_right
+              _ ≤ TRA.cr ((parRed a)ᵒ) := by
+                  unfold TRA.cr; exact le_sup_right
   have hStruct : IsStruct a ((parRed a)ᵒ) := by
-    change SRA.scr ((parRed a)ᵒ) * a
-         ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ)
+    change TRA.scr ((parRed a)ᵒ) * a
+         ≤ a * TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ)
     rw [OperationalDecomposition.scr_decomposition,
         Quantale.sup_mul_distrib]
     refine sup_le ?_ ?_
@@ -255,7 +255,7 @@ theorem local_confluence {a : α}
               (OperationalDecomposition.introduction_elimination_orthogonality _ _ _)
               le_rfl
         _ = (⊥ : α) := Quantale.bot_mul
-        _ ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := bot_le
+        _ ≤ a * TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := bot_le
     · calc elimination ((parRed a)ᵒ) ((parRed a)ᵒ) * a
           ≤ elimination ((parRed a)ᵒ) ((parRed a)ᵒ)
               * (elimination (introduction 1) 1 * a) := mul_le_mul' le_rfl hgip
@@ -267,11 +267,11 @@ theorem local_confluence {a : α}
             rw [← OperationalDecomposition.elimination_compositionality]
         _ = elimination ((parRed a)ᵒ * introduction 1) ((parRed a)ᵒ) * a := by
             rw [mul_one]
-        _ ≤ elimination (SRA.cr ((parRed a)ᵒ)) ((parRed a)ᵒ) * a :=
+        _ ≤ elimination (TRA.cr ((parRed a)ᵒ)) ((parRed a)ᵒ) * a :=
             mul_le_mul'
               (elimination_monotonicity hL5 le_rfl)
               le_rfl
-        _ ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
+        _ ≤ a * TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
             hgcp _ (parRed_converse_compatibility a)
   -- Commuting the rule past `~B`
   --
@@ -279,55 +279,55 @@ theorem local_confluence {a : α}
   -- that `~B` composed with the rule — on the left, on the right, or on both
   -- sides — stays inside `B`. Determinism is consumed exactly once, in the
   -- two-sided case, to cancel the `aᵒ * a` that appears in the middle.
-  have hstruct_dual : aᵒ * SRA.scr (parRed a)
-                    ≤ SRA.subst (parRed a) (parRed a) * aᵒ := by
+  have hstruct_dual : aᵒ * TRA.scr (parRed a)
+                    ≤ TRA.subst (parRed a) (parRed a) * aᵒ := by
     have hd := hN5 hStruct
     rwa [IsInvolutiveQuantale.converse_involutivity] at hd
-  have hL11 : aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * a
+  have hL11 : aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) * a
             ≤ parRed a * (parRed a)ᵒ := by
-    have hstruct : SRA.scr ((parRed a)ᵒ) * a
-                 ≤ a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := hStruct
-    calc aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * a
-        = aᵒ * (SRA.scr (parRed a) * SRA.scr ((parRed a)ᵒ)) * a := by rw [hP1]
-      _ = aᵒ * SRA.scr (parRed a) * (SRA.scr ((parRed a)ᵒ) * a) := by
+    have hstruct : TRA.scr ((parRed a)ᵒ) * a
+                 ≤ a * TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := hStruct
+    calc aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) * a
+        = aᵒ * (TRA.scr (parRed a) * TRA.scr ((parRed a)ᵒ)) * a := by rw [hP1]
+      _ = aᵒ * TRA.scr (parRed a) * (TRA.scr ((parRed a)ᵒ) * a) := by
           simp only [mul_assoc]
-      _ ≤ aᵒ * SRA.scr (parRed a) * (a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ)) :=
+      _ ≤ aᵒ * TRA.scr (parRed a) * (a * TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ)) :=
           mul_le_mul' le_rfl hstruct
-      _ = aᵒ * SRA.scr (parRed a) * a * SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by
+      _ = aᵒ * TRA.scr (parRed a) * a * TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by
           simp only [mul_assoc]
-      _ ≤ SRA.subst (parRed a) (parRed a) * aᵒ * a *
-            SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
+      _ ≤ TRA.subst (parRed a) (parRed a) * aᵒ * a *
+            TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
           mul_le_mul' (mul_le_mul' hstruct_dual le_rfl) le_rfl
-      _ = SRA.subst (parRed a) (parRed a) * (aᵒ * a) *
-            SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by
+      _ = TRA.subst (parRed a) (parRed a) * (aᵒ * a) *
+            TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by
           simp only [mul_assoc]
-      _ ≤ SRA.subst (parRed a) (parRed a) * 1 *
-            SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
+      _ ≤ TRA.subst (parRed a) (parRed a) * 1 *
+            TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) :=
           mul_le_mul' (mul_le_mul' le_rfl h3) le_rfl
-      _ = SRA.subst (parRed a) (parRed a) *
-            SRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by rw [mul_one]
+      _ = TRA.subst (parRed a) (parRed a) *
+            TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) := by rw [mul_one]
       _ ≤ parRed a * (parRed a)ᵒ :=
           mul_le_mul' (parRed_substitutivity h1) hN6
-  have hL12 : aᵒ * SRA.scr (parRed a * (parRed a)ᵒ)
+  have hL12 : aᵒ * TRA.scr (parRed a * (parRed a)ᵒ)
             ≤ parRed a * (parRed a)ᵒ := by
-    calc aᵒ * SRA.scr (parRed a * (parRed a)ᵒ)
-        = aᵒ * (SRA.scr (parRed a) * SRA.scr ((parRed a)ᵒ)) := by rw [hP1]
-      _ = aᵒ * SRA.scr (parRed a) * SRA.scr ((parRed a)ᵒ) := by
+    calc aᵒ * TRA.scr (parRed a * (parRed a)ᵒ)
+        = aᵒ * (TRA.scr (parRed a) * TRA.scr ((parRed a)ᵒ)) := by rw [hP1]
+      _ = aᵒ * TRA.scr (parRed a) * TRA.scr ((parRed a)ᵒ) := by
           simp only [mul_assoc]
-      _ ≤ SRA.subst (parRed a) (parRed a) * aᵒ * SRA.scr ((parRed a)ᵒ) :=
+      _ ≤ TRA.subst (parRed a) (parRed a) * aᵒ * TRA.scr ((parRed a)ᵒ) :=
           mul_le_mul' hstruct_dual le_rfl
-      _ ≤ parRed a * aᵒ * SRA.scr ((parRed a)ᵒ) :=
+      _ ≤ parRed a * aᵒ * TRA.scr ((parRed a)ᵒ) :=
           mul_le_mul' (mul_le_mul' (parRed_substitutivity h1) le_rfl) le_rfl
-      _ = parRed a * (aᵒ * SRA.scr ((parRed a)ᵒ)) := by simp only [mul_assoc]
-      _ ≤ parRed a * ((aᵒ ⊔ 1) * SRA.cr ((parRed a)ᵒ)) := by
+      _ = parRed a * (aᵒ * TRA.scr ((parRed a)ᵒ)) := by simp only [mul_assoc]
+      _ ≤ parRed a * ((aᵒ ⊔ 1) * TRA.cr ((parRed a)ᵒ)) := by
           refine mul_le_mul' le_rfl (mul_le_mul' le_sup_left ?_)
-          unfold SRA.cr; exact le_sup_right
+          unfold TRA.cr; exact le_sup_right
       _ = parRed a * (parRed a)ᵒ := by rw [hP4]
-  have hL21 : SRA.scr (parRed a * (parRed a)ᵒ) * a
+  have hL21 : TRA.scr (parRed a * (parRed a)ᵒ) * a
             ≤ parRed a * (parRed a)ᵒ := by
     have hconv := IsInvolutiveQuantale.converse_monotonicity hL12
     rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_involutivity,
-        ← SRA.scr_converse_commutation, hP2] at hconv
+        ← TRA.scr_converse_commutation, hP2] at hconv
     exact hconv
   -- The two branches of the inductive step
   --
@@ -339,76 +339,76 @@ theorem local_confluence {a : α}
   set Y : α := parRed a ⇨ₗ (parRed a * (parRed a)ᵒ) with hY_def
   have counit : Y * parRed a ≤ parRed a * (parRed a)ᵒ :=
     Quantale.leftMulResiduation_le_iff_mul_le.mp le_rfl
-  have hpar : parRed a = SRA.cr (parRed a) * (a ⊔ 1) := by
-    have hf : parRed a = SRA.cr (parRed a) * (1 ⊔ SRA.subst a 1) := SRA.howe_fixpoint _
+  have hpar : parRed a = TRA.cr (parRed a) * (a ⊔ 1) := by
+    have hf : parRed a = TRA.cr (parRed a) * (1 ⊔ TRA.subst a 1) := TRA.howe_fixpoint _
     rw [hN2, sup_comm 1 a] at hf
     exact hf
-  have hLeaf1 : aᵒ * SRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
-    calc aᵒ * SRA.cr Y * parRed a
-        = aᵒ * (SRA.varDiag ⊔ SRA.scr Y) * parRed a := by rfl
-      _ = (aᵒ * SRA.varDiag ⊔ aᵒ * SRA.scr Y) * parRed a := by
+  have hLeaf1 : aᵒ * TRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
+    calc aᵒ * TRA.cr Y * parRed a
+        = aᵒ * (TRA.varDiag ⊔ TRA.scr Y) * parRed a := by rfl
+      _ = (aᵒ * TRA.varDiag ⊔ aᵒ * TRA.scr Y) * parRed a := by
           rw [Quantale.mul_sup_distrib]
-      _ = aᵒ * SRA.varDiag * parRed a ⊔ aᵒ * SRA.scr Y * parRed a := by
+      _ = aᵒ * TRA.varDiag * parRed a ⊔ aᵒ * TRA.scr Y * parRed a := by
           rw [Quantale.sup_mul_distrib]
-      _ = ⊥ * parRed a ⊔ aᵒ * SRA.scr Y * parRed a := by
+      _ = ⊥ * parRed a ⊔ aᵒ * TRA.scr Y * parRed a := by
           rw [hN4]
-      _ = ⊥ ⊔ aᵒ * SRA.scr Y * parRed a := by rw [Quantale.bot_mul]
-      _ = aᵒ * SRA.scr Y * parRed a := bot_sup_eq _
-      _ = aᵒ * SRA.scr Y * (SRA.cr (parRed a) * (a ⊔ 1)) := by
+      _ = ⊥ ⊔ aᵒ * TRA.scr Y * parRed a := by rw [Quantale.bot_mul]
+      _ = aᵒ * TRA.scr Y * parRed a := bot_sup_eq _
+      _ = aᵒ * TRA.scr Y * (TRA.cr (parRed a) * (a ⊔ 1)) := by
           conv_lhs => rw [hpar]
-      _ = aᵒ * (SRA.scr Y * SRA.cr (parRed a)) * (a ⊔ 1) := by
+      _ = aᵒ * (TRA.scr Y * TRA.cr (parRed a)) * (a ⊔ 1) := by
           simp only [mul_assoc]
-      _ = aᵒ * (SRA.scr Y * SRA.scr (parRed a)) * (a ⊔ 1) := by rw [hN3]
-      _ = aᵒ * SRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← SRA.scr_compositionality]
-      _ ≤ aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * (a ⊔ 1) :=
-          mul_le_mul' (mul_le_mul' le_rfl (SRA.scr_monotonicity counit)) le_rfl
-      _ = aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * a
-            ⊔ aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * 1 := by
+      _ = aᵒ * (TRA.scr Y * TRA.scr (parRed a)) * (a ⊔ 1) := by rw [hN3]
+      _ = aᵒ * TRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← TRA.scr_compositionality]
+      _ ≤ aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) * (a ⊔ 1) :=
+          mul_le_mul' (mul_le_mul' le_rfl (TRA.scr_monotonicity counit)) le_rfl
+      _ = aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) * a
+            ⊔ aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) * 1 := by
           rw [Quantale.mul_sup_distrib]
-      _ = aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) * a
-            ⊔ aᵒ * SRA.scr (parRed a * (parRed a)ᵒ) := by rw [mul_one]
+      _ = aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) * a
+            ⊔ aᵒ * TRA.scr (parRed a * (parRed a)ᵒ) := by rw [mul_one]
       _ ≤ parRed a * (parRed a)ᵒ :=
           sup_le hL11 hL12
-  have hLeaf2 : (1 : α) * SRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
+  have hLeaf2 : (1 : α) * TRA.cr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
     rw [one_mul]
     have h1_le_parRed_converse : (1 : α) ≤ (parRed a)ᵒ := by
       rw [← IsInvolutiveQuantale.converse_one]
       exact IsInvolutiveQuantale.converse_monotonicity (parRed_reflexivity a)
-    have piece_varDiag : SRA.varDiag * parRed a ≤ parRed a * (parRed a)ᵒ := by
-      calc SRA.varDiag * parRed a
-          ≤ 1 * parRed a := mul_le_mul' SRA.varDiag_coreflexivity le_rfl
+    have piece_varDiag : TRA.varDiag * parRed a ≤ parRed a * (parRed a)ᵒ := by
+      calc TRA.varDiag * parRed a
+          ≤ 1 * parRed a := mul_le_mul' TRA.varDiag_coreflexivity le_rfl
         _ = parRed a := one_mul _
         _ = parRed a * 1 := (mul_one _).symm
         _ ≤ parRed a * (parRed a)ᵒ := mul_le_mul' le_rfl h1_le_parRed_converse
-    have piece_scr : SRA.scr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
-      calc SRA.scr Y * parRed a
-          = SRA.scr Y * (SRA.cr (parRed a) * (a ⊔ 1)) := by
+    have piece_scr : TRA.scr Y * parRed a ≤ parRed a * (parRed a)ᵒ := by
+      calc TRA.scr Y * parRed a
+          = TRA.scr Y * (TRA.cr (parRed a) * (a ⊔ 1)) := by
             conv_lhs => rw [hpar]
-        _ = (SRA.scr Y * SRA.cr (parRed a)) * (a ⊔ 1) := by simp only [mul_assoc]
-        _ = (SRA.scr Y * SRA.scr (parRed a)) * (a ⊔ 1) := by rw [hN3]
-        _ = SRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← SRA.scr_compositionality]
-        _ ≤ SRA.scr (parRed a * (parRed a)ᵒ) * (a ⊔ 1) :=
-            mul_le_mul' (SRA.scr_monotonicity counit) le_rfl
-        _ = SRA.scr (parRed a * (parRed a)ᵒ) * a
-              ⊔ SRA.scr (parRed a * (parRed a)ᵒ) * 1 := by
+        _ = (TRA.scr Y * TRA.cr (parRed a)) * (a ⊔ 1) := by simp only [mul_assoc]
+        _ = (TRA.scr Y * TRA.scr (parRed a)) * (a ⊔ 1) := by rw [hN3]
+        _ = TRA.scr (Y * parRed a) * (a ⊔ 1) := by rw [← TRA.scr_compositionality]
+        _ ≤ TRA.scr (parRed a * (parRed a)ᵒ) * (a ⊔ 1) :=
+            mul_le_mul' (TRA.scr_monotonicity counit) le_rfl
+        _ = TRA.scr (parRed a * (parRed a)ᵒ) * a
+              ⊔ TRA.scr (parRed a * (parRed a)ᵒ) * 1 := by
             rw [Quantale.mul_sup_distrib]
-        _ = SRA.scr (parRed a * (parRed a)ᵒ) * a
-              ⊔ SRA.scr (parRed a * (parRed a)ᵒ) := by rw [mul_one]
+        _ = TRA.scr (parRed a * (parRed a)ᵒ) * a
+              ⊔ TRA.scr (parRed a * (parRed a)ᵒ) := by rw [mul_one]
         _ ≤ parRed a * (parRed a)ᵒ :=
             sup_le hL21 hP3
-    calc SRA.cr Y * parRed a
-        = (SRA.varDiag ⊔ SRA.scr Y) * parRed a := by rfl
-      _ = SRA.varDiag * parRed a ⊔ SRA.scr Y * parRed a := by
+    calc TRA.cr Y * parRed a
+        = (TRA.varDiag ⊔ TRA.scr Y) * parRed a := by rfl
+      _ = TRA.varDiag * parRed a ⊔ TRA.scr Y * parRed a := by
           rw [Quantale.sup_mul_distrib]
       _ ≤ parRed a * (parRed a)ᵒ := sup_le piece_varDiag piece_scr
   have hDiamond : IsDiamond (parRed a) := by
     change (parRed a)ᵒ * parRed a ≤ parRed a * (parRed a)ᵒ
     refine Quantale.leftMulResiduation_le_iff_mul_le.mp ?_
     rw [parRed_converse a]
-    refine SRA.opHowe_induction ?_
+    refine TRA.opHowe_induction ?_
     rw [← parRed_converse a]
-    have h2' : (SRA.subst aᵒ 1 : α) = aᵒ := by
-      rw [← SRA.subst_one_converse_commutation a, hN2]
+    have h2' : (TRA.subst aᵒ 1 : α) = aᵒ := by
+      rw [← TRA.subst_one_converse_commutation a, hN2]
     rw [h2', sup_comm]
     refine Quantale.leftMulResiduation_le_iff_mul_le.mpr ?_
     rw [Quantale.sup_mul_distrib, Quantale.sup_mul_distrib]

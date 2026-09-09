@@ -7,7 +7,7 @@ module
 public import LeanTra.Algebra.InvolutiveQuantale
 
 /-!
-# Syntax Relation Algebras
+# Term Relation Algebras
 
 An algebra of relations over an unspecified syntax. The base involutive
 quantale is extended with the three operations that make its elements
@@ -30,11 +30,11 @@ completeness of the lattice supplies.
 * It asks the compatible refinement to be ω-cocontinuous. Monotonicity is
   enough, the fixed points coming from Knaster–Tarski rather than from
   colimits of ω-chains.
-* It postulates a uniform unique solution of `x = ⌃x * a`. `SRA.howe` is
+* It postulates a uniform unique solution of `x = ⌃x * a`. `TRA.howe` is
   that least fixed point, and its uniqueness is a theorem
-  (`SRA.howe_unique`, in `SRA/Howe.lean`).
+  (`TRA.howe_unique`, in `TRA/Howe.lean`).
 * It asks `(·, Δη, ·⟦·⟧)` to be a *closed* monoid. The monoid laws are
-  axioms below; closedness is not, since `SRA.substResid` is the join of
+  axioms below; closedness is not, since `TRA.substResid` is the join of
   its own candidates and the adjunction follows from join-preservation of
   substitution in its first argument.
 
@@ -77,14 +77,14 @@ follow from the axioms above:
   hold on variables;
 * `□a := j * a * j`, the closure modality — the pairs of `a` whose two
   endpoints are closed. Its laws are theorems in
-  `SRA/Modality.lean`.
+  `TRA/Modality.lean`.
 
 One law of `□` does not follow: `(□a)⟦b⟧ ≤ □a`. No condition
 on `j` alone yields it through the oplax `subst_compositionality_oplax`,
 and the first-order term model of `Instances/PeanoArithmetic`, where `j` is
 the identity on closed terms, exhibits a relation and a substituent for
 which it fails. The obstruction and the counterexample are recorded in
-the *Investigation* block of `SRA/Modality.lean`. It is therefore
+the *Investigation* block of `TRA/Modality.lean`. It is therefore
 absent from the class rather than assumed.
 
 ## Derived laws
@@ -106,34 +106,34 @@ op-Howe mirror, have their own file.
 Identifiers are used throughout in place of the reference's symbols,
 which appear in the thesis text only. Beyond the notations of the
 algebraic base (`·ᵒ` for converse, `⇨ₗ` and `⇨ᵣ` for the composition
-residuals), this file declares four notations in the `SRA` scope; open
-them with `open scoped SRA`. Each prefix binds at `max`, so it takes
+residuals), this file declares four notations in the `TRA` scope; open
+them with `open scoped TRA`. Each prefix binds at `max`, so it takes
 exactly the atom that follows: `~(parRed a)` needs its parentheses.
 
 | Reference symbol | Lean name                            | Notation   |
 |------------------|--------------------------------------|------------|
 | `Δ`              | `(1 : α)`                            | —          |
-| `Δη`             | `SRA.varDiag`                        | `Δη`       |
-| tilde `a`        | `SRA.scr a`                          | `~a`       |
-| hat `a`          | `SRA.cr a`                           | `⌃a`       |
-| `a[b]`           | `SRA.subst a b`                      | `a⟦b⟧`     |
-| `j` (`□Δ`)       | `SRA.j`                              | —          |
-| `□a`             | `SRA.box a`                          | `□a`       |
-| `aᴴ`             | `SRA.howe a`                         | `aᴴ`       |
-| `b » c`          | `SRA.substResid b c`                 | —          |
-| `a§`             | `SRA.opHowe a`                       | `a§`       |
-| `♦a`             | `SRA.dia a`                          | `♦a`       |
+| `Δη`             | `TRA.varDiag`                        | `Δη`       |
+| tilde `a`        | `TRA.scr a`                          | `~a`       |
+| hat `a`          | `TRA.cr a`                           | `⌃a`       |
+| `a[b]`           | `TRA.subst a b`                      | `a⟦b⟧`     |
+| `j` (`□Δ`)       | `TRA.j`                              | —          |
+| `□a`             | `TRA.box a`                          | `□a`       |
+| `aᴴ`             | `TRA.howe a`                         | `aᴴ`       |
+| `b » c`          | `TRA.substResid b c`                 | —          |
+| `a§`             | `TRA.opHowe a`                       | `a§`       |
+| `♦a`             | `TRA.dia a`                          | `♦a`       |
 | `a⇛`             | `LeanTra.Confluence.parRed a`        | `a⇛`       |
 | `a∗`             | `LeanTra.Algebra.star a`             | `a∗`       |
 | ιa               | `OperationalDecomposition.introduction a`  | `ιa`       |
 | ε(a, b)          | `OperationalDecomposition.elimination a b` | `ε(a, b)`  |
 
 Not all of these live in this file. `howe`, `opHowe` and `substResid`
-live in `SRA/Howe.lean`; `box` and `dia` in `SRA/Modality.lean`; all
-five are scoped in `SRA`. `parRed` is scoped in `LeanTra.Confluence`
+live in `TRA/Howe.lean`; `box` and `dia` in `TRA/Modality.lean`; all
+five are scoped in `TRA`. `parRed` is scoped in `LeanTra.Confluence`
 (`Confluence/ParallelReduction.lean`); `star` in `LeanTra.Algebra`
 (`Algebra/KleeneStar.lean`); `introduction` and `elimination` in
-`OperationalDecomposition` (`SRA/OperationalDecomposition.lean`). A
+`OperationalDecomposition` (`TRA/OperationalDecomposition.lean`). A
 file that wants the last three notations needs the corresponding
 `open scoped`.
 
@@ -148,14 +148,14 @@ universe u
 
 open scoped IsInvolutiveQuantale
 
-/-- A `SRA` (Syntax Relation Algebra) over an involutive unital quantale
+/-- A `TRA` (Term Relation Algebra) over an involutive unital quantale
 `α`. Extends the base (`Monoid` + `CompleteLattice` + `IsQuantale` +
 `IsInvolutiveQuantale`) with the variable co-equivalence `Δη`, the strict
 compatible refinement `~·`, relation substitution `·⟦·⟧`, and the closure
 constant `j`, together with their defining axioms. The closure modality
 `□` is derived below as `j * · * j`, and its laws are proved in
-`SRA/Modality.lean`. -/
-class SRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] where
+`TRA/Modality.lean`. -/
+class TRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] where
   /-- The variable co-equivalence `Δη`: the relation that holds between two
   terms exactly when they are the same variable. -/
   varDiag : α
@@ -257,11 +257,11 @@ class SRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvo
   protected j_varDiag_orthogonality : j * varDiag ≤ ⊥
 
 
-namespace SRA
+namespace TRA
 
 variable {α : Type u}
 variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α]
-variable [SRA α]
+variable [TRA α]
 
 
 
@@ -273,24 +273,24 @@ involutivity supplies the other, and the equality is what `rw` and `simp`
 can work with. Idempotence closes `varDiag_cotransitivity` from above. -/
 
 /-- `Δη ≤ Δ`: the variable co-equivalence is co-reflexive. -/
-theorem varDiag_coreflexivity : (SRA.varDiag : α) ≤ 1 := le_sup_left.trans_eq SRA.cr_fixpoint
+theorem varDiag_coreflexivity : (TRA.varDiag : α) ≤ 1 := le_sup_left.trans_eq TRA.cr_fixpoint
 
 /-- `Δηᵒ = Δη`. The class only assumes `Δηᵒ ≤ Δη`; the reverse inequality is
 free, since applying converse-monotonicity to the axiom gives `Δηᵒᵒ ≤ Δηᵒ`,
 i.e. `Δη ≤ Δηᵒ`. Stated as an equality so that it can be rewritten with. -/
-@[simp] theorem varDiag_symmetry_eq : (SRA.varDiag : α)ᵒ = SRA.varDiag := by
-  refine le_antisymm SRA.varDiag_symmetry ?_
-  have h : (SRA.varDiag : α)ᵒᵒ ≤ SRA.varDiagᵒ :=
-    IsInvolutiveQuantale.converse_monotonicity SRA.varDiag_symmetry
+@[simp] theorem varDiag_symmetry_eq : (TRA.varDiag : α)ᵒ = TRA.varDiag := by
+  refine le_antisymm TRA.varDiag_symmetry ?_
+  have h : (TRA.varDiag : α)ᵒᵒ ≤ TRA.varDiagᵒ :=
+    IsInvolutiveQuantale.converse_monotonicity TRA.varDiag_symmetry
   rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 /-- `Δη * Δη = Δη`: the variable co-equivalence is idempotent under
 composition. -/
-@[simp] theorem varDiag_idempotence : (SRA.varDiag : α) * SRA.varDiag = SRA.varDiag := by
-  refine le_antisymm ?_ SRA.varDiag_cotransitivity
-  calc (SRA.varDiag : α) * SRA.varDiag
-      ≤ 1 * SRA.varDiag := mul_le_mul' varDiag_coreflexivity le_rfl
-    _ = SRA.varDiag := one_mul _
+@[simp] theorem varDiag_idempotence : (TRA.varDiag : α) * TRA.varDiag = TRA.varDiag := by
+  refine le_antisymm ?_ TRA.varDiag_cotransitivity
+  calc (TRA.varDiag : α) * TRA.varDiag
+      ≤ 1 * TRA.varDiag := mul_le_mul' varDiag_coreflexivity le_rfl
+    _ = TRA.varDiag := one_mul _
 
 
 
@@ -300,33 +300,33 @@ Oplaxity on the unit is the right half of `cr_fixpoint`. Orthogonality to
 `Δη` is assumed on one side only; converse gives the mirror. -/
 
 /-- `~Δ ≤ Δ`: the strict compatible refinement is oplax on the unit. -/
-theorem scr_unit_oplaxity : SRA.scr (1 : α) ≤ 1 := le_sup_right.trans_eq SRA.cr_fixpoint
+theorem scr_unit_oplaxity : TRA.scr (1 : α) ≤ 1 := le_sup_right.trans_eq TRA.cr_fixpoint
 
 /-- Symmetric orthogonality: `~a * Δη ≤ ⊥`, derived from the axiomatic
 left-orthogonality via converse. -/
-theorem scr_varDiag_orthogonality (a : α) : SRA.scr a * SRA.varDiag ≤ ⊥ := by
+theorem scr_varDiag_orthogonality (a : α) : TRA.scr a * TRA.varDiag ≤ ⊥ := by
   rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
       IsInvolutiveQuantale.converse_bot_strictness,
       IsInvolutiveQuantale.converse_compositionality,
-      ← SRA.scr_converse_commutation, varDiag_symmetry_eq]
-  exact SRA.varDiag_scr_orthogonality _
+      ← TRA.scr_converse_commutation, varDiag_symmetry_eq]
+  exact TRA.varDiag_scr_orthogonality _
 
 
 
 /-! ### Compatible refinement -/
 /-- Compatible refinement `⌃· := Δη ⊔ ~·`. Derived operation, not a field of
-`SRA`: two terms are compatibly refined by `a` when they are either the same
+`TRA`: two terms are compatibly refined by `a` when they are either the same
 variable or built from the same operator with `a`-related sub-terms. -/
 def cr (a : α) : α := varDiag ⊔ scr a
 
 /-- `⌃·` is monotone. -/
-theorem cr_monotonicity ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b := sup_le_sup_left (SRA.scr_monotonicity h) _
+theorem cr_monotonicity ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b := sup_le_sup_left (TRA.scr_monotonicity h) _
 
 /-- Fixed-point law for `⌃·`: `⌃Δ = Δ`. -/
-@[simp] theorem cr_one : cr (1 : α) = 1 := SRA.cr_fixpoint
+@[simp] theorem cr_one : cr (1 : α) = 1 := TRA.cr_fixpoint
 
 /-- Structural induction: `Δ` is the least pre-fixed point of `⌃·`. -/
-theorem one_le_of_cr_le ⦃a : α⦄ (h : cr a ≤ a) : 1 ≤ a := SRA.cr_induction h
+theorem one_le_of_cr_le ⦃a : α⦄ (h : cr a ≤ a) : 1 ≤ a := TRA.cr_induction h
 
 /-- `⌃·` distributes over composition: `⌃a * ⌃b = ⌃(a * b)`. -/
 theorem cr_compositionality (a b : α) : cr a * cr b = cr (a * b) := by
@@ -336,19 +336,19 @@ theorem cr_compositionality (a b : α) : cr a * cr b = cr (a * b) := by
   refine le_antisymm ?_ ?_
   · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)
     · exact le_sup_of_le_left varDiag_idempotence.le
-    · exact (SRA.varDiag_scr_orthogonality b).trans bot_le
+    · exact (TRA.varDiag_scr_orthogonality b).trans bot_le
     · exact (scr_varDiag_orthogonality a).trans bot_le
-    · rw [SRA.scr_compositionality]; exact le_sup_right
+    · rw [TRA.scr_compositionality]; exact le_sup_right
   · refine sup_le ?_ ?_
-    · exact le_sup_of_le_left (le_sup_of_le_left SRA.varDiag_cotransitivity)
-    · rw [SRA.scr_compositionality]
+    · exact le_sup_of_le_left (le_sup_of_le_left TRA.varDiag_cotransitivity)
+    · rw [TRA.scr_compositionality]
       exact le_sup_of_le_right (le_sup_of_le_right le_rfl)
 
 /-- `⌃·` commutes with converse: `(⌃a)ᵒ = ⌃(aᵒ)`. -/
 @[simp]
 theorem cr_converse_commutation (a : α) : (cr a)ᵒ = cr (aᵒ) := by
   unfold cr
-  rw [IsInvolutiveQuantale.converse_join_preservation_binary, varDiag_symmetry_eq, ← SRA.scr_converse_commutation]
+  rw [IsInvolutiveQuantale.converse_join_preservation_binary, varDiag_symmetry_eq, ← TRA.scr_converse_commutation]
 
 
 
@@ -360,45 +360,45 @@ recovered left monotonicity with the axiom `subst_monotonicity_right`. -/
 
 /-- Substitution annihilates `⊥` on the left: `⊥⟦b⟧ = ⊥`. -/
 @[simp]
-theorem subst_bot_strictness_left (b : α) : SRA.subst ⊥ b = ⊥ := by
-  have h := SRA.subst_join_preservation_left (∅ : Set α) b
+theorem subst_bot_strictness_left (b : α) : TRA.subst ⊥ b = ⊥ := by
+  have h := TRA.subst_join_preservation_left (∅ : Set α) b
   simp only [Set.image_empty, sSup_empty] at h
   exact h
 
 /-- Substitution preserves binary joins in the first argument. -/
 theorem subst_join_preservation_binary_left (a a' b : α) :
-    SRA.subst (a ⊔ a') b = SRA.subst a b ⊔ SRA.subst a' b := by
-  have h := SRA.subst_join_preservation_left ({a, a'} : Set α) b
+    TRA.subst (a ⊔ a') b = TRA.subst a b ⊔ TRA.subst a' b := by
+  have h := TRA.subst_join_preservation_left ({a, a'} : Set α) b
   simp only [sSup_pair, Set.image_pair] at h
   exact h
 
 /-- Left-argument monotonicity of substitution. -/
-theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : SRA.subst a b ≤ SRA.subst a' b := by
-  have key : SRA.subst (sSup ({a, a'} : Set α)) b
-      = sSup ((fun x => SRA.subst x b) '' ({a, a'} : Set α)) :=
-    SRA.subst_join_preservation_left _ _
+theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : TRA.subst a b ≤ TRA.subst a' b := by
+  have key : TRA.subst (sSup ({a, a'} : Set α)) b
+      = sSup ((fun x => TRA.subst x b) '' ({a, a'} : Set α)) :=
+    TRA.subst_join_preservation_left _ _
   rw [sSup_pair, Set.image_pair, sSup_pair, sup_eq_right.mpr h] at key
-  have hle : SRA.subst a b ≤ SRA.subst a b ⊔ SRA.subst a' b := le_sup_left
+  have hle : TRA.subst a b ≤ TRA.subst a b ⊔ TRA.subst a' b := le_sup_left
   rw [← key] at hle
   exact hle
 
 /-- Full two-argument monotonicity of substitution. -/
-theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : SRA.subst a b ≤ SRA.subst a' b' :=
-  (subst_monotonicity_left ha).trans (SRA.subst_monotonicity_right hb)
+theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : TRA.subst a b ≤ TRA.subst a' b' :=
+  (subst_monotonicity_left ha).trans (TRA.subst_monotonicity_right hb)
 
 /-- Substituting into a compatible refinement: `(⌃a)⟦b⟧ ≤ b ⊔ ⌃(a⟦b⟧)`,
 under the guard `Δη ≤ b`. Inherits the guard from
-`SRA.subst_scr_oplaxity`. -/
-theorem subst_cr_oplaxity (a b : α) (hb : SRA.varDiag ≤ b) :
-    SRA.subst (SRA.cr a) b ≤ b ⊔ SRA.cr (SRA.subst a b) := by
-  unfold SRA.cr
-  rw [subst_join_preservation_binary_left, SRA.subst_varDiag_unit_left]
-  exact sup_le_sup_left ((SRA.subst_scr_oplaxity _ _ hb).trans le_sup_right) b
+`TRA.subst_scr_oplaxity`. -/
+theorem subst_cr_oplaxity (a b : α) (hb : TRA.varDiag ≤ b) :
+    TRA.subst (TRA.cr a) b ≤ b ⊔ TRA.cr (TRA.subst a b) := by
+  unfold TRA.cr
+  rw [subst_join_preservation_binary_left, TRA.subst_varDiag_unit_left]
+  exact sup_le_sup_left ((TRA.subst_scr_oplaxity _ _ hb).trans le_sup_right) b
 
 /-- Converse commutes with the base instance: `(a⟦Δ⟧)ᵒ = aᵒ⟦Δ⟧`. -/
 theorem subst_one_converse_commutation (a : α) :
-    (SRA.subst a 1)ᵒ = SRA.subst aᵒ 1 := by
-  rw [SRA.subst_converse_commutation, IsInvolutiveQuantale.converse_one]
+    (TRA.subst a 1)ᵒ = TRA.subst aᵒ 1 := by
+  rw [TRA.subst_converse_commutation, IsInvolutiveQuantale.converse_one]
 
 
 
@@ -412,28 +412,28 @@ from `j` below. -/
 
 /-- `j * j = j`. `≤` from `j_coreflexivity` (`j*j ≤ 1*j = j`); `≥` is
 `j_cotransitivity`. -/
-@[simp] theorem j_idempotence : (SRA.j : α) * SRA.j = SRA.j := by
-  refine le_antisymm ?_ SRA.j_cotransitivity
-  calc (SRA.j : α) * SRA.j
-      ≤ 1 * SRA.j := mul_le_mul' SRA.j_coreflexivity le_rfl
-    _ = SRA.j := one_mul _
+@[simp] theorem j_idempotence : (TRA.j : α) * TRA.j = TRA.j := by
+  refine le_antisymm ?_ TRA.j_cotransitivity
+  calc (TRA.j : α) * TRA.j
+      ≤ 1 * TRA.j := mul_le_mul' TRA.j_coreflexivity le_rfl
+    _ = TRA.j := one_mul _
 
 /-- `jᵒ = j`: same one-liner as `varDiag_symmetry_eq`, from `j_symmetry`
 plus involutivity of converse. -/
-@[simp] theorem j_symmetry_eq : (SRA.j : α)ᵒ = SRA.j := by
-  refine le_antisymm SRA.j_symmetry ?_
-  have h : (SRA.j : α)ᵒᵒ ≤ (SRA.j : α)ᵒ :=
-    IsInvolutiveQuantale.converse_monotonicity SRA.j_symmetry
+@[simp] theorem j_symmetry_eq : (TRA.j : α)ᵒ = TRA.j := by
+  refine le_antisymm TRA.j_symmetry ?_
+  have h : (TRA.j : α)ᵒᵒ ≤ (TRA.j : α)ᵒ :=
+    IsInvolutiveQuantale.converse_monotonicity TRA.j_symmetry
   rwa [IsInvolutiveQuantale.converse_involutivity] at h
 
 
 /-! ### Notation -/
 
-@[inherit_doc] scoped prefix:max "~" => SRA.scr
-@[inherit_doc] scoped prefix:max "⌃" => SRA.cr
-@[inherit_doc] scoped notation:max a "⟦" b "⟧" => SRA.subst a b
-@[inherit_doc] scoped notation:max "Δη" => SRA.varDiag
+@[inherit_doc] scoped prefix:max "~" => TRA.scr
+@[inherit_doc] scoped prefix:max "⌃" => TRA.cr
+@[inherit_doc] scoped notation:max a "⟦" b "⟧" => TRA.subst a b
+@[inherit_doc] scoped notation:max "Δη" => TRA.varDiag
 /-- `Δ` is the identity relation, i.e. the unit `1` of the quantale. -/
 scoped notation:max "Δ" => (1 : _)
 
-end SRA
+end TRA

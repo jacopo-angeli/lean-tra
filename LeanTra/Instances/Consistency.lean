@@ -4,13 +4,13 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Basic
-public import LeanTra.SRA.OperationalDecomposition
+public import LeanTra.TRA.Basic
+public import LeanTra.TRA.OperationalDecomposition
 
 /-!
-# Consistency of the `SRA` and `OperationalDecomposition` axioms
+# Consistency of the `TRA` and `OperationalDecomposition` axioms
 
-The class `SRA` bundles twenty axioms and `OperationalDecomposition` extends
+The class `TRA` bundles twenty axioms and `OperationalDecomposition` extends
 it with fourteen more. Any such axiomatic theory carries the risk of being
 *inconsistent*: a hidden interaction between the axioms could force `⊥ = ⊤`
 on every carrier, after which every theorem stated over the class would hold
@@ -20,7 +20,7 @@ one of the thirty-four axioms is directly discharged. A first-order theory
 that has a model cannot derive a contradiction, so producing such an
 inhabitant is a proof of consistency in the strict logical sense. The rest
 of the file follows the natural order of that construction: fix the carrier,
-install the involutive-quantale structure, discharge the SRA axioms,
+install the involutive-quantale structure, discharge the TRA axioms,
 discharge the operational-decomposition axioms, exhibit the non-degeneracy
 witnesses, print the axiom trace.
 -/
@@ -32,7 +32,7 @@ namespace LeanTra.Structure.Model
 
 /-! ## The carrier
 
-The key thing to internalise about the model is that the carrier of an SRA
+The key thing to internalise about the model is that the carrier of an TRA
 is **not** itself a set of relations, it is the underlying set of an
 abstract algebra whose elements happen to *behave* like relations. The
 framework is pointfree: it does not care what its elements are, only that
@@ -102,9 +102,9 @@ instance instIsInvolutiveQuantale : IsInvolutiveQuantale Toy where
   converse_compositionality _ _ := propext ⟨fun ⟨p, q⟩ => ⟨q, p⟩, fun ⟨p, q⟩ => ⟨q, p⟩⟩
   converse_monotonicity h := h
 
-/-! ## The `SRA` instance
+/-! ## The `TRA` instance
 
-The four SRA operations on `Toy` are `varDiag := ⊤`, `scr _ := ⊥`
+The four TRA operations on `Toy` are `varDiag := ⊤`, `scr _ := ⊥`
 (constantly `⊥`, regardless of the argument), `subst a b := a ∧ b`, and
 `j := ⊥`. These choices are not arbitrary: they are essentially forced by
 the axioms themselves once the carrier has been fixed to two elements
@@ -124,7 +124,7 @@ terms whose sub-parts could be `φ`-related, `subst φ ψ` collapses to
 `φ ∧ ψ` because on a syntax with only one term substitution is trivial,
 and `j = ∅ = ⊥` because `x` is not closed. So `Toy` is the pointfree
 picture of the term-model on the empty signature with one variable, and
-the axioms of `SRA` hold on it for the same reasons they hold on any term
+the axioms of `TRA` hold on it for the same reasons they hold on any term
 model, just heavily degenerate. Concretely this means every axiom reduces
 to a trivial statement about the two elements `⊥` and `⊤`: the `varDiag`
 laws become `⊤ ≤ ⊤` and `⊤ ≤ ⊤ ∧ ⊤`, the unit laws for substitution become
@@ -132,7 +132,7 @@ laws become `⊤ ≤ ⊤` and `⊤ ≤ ⊤ ∧ ⊤`, the unit laws for substitut
 associativity of `∧`, and every axiom involving `scr` or `j` collapses
 because those operations are constantly `⊥`. -/
 
-instance instSRA : SRA Toy where
+instance instTRA : TRA Toy where
   varDiag := True
   scr _ := False
   subst a b := a ∧ b
@@ -169,7 +169,7 @@ instance instSRA : SRA Toy where
 
 /-! ## The `OperationalDecomposition` instance
 
-The same two-element carrier that discharges the `SRA` axioms extends to the
+The same two-element carrier that discharges the `TRA` axioms extends to the
 operational-decomposition layer with `introduction := fun _ => ⊥` and
 `elimination := fun _ _ => ⊥`. Every axiom of the class collapses accordingly:
 the decomposition `scr a = introduction a ⊔ elimination a a` becomes
@@ -178,9 +178,9 @@ the decomposition `scr a = introduction a ⊔ elimination a a` becomes
 laws all reduce to trivial statements about `⊥`. The instance is included in
 this file because consistency of `OperationalDecomposition` on its own is not
 enough: what matters is that its axioms do not contradict the underlying
-`SRA` layer, and that requires exhibiting the two structures on the *same*
+`TRA` layer, and that requires exhibiting the two structures on the *same*
 carrier. On `Toy` they coexist, so no such contradiction can exist. As with
-the `SRA` instance, the derived operations (`introductionCoreflexive`,
+the `TRA` instance, the derived operations (`introductionCoreflexive`,
 `eliminationCoreflexive`, `valueCoreflexive`, the evaluation recursors) all
 collapse to `⊥`, so no operational content is exercised; that job is left to
 the concrete term models in `Instances/PeanoArithmetic.lean` and
@@ -244,7 +244,7 @@ end LeanTra.Structure.Model
 
 The two `#print axioms` commands below make the axiom footprint of the two
 class instances visible in the build log. Both consist of `propext` and
-`Quot.sound` only, without `Classical.choice`, so consistency of `SRA` and
+`Quot.sound` only, without `Classical.choice`, so consistency of `TRA` and
 `OperationalDecomposition` is established already in the choice-free
 fragment of Lean. What this file does *not* certify is that the axioms
 have any non-trivial content: on a two-element carrier the compatible
@@ -257,5 +257,5 @@ genuine signature and `j` really does isolate closed terms. This file has
 the complementary role: not to check that the axioms *say something*, but
 to check that what they say is *not internally contradictory*. -/
 
-#print axioms LeanTra.Structure.Model.Toy.instSRA
+#print axioms LeanTra.Structure.Model.Toy.instTRA
 #print axioms LeanTra.Structure.Model.Toy.instOperationalDecomposition

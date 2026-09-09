@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Modality
+public import LeanTra.TRA.Modality
 
 /-!
 # Operational decomposition
@@ -18,9 +18,9 @@ major arguments of an elimination form until they become introduction
 forms, at which point a constructor meets a destructor and a
 computational step fires.
 
-An operational decomposition equips a `SRA` with the structure needed to
+An operational decomposition equips a `TRA` with the structure needed to
 express that distinction without committing to a term representation.
-Where `SRA` only knows that a relation can be lifted one layer of term
+Where `TRA` only knows that a relation can be lifted one layer of term
 structure, via `~·`, this class says what that layer is made of: a
 constructor part and a destructor part, and nothing else. It is the
 setting in which Gentzen's inversion and conservation principles can be
@@ -70,7 +70,7 @@ which is the shape every statement about evaluation order takes.
 -/
 @[expose] public section
 
-open scoped IsInvolutiveQuantale Quantale SRA
+open scoped IsInvolutiveQuantale Quantale TRA
 
 universe u
 
@@ -79,7 +79,7 @@ class OperationalDecomposition (α : Type u)
   [CompleteLattice α]
   [IsQuantale α]
   [IsInvolutiveQuantale α]
-  extends SRA α where
+  extends TRA α where
 
   /-- The constructor part of the decomposition: `introduction a` relates
   two introduction forms with the same outermost constructor whose
@@ -129,24 +129,24 @@ class OperationalDecomposition (α : Type u)
 
   /-- The strict compatible refinement decomposes into its
   constructor part and its destructor part, and into nothing else. -/
-  protected scr_decomposition (a : α) : SRA.scr a = introduction a ⊔ elimination a a
+  protected scr_decomposition (a : α) : TRA.scr a = introduction a ⊔ elimination a a
 
   /-- Substitution distributes, oplaxly, over `introduction`, under the
   guard `Δη ≤ b`. Same binder-side obstruction as
-  `SRA.subst_scr_oplaxity`: substituting under an `introduction` form
+  `TRA.subst_scr_oplaxity`: substituting under an `introduction` form
   crosses a binder, and the pointwise `b`-obligation forces the
   freshly-bound variable to be `b`-related to itself, which the guard
   supplies. Without the guard the law is refuted in the second-order
   λ-calculus model. At first order the guard is vacuous. Every use in
   the abstract development instantiates `b` with a relation containing
   the identity. -/
-  protected subst_introduction_oplaxity (a b : α) (hb : SRA.varDiag ≤ b) :
-      SRA.subst (introduction a) b ≤ introduction (SRA.subst a b)
+  protected subst_introduction_oplaxity (a b : α) (hb : TRA.varDiag ≤ b) :
+      TRA.subst (introduction a) b ≤ introduction (TRA.subst a b)
   /-- Substitution distributes, oplaxly, over `elimination`, slot by slot. -/
-  protected subst_elimination_oplaxity (a₁ a₂ b : α) : SRA.subst (elimination a₁ a₂) b ≤ elimination (SRA.subst a₁ b) (SRA.subst a₂ b)
+  protected subst_elimination_oplaxity (a₁ a₂ b : α) : TRA.subst (elimination a₁ a₂) b ≤ elimination (TRA.subst a₁ b) (TRA.subst a₂ b)
 
   /-- The closure modality passes through the major slot of an elimination form. -/
-  protected box_elimination_oplaxity (a b : α) : SRA.box (elimination a b) ≤ elimination (SRA.box a) b
+  protected box_elimination_oplaxity (a b : α) : TRA.box (elimination a b) ≤ elimination (TRA.box a) b
 
 namespace OperationalDecomposition
 

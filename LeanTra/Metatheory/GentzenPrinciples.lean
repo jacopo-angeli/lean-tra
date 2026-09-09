@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.OperationalDecomposition
+public import LeanTra.TRA.OperationalDecomposition
 
 /-!
 # Gentzen inversion and conservation principles
@@ -57,7 +57,7 @@ it, so only the two principles above are declared.
 -/
 @[expose] public section
 
-open scoped IsInvolutiveQuantale Quantale SRA
+open scoped IsInvolutiveQuantale Quantale TRA
 
 open OperationalDecomposition
 

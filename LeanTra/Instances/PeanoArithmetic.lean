@@ -7,9 +7,9 @@ module
 public import Mathlib.Logic.IsEmpty.Defs
 public import Mathlib.Logic.Function.Basic
 public import LeanTra.Algebra.InvolutiveQuantale
-public import LeanTra.SRA.Basic
-public import LeanTra.SRA.Modality
-public import LeanTra.SRA.OperationalDecomposition
+public import LeanTra.TRA.Basic
+public import LeanTra.TRA.Modality
+public import LeanTra.TRA.OperationalDecomposition
 public import LeanTra.Metatheory.GentzenPrinciples
 public import LeanTra.Metatheory.Confluence.Local
 public import LeanTra.Metatheory.Determinism.BigStep
@@ -18,7 +18,7 @@ public import LeanTra.Metatheory.Determinism.BigStep
 # Peano arithmetic as a first-order term-relation algebra
 
 The abstract bridge theorem in `Metatheory/Confluence/Local.lean` proves
-that, on an involutive quantale equipped with the `SRA` and
+that, on an involutive quantale equipped with the `TRA` and
 `OperationalDecomposition` typeclasses, any element `a` satisfying five
 local conditions — `IsReduction`, `IsSubstitutiveAtIdentity`,
 `IsDeterministic`, Gentzen's inversion `GIP`, Gentzen's conservation
@@ -47,15 +47,15 @@ Building this instance forces a specific sequence of constructions,
 each conceptually independent but each required by the next. First we
 fix the inductive type `Tm Γ` of Peano terms in a type-valued context Γ
 and its Kleisli-monad structure (`subst`, `ren`). Next we build
-`SynRel`, the involutive quantale of renaming-closed context-indexed
-binary relations on `Tm`, which is the algebraic carrier the SRA
-typeclass expects. On top of `SynRel` we define the four SRA
+`TrmRel`, the involutive quantale of renaming-closed context-indexed
+binary relations on `Tm`, which is the algebraic carrier the TRA
+typeclass expects. On top of `TrmRel` we define the four TRA
 operations `varDiag`, `scr`, `subst`, `j` and discharge their twenty
-accompanying axioms, then package the result as `instance SRA SynRel`.
+accompanying axioms, then package the result as `instance TRA TrmRel`.
 We repeat the same discipline for the intro / elim decomposition of
 `scr`, defining `introduction` and `elimination` and discharging the
 fourteen axioms of `OperationalDecomposition`. Only at that point do we
-state the primitive reduction `rule` as a `SynRel`, verify the five
+state the primitive reduction `rule` as a `TrmRel`, verify the five
 bridge-theorem hypotheses on it, and obtain confluence.
 
 Two design decisions shape the whole file. First, a context is any
@@ -351,37 +351,37 @@ end Tm
 
 /-!
 With the syntactic layer in place, we now construct the algebraic
-carrier on which the whole SRA machinery will live: `SynRel`, the type
+carrier on which the whole TRA machinery will live: `TrmRel`, the type
 of renaming-closed context-indexed binary relations on `Tm`. Concretely
-an element of `SynRel` is a family of binary relations `φ.rel Γ : Tm Γ
+an element of `TrmRel` is a family of binary relations `φ.rel Γ : Tm Γ
 → Tm Γ → Prop`, one per context type Γ, together with a coherence
 condition — the family is closed under renaming. The coherence
 condition is the minimal amount of syntax-sensitivity the definition
-needs; every operation defined on top of `SynRel` will preserve it, so
+needs; every operation defined on top of `TrmRel` will preserve it, so
 we never have to think about it explicitly again.
 
-Pointwise from `Prop`, `SynRel` inherits a complete lattice (order is
+Pointwise from `Prop`, `TrmRel` inherits a complete lattice (order is
 pointwise implication, meets and joins are conjunction and disjunction),
 a monoid whose product is relational composition `∃ u, φ t u ∧ ψ u v`
 and whose unit is the pointwise identity `t = s`, a quantale
 (composition distributes over arbitrary joins), and an involution
 (converse swaps the two arguments). These four layers of structure are
-exactly the algebraic content the `SRA` typeclass expects of its
-carrier, so once `SynRel` carries them, the class hypotheses of every
+exactly the algebraic content the `TRA` typeclass expects of its
+carrier, so once `TrmRel` carries them, the class hypotheses of every
 downstream lemma will be discharged automatically.
 -/
 
 /-- A *syntax relation*: a family of binary relations on `Tm Γ`, one
 per context type `Γ`, closed under renaming. -/
-structure SynRel : Type 1 where
+structure TrmRel : Type 1 where
   rel : (Γ : Type) → Tm Γ → Tm Γ → Prop
   ren_closed : ∀ {Γ Δ : Type} (f : Γ → Δ) {t s : Tm Γ},
                  rel Γ t s → rel Δ (t.ren f) (s.ren f)
 
-namespace SynRel
+namespace TrmRel
 
 @[ext]
-theorem ext {φ ψ : SynRel}
+theorem ext {φ ψ : TrmRel}
     (h : ∀ Γ (t s : Tm Γ), φ.rel Γ t s ↔ ψ.rel Γ t s) : φ = ψ := by
   obtain ⟨r, _⟩ := φ
   obtain ⟨r', _⟩ := ψ
@@ -389,7 +389,7 @@ theorem ext {φ ψ : SynRel}
   subst hrel; rfl
 
 /-!
-The order on `SynRel` is pointwise implication, `⊤` and `⊥` are the
+The order on `TrmRel` is pointwise implication, `⊤` and `⊥` are the
 constantly-true and constantly-false families, meets and joins are
 pointwise conjunction and disjunction, and arbitrary sups and infs
 follow the same pattern using an existential (resp. universal) over
@@ -397,37 +397,37 @@ the index set. Each of these operations preserves renaming-closure by
 inspection.
 -/
 
-instance instLE : LE SynRel :=
+instance instLE : LE TrmRel :=
   ⟨fun φ ψ => ∀ Γ (t s : Tm Γ), φ.rel Γ t s → ψ.rel Γ t s⟩
 
-theorem le_iff {φ ψ : SynRel} :
+theorem le_iff {φ ψ : TrmRel} :
     φ ≤ ψ ↔ ∀ Γ (t s : Tm Γ), φ.rel Γ t s → ψ.rel Γ t s := Iff.rfl
 
-instance instTop : Top SynRel := ⟨{
+instance instTop : Top TrmRel := ⟨{
   rel := fun _ _ _ => True
   ren_closed := by intros; trivial
 }⟩
 
-instance instBot : Bot SynRel := ⟨{
+instance instBot : Bot TrmRel := ⟨{
   rel := fun _ _ _ => False
   ren_closed := by intros _ _ _ _ _ h; exact h.elim
 }⟩
 
-instance instMax : Max SynRel := ⟨fun φ ψ => {
+instance instMax : Max TrmRel := ⟨fun φ ψ => {
   rel := fun Γ t s => φ.rel Γ t s ∨ ψ.rel Γ t s
   ren_closed := by
     intros _ _ f _ _ h
     exact h.imp (φ.ren_closed f) (ψ.ren_closed f)
 }⟩
 
-instance instMin : Min SynRel := ⟨fun φ ψ => {
+instance instMin : Min TrmRel := ⟨fun φ ψ => {
   rel := fun Γ t s => φ.rel Γ t s ∧ ψ.rel Γ t s
   ren_closed := by
     intros _ _ f _ _ h
     exact ⟨φ.ren_closed f h.1, ψ.ren_closed f h.2⟩
 }⟩
 
-instance instSupSet : SupSet SynRel := ⟨fun 𝒮 => {
+instance instSupSet : SupSet TrmRel := ⟨fun 𝒮 => {
   rel := fun Γ t s => ∃ φ ∈ 𝒮, φ.rel Γ t s
   ren_closed := by
     intros _ _ f _ _ h
@@ -435,7 +435,7 @@ instance instSupSet : SupSet SynRel := ⟨fun 𝒮 => {
     exact ⟨φ, hφ𝒮, φ.ren_closed f h⟩
 }⟩
 
-instance instInfSet : InfSet SynRel := ⟨fun 𝒮 => {
+instance instInfSet : InfSet TrmRel := ⟨fun 𝒮 => {
   rel := fun Γ t s => ∀ φ ∈ 𝒮, φ.rel Γ t s
   ren_closed := by
     intros _ _ f _ _ h φ hφ𝒮
@@ -450,31 +450,31 @@ definition of, e.g., `sSup`.
 -/
 
 @[simp] theorem top_rel {Γ} {t s : Tm Γ} :
-    (⊤ : SynRel).rel Γ t s ↔ True := Iff.rfl
+    (⊤ : TrmRel).rel Γ t s ↔ True := Iff.rfl
 
 @[simp] theorem bot_rel {Γ} {t s : Tm Γ} :
-    (⊥ : SynRel).rel Γ t s ↔ False := Iff.rfl
+    (⊥ : TrmRel).rel Γ t s ↔ False := Iff.rfl
 
-@[simp] theorem sup_rel {φ ψ : SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem sup_rel {φ ψ : TrmRel} {Γ} {t s : Tm Γ} :
     (φ ⊔ ψ).rel Γ t s ↔ φ.rel Γ t s ∨ ψ.rel Γ t s := Iff.rfl
 
-@[simp] theorem inf_rel {φ ψ : SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem inf_rel {φ ψ : TrmRel} {Γ} {t s : Tm Γ} :
     (φ ⊓ ψ).rel Γ t s ↔ φ.rel Γ t s ∧ ψ.rel Γ t s := Iff.rfl
 
-@[simp] theorem sSup_rel {𝒮 : Set SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem sSup_rel {𝒮 : Set TrmRel} {Γ} {t s : Tm Γ} :
     (sSup 𝒮).rel Γ t s ↔ ∃ φ ∈ 𝒮, φ.rel Γ t s := Iff.rfl
 
-@[simp] theorem sInf_rel {𝒮 : Set SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem sInf_rel {𝒮 : Set TrmRel} {Γ} {t s : Tm Γ} :
     (sInf 𝒮).rel Γ t s ↔ ∀ φ ∈ 𝒮, φ.rel Γ t s := Iff.rfl
 
-theorem iSup_rel {κ : Sort*} {f : κ → SynRel} {Γ} {t s : Tm Γ} :
+theorem iSup_rel {κ : Sort*} {f : κ → TrmRel} {Γ} {t s : Tm Γ} :
     (⨆ i, f i).rel Γ t s ↔ ∃ i, (f i).rel Γ t s := by
   rw [iSup, sSup_rel]
   constructor
   · rintro ⟨_, ⟨i, rfl⟩, h⟩; exact ⟨i, h⟩
   · rintro ⟨i, h⟩; exact ⟨f i, ⟨i, rfl⟩, h⟩
 
-theorem biSup_rel {α : Type*} {s : Set α} {f : α → SynRel}
+theorem biSup_rel {α : Type*} {s : Set α} {f : α → TrmRel}
     {Γ} {t st : Tm Γ} :
     (⨆ a ∈ s, f a).rel Γ t st ↔ ∃ a ∈ s, (f a).rel Γ t st := by
   simp only [iSup_rel]
@@ -483,12 +483,12 @@ theorem biSup_rel {α : Type*} {s : Set α} {f : α → SynRel}
   · rintro ⟨a, ha, h⟩; exact ⟨a, ha, h⟩
 
 /-!
-Assembly of the pointwise operations into a `CompleteLattice SynRel`
+Assembly of the pointwise operations into a `CompleteLattice TrmRel`
 instance. Each field is discharged by the corresponding pointwise fact
 already proved.
 -/
 
-instance instCompleteLattice : CompleteLattice SynRel where
+instance instCompleteLattice : CompleteLattice TrmRel where
   le := (· ≤ ·)
   le_refl _ _ _ _ h := h
   le_trans _ _ _ h₁ h₂ Γ t s h := h₂ Γ t s (h₁ Γ t s h)
@@ -520,12 +520,12 @@ instance instCompleteLattice : CompleteLattice SynRel where
 /-!
 Composition of relations `(φ * ψ).rel t v := ∃ u, φ t u ∧ ψ u v`, the
 identity relation `1 := (fun t s => t = s)`, distributivity of `*` over
-`sSup`, and converse: together these promote `SynRel` from a complete
-lattice to an involutive quantale, exactly the algebraic layer the SRA
+`sSup`, and converse: together these promote `TrmRel` from a complete
+lattice to an involutive quantale, exactly the algebraic layer the TRA
 typeclass takes for granted.
 -/
 
-instance instMul : Mul SynRel := ⟨fun φ ψ => {
+instance instMul : Mul TrmRel := ⟨fun φ ψ => {
   rel := fun Γ t v => ∃ u, φ.rel Γ t u ∧ ψ.rel Γ u v
   ren_closed := by
     intros _ _ f _ _ h
@@ -533,19 +533,19 @@ instance instMul : Mul SynRel := ⟨fun φ ψ => {
     exact ⟨u.ren f, φ.ren_closed f htu, ψ.ren_closed f huv⟩
 }⟩
 
-instance instOne : One SynRel := ⟨{
+instance instOne : One TrmRel := ⟨{
   rel := fun _ t s => t = s
   ren_closed := by
     intros _ _ f _ _ h; exact congrArg (Tm.ren · f) h
 }⟩
 
-@[simp] theorem mul_rel {φ ψ : SynRel} {Γ} {t v : Tm Γ} :
+@[simp] theorem mul_rel {φ ψ : TrmRel} {Γ} {t v : Tm Γ} :
     (φ * ψ).rel Γ t v ↔ ∃ u, φ.rel Γ t u ∧ ψ.rel Γ u v := Iff.rfl
 
 @[simp] theorem one_rel {Γ} {t s : Tm Γ} :
-    (1 : SynRel).rel Γ t s ↔ t = s := Iff.rfl
+    (1 : TrmRel).rel Γ t s ↔ t = s := Iff.rfl
 
-instance instMonoid : Monoid SynRel where
+instance instMonoid : Monoid TrmRel where
   mul := (· * ·)
   one := 1
   one_mul φ := by
@@ -564,7 +564,7 @@ instance instMonoid : Monoid SynRel where
     · rintro ⟨v, ⟨u, htu, huv⟩, hvw⟩; exact ⟨u, htu, v, huv, hvw⟩
     · rintro ⟨u, htu, v, huv, hvw⟩; exact ⟨v, ⟨u, htu, huv⟩, hvw⟩
 
-instance instIsQuantale : IsQuantale SynRel where
+instance instIsQuantale : IsQuantale TrmRel where
   mul_sSup_distrib a 𝒮 := by
     ext Γ t v
     rw [mul_rel, biSup_rel]
@@ -580,16 +580,16 @@ instance instIsQuantale : IsQuantale SynRel where
     · rintro ⟨u, ⟨φ, hφ, hφtu⟩, hau⟩; exact ⟨φ, hφ, u, hφtu, hau⟩
     · rintro ⟨φ, hφ, u, hφtu, hau⟩; exact ⟨u, ⟨φ, hφ, hφtu⟩, hau⟩
 
-def converse (φ : SynRel) : SynRel := {
+def converse (φ : TrmRel) : TrmRel := {
   rel := fun Γ t s => φ.rel Γ s t
   ren_closed := by
     intros _ _ f _ _ h; exact φ.ren_closed f h
 }
 
-@[simp] theorem converse_rel (φ : SynRel) {Γ} {t s : Tm Γ} :
+@[simp] theorem converse_rel (φ : TrmRel) {Γ} {t s : Tm Γ} :
     (converse φ).rel Γ t s ↔ φ.rel Γ s t := Iff.rfl
 
-instance instIsInvolutiveQuantale : IsInvolutiveQuantale SynRel where
+instance instIsInvolutiveQuantale : IsInvolutiveQuantale TrmRel where
   converse := converse
   converse_involutivity _ := by ext; rfl
   converse_compositionality φ ψ := by
@@ -600,21 +600,21 @@ instance instIsInvolutiveQuantale : IsInvolutiveQuantale SynRel where
   converse_monotonicity h Γ t s h' := h Γ s t h'
 
 /-!
-A sanity check: `⊥ ≠ ⊤` on `SynRel`, hence `Nontrivial SynRel`. Without
-this the SRA axioms would be vacuously satisfied by the degenerate
+A sanity check: `⊥ ≠ ⊤` on `TrmRel`, hence `Nontrivial TrmRel`. Without
+this the TRA axioms would be vacuously satisfied by the degenerate
 one-point carrier, which is not what we want.
 -/
 
-theorem bot_ne_top : (⊥ : SynRel) ≠ ⊤ := by
+theorem bot_ne_top : (⊥ : TrmRel) ≠ ⊤ := by
   intro h
-  have hle : (⊤ : SynRel) ≤ ⊥ := h ▸ le_refl _
+  have hle : (⊤ : TrmRel) ≤ ⊥ := h ▸ le_refl _
   exact hle Unit (Tm.var ()) (Tm.var ()) trivial
 
-instance instNontrivial : Nontrivial SynRel := ⟨⊥, ⊤, bot_ne_top⟩
+instance instNontrivial : Nontrivial TrmRel := ⟨⊥, ⊤, bot_ne_top⟩
 
 /-!
-`SynRel` is now an involutive quantale, so we can define the four
-operations the `SRA` typeclass demands and start discharging their
+`TrmRel` is now an involutive quantale, so we can define the four
+operations the `TRA` typeclass demands and start discharging their
 axioms. The four operations are `varDiag` (the variable co-equivalence,
 which relates two terms iff they are the same variable), `scr` (the
 strict compatible refinement, which relates two terms iff they have the
@@ -623,7 +623,7 @@ same outermost constructor with pairwise `φ`-related sub-terms), `subst`
 relations), and `j` (the closure constant, which relates a term to
 itself provided the term is the weakening of a closed term).
 
-Between the four operations the SRA class prescribes twenty axioms,
+Between the four operations the TRA class prescribes twenty axioms,
 which we discharge in three passes ordered by technical difficulty. The
 first pass — monotonicity, commutation with converse, join-preservation
 in the second slot of `subst`, symmetry and co-transitivity of `varDiag`
@@ -646,7 +646,7 @@ the diagonal with "term is the weakening of a closed one".
 both are the same variable `Tm.var x`. Sees only variables and ignores
 compound terms; serves as the two-sided identity of relation
 substitution and is orthogonal to every compound-headed relation. -/
-def varDiag : SynRel := {
+def varDiag : TrmRel := {
   rel := fun Γ t s => ∃ x : Γ, t = Tm.var x ∧ s = Tm.var x
   ren_closed := by
     intro _ _ f _ _ h
@@ -663,7 +663,7 @@ constructor: `(zero, zero)` with no premise on `φ` (nullary intro),
 pairwise-`φ` bodies (binary elim). The nullary case is precisely what
 makes `scr ⊥ ≠ ⊥` and forces the non-empty-join relaxation of
 `OperationalDecomposition` discussed in the module preamble. -/
-def scr (φ : SynRel) : SynRel := {
+def scr (φ : TrmRel) : TrmRel := {
   rel := fun Γ t s =>
     (t = Tm.zero ∧ s = Tm.zero) ∨
     (∃ t' s' : Tm Γ, t = Tm.succ t' ∧ s = Tm.succ s' ∧ φ.rel Γ t' s') ∨
@@ -692,7 +692,7 @@ pointwise `ψ`-related, such that `u = t.subst τ` and `v = s.subst σ`.
 The source context Γ is existentially quantified — a witness, not part
 of the data — which is why associativity of `subst` needs to glue two
 such witnesses into a dependent sum below. -/
-def subst (φ ψ : SynRel) : SynRel := {
+def subst (φ ψ : TrmRel) : TrmRel := {
   rel := fun Θ u v =>
     ∃ (Γ : Type) (t s : Tm Γ) (τ σ : Γ → Tm Θ),
       u = t.subst τ ∧ v = s.subst σ
@@ -712,10 +712,10 @@ their `Prop`-level content, tagged `@[simp]` for automated use.
 -/
 
 @[simp] theorem varDiag_rel {Γ} {t s : Tm Γ} :
-    (varDiag : SynRel).rel Γ t s ↔ ∃ x : Γ, t = Tm.var x ∧ s = Tm.var x :=
+    (varDiag : TrmRel).rel Γ t s ↔ ∃ x : Γ, t = Tm.var x ∧ s = Tm.var x :=
   Iff.rfl
 
-@[simp] theorem scr_rel {φ : SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem scr_rel {φ : TrmRel} {Γ} {t s : Tm Γ} :
     (scr φ).rel Γ t s ↔
       (t = Tm.zero ∧ s = Tm.zero) ∨
       (∃ t' s' : Tm Γ, t = Tm.succ t' ∧ s = Tm.succ s' ∧ φ.rel Γ t' s') ∨
@@ -724,7 +724,7 @@ their `Prop`-level content, tagged `@[simp]` for automated use.
       (∃ m₁ m₂ n₁ n₂ : Tm Γ, t = Tm.mult m₁ n₁ ∧ s = Tm.mult m₂ n₂ ∧
                               φ.rel Γ m₁ m₂ ∧ φ.rel Γ n₁ n₂) := Iff.rfl
 
-@[simp] theorem subst_rel {φ ψ : SynRel} {Θ} {u v : Tm Θ} :
+@[simp] theorem subst_rel {φ ψ : TrmRel} {Θ} {u v : Tm Θ} :
     (subst φ ψ).rel Θ u v ↔
       ∃ (Γ : Type) (t s : Tm Γ) (τ σ : Γ → Tm Θ),
         u = t.subst τ ∧ v = s.subst σ
@@ -740,7 +740,7 @@ symmetry, co-transitivity, and disjointness of `varDiag` with the
 compound layer `scr φ`.
 -/
 
-theorem scr_monotonicity {φ ψ : SynRel} (h : φ ≤ ψ) : scr φ ≤ scr ψ := by
+theorem scr_monotonicity {φ ψ : TrmRel} (h : φ ≤ ψ) : scr φ ≤ scr ψ := by
   intro Γ t s hs
   rcases hs with ⟨rfl, rfl⟩
               | ⟨t', s', rfl, rfl, hφ⟩
@@ -753,13 +753,13 @@ theorem scr_monotonicity {φ ψ : SynRel} (h : φ ≤ ψ) : scr φ ≤ scr ψ :=
   · exact Or.inr (Or.inr (Or.inr ⟨m₁, m₂, n₁, n₂, rfl, rfl,
                   h Γ m₁ m₂ hφm, h Γ n₁ n₂ hφn⟩))
 
-theorem subst_monotonicity_right {φ ψ ψ' : SynRel} (h : ψ ≤ ψ') :
+theorem subst_monotonicity_right {φ ψ ψ' : TrmRel} (h : ψ ≤ ψ') :
     subst φ ψ ≤ subst φ ψ' := by
   intro Θ u v hs
   obtain ⟨Γ, t, s, τ, σ, hu, hv, hφ, hψ⟩ := hs
   exact ⟨Γ, t, s, τ, σ, hu, hv, hφ, fun x => h Θ (τ x) (σ x) (hψ x)⟩
 
-theorem scr_converse_commutation (φ : SynRel) : scr (φᵒ) = (scr φ)ᵒ := by
+theorem scr_converse_commutation (φ : TrmRel) : scr (φᵒ) = (scr φ)ᵒ := by
   ext Γ t s
   constructor
   · rintro (⟨rfl, rfl⟩
@@ -779,7 +779,7 @@ theorem scr_converse_commutation (φ : SynRel) : scr (φᵒ) = (scr φ)ᵒ := by
     · exact Or.inr (Or.inr (Or.inl ⟨m₂, m₁, n₂, n₁, rfl, rfl, hφm, hφn⟩))
     · exact Or.inr (Or.inr (Or.inr ⟨m₂, m₁, n₂, n₁, rfl, rfl, hφm, hφn⟩))
 
-theorem subst_converse_commutation (φ ψ : SynRel) :
+theorem subst_converse_commutation (φ ψ : TrmRel) :
     (subst φ ψ)ᵒ = subst (φᵒ) (ψᵒ) := by
   ext Θ u v
   constructor
@@ -788,7 +788,7 @@ theorem subst_converse_commutation (φ ψ : SynRel) :
   · rintro ⟨Γ, t, s, τ, σ, hu, hv, hφ, hψ⟩
     exact ⟨Γ, s, t, σ, τ, hv, hu, hφ, fun x => hψ x⟩
 
-theorem subst_join_preservation_left (𝒮 : Set SynRel) (ψ : SynRel) :
+theorem subst_join_preservation_left (𝒮 : Set TrmRel) (ψ : TrmRel) :
     subst (sSup 𝒮) ψ = sSup ((fun φ => subst φ ψ) '' 𝒮) := by
   ext Θ u v
   constructor
@@ -797,18 +797,18 @@ theorem subst_join_preservation_left (𝒮 : Set SynRel) (ψ : SynRel) :
   · rintro ⟨_, ⟨φ, hφ𝒮, rfl⟩, Γ, t, s, τ, σ, hu, hv, hφ, hψ⟩
     exact ⟨Γ, t, s, τ, σ, hu, hv, ⟨φ, hφ𝒮, hφ⟩, hψ⟩
 
-theorem varDiag_symmetry : (varDiag : SynRel)ᵒ ≤ varDiag := by
+theorem varDiag_symmetry : (varDiag : TrmRel)ᵒ ≤ varDiag := by
   intro Γ t s h
   obtain ⟨x, hs, ht⟩ := h
   exact ⟨x, ht, hs⟩
 
-theorem varDiag_cotransitivity : (varDiag : SynRel) ≤ varDiag * varDiag := by
+theorem varDiag_cotransitivity : (varDiag : TrmRel) ≤ varDiag * varDiag := by
   intro Γ t s h
   obtain ⟨x, ht, hs⟩ := h
   exact ⟨Tm.var x, ⟨x, ht, rfl⟩, ⟨x, rfl, hs⟩⟩
 
-theorem varDiag_scr_orthogonality (φ : SynRel) :
-    (varDiag : SynRel) * scr φ ≤ ⊥ := by
+theorem varDiag_scr_orthogonality (φ : TrmRel) :
+    (varDiag : TrmRel) * scr φ ≤ ⊥ := by
   intro Γ t v h
   obtain ⟨u, ⟨x, _, rfl⟩, hscr⟩ := h
   rcases hscr with ⟨hu, _⟩
@@ -824,11 +824,11 @@ is a case-split over the four `scr`-cases. `scr_compositionality`
 is a sixteen-case matrix: four constructor cases on each side, twelve
 of which are shape-conflicts closed by `cases`, four of which are the
 honest sub-proofs. `cr_fixpoint` and `cr_induction` together internalise
-structural induction on `Tm` inside `SynRel`, matching the abstract law
+structural induction on `Tm` inside `TrmRel`, matching the abstract law
 `Δ̂ ≤ φ ⇒ Δ ≤ φ` of Section 3.1.1 of the paper.
 -/
 
-theorem subst_varDiag_unit_left (ψ : SynRel) : subst varDiag ψ = ψ := by
+theorem subst_varDiag_unit_left (ψ : TrmRel) : subst varDiag ψ = ψ := by
   ext Θ u v
   constructor
   · rintro ⟨_, _, _, τ, σ, rfl, rfl, ⟨x, rfl, rfl⟩, hψ⟩
@@ -838,7 +838,7 @@ theorem subst_varDiag_unit_left (ψ : SynRel) : subst varDiag ψ = ψ := by
             rfl, rfl, ⟨(), rfl, rfl⟩, ?_⟩
     intro _; exact hψ
 
-theorem subst_varDiag_unit_right (φ : SynRel) : subst φ varDiag = φ := by
+theorem subst_varDiag_unit_right (φ : TrmRel) : subst φ varDiag = φ := by
   ext Θ u v
   constructor
   · rintro ⟨Γ, t, s, τ, σ, rfl, rfl, hφ, hvar⟩
@@ -852,7 +852,7 @@ theorem subst_varDiag_unit_right (φ : SynRel) : subst φ varDiag = φ := by
            (Tm.subst_id u).symm, (Tm.subst_id v).symm, hφ,
            fun x => ⟨x, rfl, rfl⟩⟩
 
-theorem subst_scr_oplaxity (φ ψ : SynRel) :
+theorem subst_scr_oplaxity (φ ψ : TrmRel) :
     subst (scr φ) ψ ≤ scr (subst φ ψ) := by
   intro Θ u v h
   obtain ⟨Γ, t, s, τ, σ, hu, hv, hscr, hψ⟩ := h
@@ -875,7 +875,7 @@ theorem subst_scr_oplaxity (φ ψ : SynRel) :
     · exact ⟨Γ, m₁, m₂, τ, σ, rfl, rfl, hφm, hψ⟩
     · exact ⟨Γ, n₁, n₂, τ, σ, rfl, rfl, hφn, hψ⟩
 
-theorem scr_compositionality (φ ψ : SynRel) : scr (φ * ψ) = scr φ * scr ψ := by
+theorem scr_compositionality (φ ψ : TrmRel) : scr (φ * ψ) = scr φ * scr ψ := by
   ext Γ t v
   constructor
   · rintro (⟨rfl, rfl⟩
@@ -939,7 +939,7 @@ theorem scr_compositionality (φ ψ : SynRel) : scr (φ * ψ) = scr φ * scr ψ 
         exact Or.inr (Or.inr (Or.inr
           ⟨m₁, m₂, n₁, n₂, rfl, rfl, ⟨wm, hφm, hψm⟩, ⟨wn, hφn, hψn⟩⟩))
 
-theorem cr_fixpoint : (varDiag ⊔ scr 1 : SynRel) = 1 := by
+theorem cr_fixpoint : (varDiag ⊔ scr 1 : TrmRel) = 1 := by
   ext Γ t s
   constructor
   · intro h
@@ -964,7 +964,7 @@ theorem cr_fixpoint : (varDiag ⊔ scr 1 : SynRel) = 1 := by
     | mult m n => exact Or.inr (Or.inr (Or.inr (Or.inr
                     ⟨m, m, n, n, rfl, rfl, rfl, rfl⟩)))
 
-theorem cr_induction {φ : SynRel}
+theorem cr_induction {φ : TrmRel}
     (h : varDiag ⊔ scr φ ≤ φ) : 1 ≤ φ := by
   intro Γ t s (heq : t = s)
   subst heq
@@ -998,7 +998,7 @@ cleanly into the two halves of the target composition; the reverse
 inequality fails in general, hence "oplax".
 -/
 
-theorem subst_associativity (φ ψ χ : SynRel) :
+theorem subst_associativity (φ ψ χ : TrmRel) :
     subst (subst φ ψ) χ = subst φ (subst ψ χ) := by
   ext Δ u v
   constructor
@@ -1034,7 +1034,7 @@ theorem subst_associativity (φ ψ χ : SynRel) :
     · rintro ⟨x, y⟩
       exact hχ x y
 
-theorem subst_compositionality_oplax (φ φ' ψ ψ' : SynRel) :
+theorem subst_compositionality_oplax (φ φ' ψ ψ' : TrmRel) :
     subst (φ * φ') (ψ * ψ') ≤ subst φ ψ * subst φ' ψ' := by
   intro Δ u v h
   obtain ⟨Γ, t, s, τ, σ, rfl, rfl, ⟨w, hφ, hφ'⟩, hpsi⟩ := h
@@ -1044,9 +1044,9 @@ theorem subst_compositionality_oplax (φ φ' ψ ψ' : SynRel) :
   · exact ⟨Γ, w, s, μ, σ, rfl, rfl, hφ', hψ'⟩
 
 /-!
-The fourth SRA operation, `j`, distinguishes closed terms from open
+The fourth TRA operation, `j`, distinguishes closed terms from open
 ones inside the algebra: it relates `t` to `s` iff `t = s` and `t` is
-the weakening of some `t₀ : ClosedTm`. As a `SynRel` it is a
+the weakening of some `t₀ : ClosedTm`. As a `TrmRel` it is a
 coreflexive (a subset of the diagonal), supported on the image of
 `Tm.close`. The four axioms below — coreflexivity, symmetry,
 cotransitivity, and orthogonality with `varDiag` — are all immediate
@@ -1056,10 +1056,10 @@ be a variable.
 
 /-- The closure constant (paper: `□Δ`): relates `t` to itself provided
 `t` is the weakening of some `t₀ : ClosedTm`. A coreflexive supported
-on the image of `Tm.close Γ : ClosedTm → Tm Γ`; the abstract `SRA.box`
+on the image of `Tm.close Γ : ClosedTm → Tm Γ`; the abstract `TRA.box`
 modality is built from it, and the four axioms below are the bare
 minimum for `box` to behave as a monotone comonad. -/
-def j : SynRel := {
+def j : TrmRel := {
   rel := fun Γ t s => t = s ∧ ∃ t₀ : ClosedTm, t = Tm.close Γ t₀
   ren_closed := by
     intro Γ Δ f t s h
@@ -1069,23 +1069,23 @@ def j : SynRel := {
 }
 
 @[simp] theorem j_rel {Γ} {t s : Tm Γ} :
-    (j : SynRel).rel Γ t s ↔
+    (j : TrmRel).rel Γ t s ↔
       t = s ∧ ∃ t₀ : ClosedTm, t = Tm.close Γ t₀ := Iff.rfl
 
-theorem j_coreflexivity : (j : SynRel) ≤ 1 := fun _ _ _ h => h.1
+theorem j_coreflexivity : (j : TrmRel) ≤ 1 := fun _ _ _ h => h.1
 
-theorem j_symmetry : (j : SynRel)ᵒ ≤ j := by
+theorem j_symmetry : (j : TrmRel)ᵒ ≤ j := by
   intro Γ t s h
   obtain ⟨hst, t₀, hs⟩ := h
   exact ⟨hst.symm, t₀, hst.symm.trans hs⟩
 
-theorem j_cotransitivity : (j : SynRel) ≤ j * j := by
+theorem j_cotransitivity : (j : TrmRel) ≤ j * j := by
   intro Γ t s h
   refine ⟨t, ⟨rfl, ?_⟩, h⟩
   obtain ⟨_, t₀, ht⟩ := h
   exact ⟨t₀, ht⟩
 
-theorem j_varDiag_orthogonality : (j : SynRel) * varDiag ≤ ⊥ := by
+theorem j_varDiag_orthogonality : (j : TrmRel) * varDiag ≤ ⊥ := by
   intro Γ t v h
   obtain ⟨u, ⟨htu, t₀, hcls⟩, ⟨x, huvar, _⟩⟩ := h
   subst htu; subst huvar
@@ -1096,62 +1096,62 @@ theorem j_varDiag_orthogonality : (j : SynRel) * varDiag ≤ ⊥ := by
   | plus _ _ => cases hcls
   | mult _ _ => cases hcls
 
-end SynRel
+end TrmRel
 
 /-!
 The previous section did the work; here we simply collect it. The
-`instance SRA SynRel` declaration is a form-filling exercise: for each
-of the twenty SRA fields we hand back the corresponding proof. Peano
+`instance TRA TrmRel` declaration is a form-filling exercise: for each
+of the twenty TRA fields we hand back the corresponding proof. Peano
 has no binders, so the model proves `subst_scr_oplaxity` without the
 class-level `Δη ≤ b` guard (the field is `fun a b _ =>
-SynRel.subst_scr_oplaxity a b`); at the second-order level the guard
+TrmRel.subst_scr_oplaxity a b`); at the second-order level the guard
 does real work, see `LambdaCalculus.lean`. From this point on, every
-abstract lemma proved against a generic `SRA α` — including the
-closure modality `SRA.box`, the combinator `SRA.cr`, and eventually
-the bridge theorem itself — becomes a concrete lemma about `SynRel`.
+abstract lemma proved against a generic `TRA α` — including the
+closure modality `TRA.box`, the combinator `TRA.cr`, and eventually
+the bridge theorem itself — becomes a concrete lemma about `TrmRel`.
 The two lemmas that close the section are sanity checks:
-`scr_top_ne_bot` witnesses that `SynRel` is non-degenerate, and
-`substJClosed` verifies `SRA.IsClosed (subst a j)`, recorded here but
+`scr_top_ne_bot` witnesses that `TrmRel` is non-degenerate, and
+`substJClosed` verifies `TRA.IsClosed (subst a j)`, recorded here but
 not consumed elsewhere.
 -/
 
-instance instSRA : SRA SynRel where
-  varDiag := SynRel.varDiag
-  scr := SynRel.scr
-  subst := SynRel.subst
-  varDiag_symmetry := SynRel.varDiag_symmetry
-  varDiag_cotransitivity := SynRel.varDiag_cotransitivity
-  scr_monotonicity := fun _ _ h => SynRel.scr_monotonicity h
-  scr_compositionality := SynRel.scr_compositionality
-  scr_converse_commutation := SynRel.scr_converse_commutation
-  varDiag_scr_orthogonality := SynRel.varDiag_scr_orthogonality
-  subst_monotonicity_right := fun _ _ _ h => SynRel.subst_monotonicity_right h
-  subst_compositionality_oplax := SynRel.subst_compositionality_oplax
-  subst_converse_commutation := SynRel.subst_converse_commutation
-  subst_join_preservation_left := SynRel.subst_join_preservation_left
-  subst_varDiag_unit_left := SynRel.subst_varDiag_unit_left
-  subst_varDiag_unit_right := SynRel.subst_varDiag_unit_right
-  subst_associativity := SynRel.subst_associativity
-  subst_scr_oplaxity := fun a b _ => SynRel.subst_scr_oplaxity a b
-  cr_fixpoint := SynRel.cr_fixpoint
-  cr_induction := fun _ h => SynRel.cr_induction h
-  j := SynRel.j
-  j_coreflexivity := SynRel.j_coreflexivity
-  j_symmetry := SynRel.j_symmetry
-  j_cotransitivity := SynRel.j_cotransitivity
-  j_varDiag_orthogonality := SynRel.j_varDiag_orthogonality
+instance instTRA : TRA TrmRel where
+  varDiag := TrmRel.varDiag
+  scr := TrmRel.scr
+  subst := TrmRel.subst
+  varDiag_symmetry := TrmRel.varDiag_symmetry
+  varDiag_cotransitivity := TrmRel.varDiag_cotransitivity
+  scr_monotonicity := fun _ _ h => TrmRel.scr_monotonicity h
+  scr_compositionality := TrmRel.scr_compositionality
+  scr_converse_commutation := TrmRel.scr_converse_commutation
+  varDiag_scr_orthogonality := TrmRel.varDiag_scr_orthogonality
+  subst_monotonicity_right := fun _ _ _ h => TrmRel.subst_monotonicity_right h
+  subst_compositionality_oplax := TrmRel.subst_compositionality_oplax
+  subst_converse_commutation := TrmRel.subst_converse_commutation
+  subst_join_preservation_left := TrmRel.subst_join_preservation_left
+  subst_varDiag_unit_left := TrmRel.subst_varDiag_unit_left
+  subst_varDiag_unit_right := TrmRel.subst_varDiag_unit_right
+  subst_associativity := TrmRel.subst_associativity
+  subst_scr_oplaxity := fun a b _ => TrmRel.subst_scr_oplaxity a b
+  cr_fixpoint := TrmRel.cr_fixpoint
+  cr_induction := fun _ h => TrmRel.cr_induction h
+  j := TrmRel.j
+  j_coreflexivity := TrmRel.j_coreflexivity
+  j_symmetry := TrmRel.j_symmetry
+  j_cotransitivity := TrmRel.j_cotransitivity
+  j_varDiag_orthogonality := TrmRel.j_varDiag_orthogonality
 
-namespace SynRel
+namespace TrmRel
 
-theorem scr_top_ne_bot : (scr ⊤ : SynRel) ≠ ⊥ := by
+theorem scr_top_ne_bot : (scr ⊤ : TrmRel) ≠ ⊥ := by
   intro hbad
-  have h : (scr ⊤ : SynRel).rel Unit (Tm.succ (Tm.var ())) (Tm.succ (Tm.var ())) :=
+  have h : (scr ⊤ : TrmRel).rel Unit (Tm.succ (Tm.var ())) (Tm.succ (Tm.var ())) :=
     Or.inr (Or.inl ⟨Tm.var (), Tm.var (), rfl, rfl, trivial⟩)
   rw [hbad] at h; exact h
 
-/-- Model-side verification of `SRA.IsClosed (subst a j)`. -/
-theorem substJClosed (a : SynRel) : SRA.IsClosed (SynRel.subst a j) := by
-  change SynRel.subst a j ≤ SRA.box (SynRel.subst a j)
+/-- Model-side verification of `TRA.IsClosed (subst a j)`. -/
+theorem substJClosed (a : TrmRel) : TRA.IsClosed (TrmRel.subst a j) := by
+  change TrmRel.subst a j ≤ TRA.box (TrmRel.subst a j)
   intro Θ u v hsubst
   have hsub := hsubst
   obtain ⟨Γ, t, s, τ, σ, rfl, rfl, _, hj⟩ := hsub
@@ -1177,10 +1177,10 @@ theorem substJClosed (a : SynRel) : SRA.IsClosed (SynRel.subst a j) := by
           hsubst⟩,
           ⟨rfl, s.subst τ', hv_cls⟩⟩
 
-end SynRel
+end TrmRel
 
 /-!
-`SynRel` is now a full-blown `SRA`. The next layer refines the strict
+`TrmRel` is now a full-blown `TRA`. The next layer refines the strict
 compatible refinement `scr` into its constructor slice `introduction`
 and its destructor slice `elimination`, matching the paper's cocartesian
 decomposition of `~·`. In our signature `introduction a` covers the two
@@ -1202,14 +1202,14 @@ preamble; without it the nullary `zero`-case would be inconsistent with
 the empty-set instance of the axiom.
 -/
 
-namespace SynRel
+namespace TrmRel
 
 /-- The constructor slice of `scr`. Two cases: `(zero, zero)` — nullary
 intro form, no `a`-premise, and the case that forces the non-empty-join
 relaxation of the framework axiom — and `(succ t', succ s')` with
 `a t' s'`. No `plus` or `mult`; those live in `elimination` below, and
 the two operations are orthogonal by construction. -/
-def introduction (a : SynRel) : SynRel := {
+def introduction (a : TrmRel) : TrmRel := {
   rel := fun Γ t s =>
     (t = Tm.zero ∧ s = Tm.zero) ∨
     (∃ t' s' : Tm Γ, t = Tm.succ t' ∧ s = Tm.succ s' ∧ a.rel Γ t' s')
@@ -1226,7 +1226,7 @@ with `a m₁ m₂` (major) and `b n₁ n₂` (minor), and
 `(mult m₁ n₁, mult m₂ n₂)` with the same slot convention. Slot 0 is
 major throughout, which is what makes the Gentzen principles below
 speak of the left argument of `plus` and `mult` as the evaluated one. -/
-def elimination (a b : SynRel) : SynRel := {
+def elimination (a b : TrmRel) : TrmRel := {
   rel := fun Γ t s =>
     (∃ m₁ m₂ n₁ n₂ : Tm Γ, t = Tm.plus m₁ n₁ ∧ s = Tm.plus m₂ n₂ ∧
                             a.rel Γ m₁ m₂ ∧ b.rel Γ n₁ n₂) ∨
@@ -1244,13 +1244,13 @@ def elimination (a b : SynRel) : SynRel := {
                     a.ren_closed f ha, b.ren_closed f hb⟩
 }
 
-@[simp] theorem introduction_rel {a : SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem introduction_rel {a : TrmRel} {Γ} {t s : Tm Γ} :
     (introduction a).rel Γ t s ↔
       (t = Tm.zero ∧ s = Tm.zero) ∨
       (∃ t' s' : Tm Γ, t = Tm.succ t' ∧ s = Tm.succ s' ∧ a.rel Γ t' s') :=
   Iff.rfl
 
-@[simp] theorem elimination_rel {a b : SynRel} {Γ} {t s : Tm Γ} :
+@[simp] theorem elimination_rel {a b : TrmRel} {Γ} {t s : Tm Γ} :
     (elimination a b).rel Γ t s ↔
       (∃ m₁ m₂ n₁ n₂ : Tm Γ, t = Tm.plus m₁ n₁ ∧ s = Tm.plus m₂ n₂ ∧
                               a.rel Γ m₁ m₂ ∧ b.rel Γ n₁ n₂) ∨
@@ -1265,7 +1265,7 @@ only in which constructor case is being propagated through which
 operation.
 -/
 
-theorem introduction_join_preservation (𝒮 : Set SynRel) (h𝒮 : 𝒮.Nonempty) :
+theorem introduction_join_preservation (𝒮 : Set TrmRel) (h𝒮 : 𝒮.Nonempty) :
     introduction (sSup 𝒮) = sSup (introduction '' 𝒮) := by
   ext Γ t s
   constructor
@@ -1279,7 +1279,7 @@ theorem introduction_join_preservation (𝒮 : Set SynRel) (h𝒮 : 𝒮.Nonempt
     · exact Or.inl ⟨rfl, rfl⟩
     · exact Or.inr ⟨t', s', rfl, rfl, φ, hφ𝒮, hφ⟩
 
-theorem introduction_compositionality (a b : SynRel) :
+theorem introduction_compositionality (a b : TrmRel) :
     introduction (a * b) = introduction a * introduction b := by
   ext Γ t v
   constructor
@@ -1301,7 +1301,7 @@ theorem introduction_compositionality (a b : SynRel) :
         refine Or.inr ⟨t', v', rfl, rfl, u₁, ha, ?_⟩
         rw [hu12]; exact hb
 
-theorem introduction_converse_commutation (a : SynRel) :
+theorem introduction_converse_commutation (a : TrmRel) :
     introduction (aᵒ) = (introduction a)ᵒ := by
   ext Γ t s
   constructor
@@ -1312,7 +1312,7 @@ theorem introduction_converse_commutation (a : SynRel) :
     · exact Or.inl ⟨rfl, rfl⟩
     · exact Or.inr ⟨s', t', rfl, rfl, ha⟩
 
-theorem elimination_join_preservation_left (𝒮 : Set SynRel) (b : SynRel) :
+theorem elimination_join_preservation_left (𝒮 : Set TrmRel) (b : TrmRel) :
     elimination (sSup 𝒮) b = sSup ((fun a => elimination a b) '' 𝒮) := by
   ext Γ t s
   constructor
@@ -1328,7 +1328,7 @@ theorem elimination_join_preservation_left (𝒮 : Set SynRel) (b : SynRel) :
     · exact Or.inl ⟨m₁, m₂, n₁, n₂, rfl, rfl, ⟨φ, hφ𝒮, hφ⟩, hb⟩
     · exact Or.inr ⟨m₁, m₂, n₁, n₂, rfl, rfl, ⟨φ, hφ𝒮, hφ⟩, hb⟩
 
-theorem elimination_join_preservation_right (a : SynRel) (𝒮 : Set SynRel) :
+theorem elimination_join_preservation_right (a : TrmRel) (𝒮 : Set TrmRel) :
     elimination a (sSup 𝒮) = sSup ((fun b => elimination a b) '' 𝒮) := by
   ext Γ t s
   constructor
@@ -1344,7 +1344,7 @@ theorem elimination_join_preservation_right (a : SynRel) (𝒮 : Set SynRel) :
     · exact Or.inl ⟨m₁, m₂, n₁, n₂, rfl, rfl, ha, ⟨φ, hφ𝒮, hφ⟩⟩
     · exact Or.inr ⟨m₁, m₂, n₁, n₂, rfl, rfl, ha, ⟨φ, hφ𝒮, hφ⟩⟩
 
-theorem elimination_compositionality (a₁ a₂ b₁ b₂ : SynRel) :
+theorem elimination_compositionality (a₁ a₂ b₁ b₂ : TrmRel) :
     elimination (a₁ * a₂) (b₁ * b₂) = elimination a₁ b₁ * elimination a₂ b₂ := by
   ext Γ t v
   constructor
@@ -1376,7 +1376,7 @@ theorem elimination_compositionality (a₁ a₂ b₁ b₂ : SynRel) :
         exact Or.inr ⟨m₁, m₂, n₁, n₂, rfl, rfl,
                       ⟨um, ha₁, ha₂⟩, ⟨un, hb₁, hb₂⟩⟩
 
-theorem elimination_converse_commutation (a b : SynRel) :
+theorem elimination_converse_commutation (a b : TrmRel) :
     elimination (aᵒ) (bᵒ) = (elimination a b)ᵒ := by
   ext Γ t s
   constructor
@@ -1396,18 +1396,18 @@ composed with a destructor is `⊥`), and the decomposition equality
 slices really do add up to the strict compatible refinement.
 -/
 
-theorem introduction_unit_oplaxity : (introduction 1 : SynRel) ≤ 1 := by
+theorem introduction_unit_oplaxity : (introduction 1 : TrmRel) ≤ 1 := by
   rintro Γ t s (⟨rfl, rfl⟩ | ⟨t', s', rfl, rfl, (heq : t' = s')⟩)
   · rfl
   · exact congrArg Tm.succ heq
 
-theorem elimination_unit_oplaxity : (elimination 1 1 : SynRel) ≤ 1 := by
+theorem elimination_unit_oplaxity : (elimination 1 1 : TrmRel) ≤ 1 := by
   rintro Γ t s (⟨m₁, m₂, n₁, n₂, rfl, rfl, (hm : m₁ = m₂), (hn : n₁ = n₂)⟩
               | ⟨m₁, m₂, n₁, n₂, rfl, rfl, (hm : m₁ = m₂), (hn : n₁ = n₂)⟩)
   · exact congrArg₂ Tm.plus hm hn
   · exact congrArg₂ Tm.mult hm hn
 
-theorem introduction_elimination_orthogonality (a b c : SynRel) :
+theorem introduction_elimination_orthogonality (a b c : TrmRel) :
     introduction a * elimination b c ≤ ⊥ := by
   rintro Γ t v ⟨u, h1, h2⟩
   rcases h1 with ⟨rfl, hu⟩ | ⟨t', u', rfl, hu, _⟩
@@ -1417,8 +1417,8 @@ theorem introduction_elimination_orthogonality (a b c : SynRel) :
   · rcases h2 with ⟨_, _, _, _, hu', _, _, _⟩ | ⟨_, _, _, _, hu', _, _, _⟩ <;>
       exact absurd (hu.symm.trans hu') (by intro h; cases h)
 
-theorem scr_decomposition (a : SynRel) :
-    (SRA.scr a : SynRel) = introduction a ⊔ elimination a a := by
+theorem scr_decomposition (a : TrmRel) :
+    (TRA.scr a : TrmRel) = introduction a ⊔ elimination a a := by
   ext Γ t s
   constructor
   · rintro (⟨rfl, rfl⟩
@@ -1439,13 +1439,13 @@ theorem scr_decomposition (a : SynRel) :
 
 /-!
 The three oplax laws relating the intro / elim decomposition to
-substitution and to the closure modality `SRA.box`.
+substitution and to the closure modality `TRA.box`.
 `box_elimination_oplaxity` is the technically heaviest theorem of the
 section: it requires a full five-way case-split on the closed term
 underlying the elimination form's major argument.
 -/
 
-theorem subst_introduction_oplaxity (a b : SynRel) :
+theorem subst_introduction_oplaxity (a b : TrmRel) :
     subst (introduction a) b ≤ introduction (subst a b) := by
   rintro Θ u v ⟨Γ, t, s, τ, σ, rfl, rfl, hintro, hψ⟩
   rcases hintro with ⟨rfl, rfl⟩ | ⟨t', s', rfl, rfl, ha⟩
@@ -1453,7 +1453,7 @@ theorem subst_introduction_oplaxity (a b : SynRel) :
   · refine Or.inr ⟨t'.subst τ, s'.subst σ, rfl, rfl, ?_⟩
     exact ⟨Γ, t', s', τ, σ, rfl, rfl, ha, hψ⟩
 
-theorem subst_elimination_oplaxity (a b c : SynRel) :
+theorem subst_elimination_oplaxity (a b c : TrmRel) :
     subst (elimination a b) c ≤ elimination (subst a c) (subst b c) := by
   rintro Θ u v ⟨Γ, t, s, τ, σ, rfl, rfl, helim, hψ⟩
   rcases helim with ⟨m₁, m₂, n₁, n₂, rfl, rfl, ha, hb⟩
@@ -1467,8 +1467,8 @@ theorem subst_elimination_oplaxity (a b c : SynRel) :
     · exact ⟨Γ, m₁, m₂, τ, σ, rfl, rfl, ha, hψ⟩
     · exact ⟨Γ, n₁, n₂, τ, σ, rfl, rfl, hb, hψ⟩
 
-theorem box_elimination_oplaxity (a b : SynRel) :
-    (SRA.box (elimination a b) : SynRel) ≤ elimination (SRA.box a) b := by
+theorem box_elimination_oplaxity (a b : TrmRel) :
+    (TRA.box (elimination a b) : TrmRel) ≤ elimination (TRA.box a) b := by
   intro Θ u v h
   obtain ⟨w, hjeab, hjwv⟩ := h
   obtain ⟨w', hju, hab⟩ := hjeab
@@ -1563,39 +1563,39 @@ theorem box_elimination_oplaxity (a b : SynRel) :
         refine ⟨m₂, ⟨m₁, ⟨rfl, u₀m, hm_eq.symm⟩, hab_maj⟩,
                 ⟨rfl, v₀m, hm_eq'.symm⟩⟩
 
-end SynRel
+end TrmRel
 
 /-!
 Assembly of the fourteen theorems above into the
-`OperationalDecomposition SynRel` instance. The two join-preservation
+`OperationalDecomposition TrmRel` instance. The two join-preservation
 fields require passing the `𝒮.Nonempty` proof through the wrapper
 lambda; the other twelve are direct.
 -/
 
-instance instOperationalDecomposition : OperationalDecomposition SynRel where
-  introduction := SynRel.introduction
-  elimination := SynRel.elimination
+instance instOperationalDecomposition : OperationalDecomposition TrmRel where
+  introduction := TrmRel.introduction
+  elimination := TrmRel.elimination
   introduction_join_preservation 𝒮 h𝒮 :=
-    SynRel.introduction_join_preservation 𝒮 h𝒮
+    TrmRel.introduction_join_preservation 𝒮 h𝒮
   elimination_join_preservation_left := fun 𝒮 _ b =>
-    SynRel.elimination_join_preservation_left 𝒮 b
+    TrmRel.elimination_join_preservation_left 𝒮 b
   elimination_join_preservation_right := fun a 𝒮 _ =>
-    SynRel.elimination_join_preservation_right a 𝒮
-  introduction_compositionality := SynRel.introduction_compositionality
-  introduction_converse_commutation := SynRel.introduction_converse_commutation
-  elimination_compositionality := SynRel.elimination_compositionality
-  elimination_converse_commutation := SynRel.elimination_converse_commutation
-  introduction_unit_oplaxity := SynRel.introduction_unit_oplaxity
-  elimination_unit_oplaxity := SynRel.elimination_unit_oplaxity
-  introduction_elimination_orthogonality := SynRel.introduction_elimination_orthogonality
-  scr_decomposition := SynRel.scr_decomposition
-  subst_introduction_oplaxity := fun a b _ => SynRel.subst_introduction_oplaxity a b
-  subst_elimination_oplaxity := SynRel.subst_elimination_oplaxity
-  box_elimination_oplaxity := SynRel.box_elimination_oplaxity
+    TrmRel.elimination_join_preservation_right a 𝒮
+  introduction_compositionality := TrmRel.introduction_compositionality
+  introduction_converse_commutation := TrmRel.introduction_converse_commutation
+  elimination_compositionality := TrmRel.elimination_compositionality
+  elimination_converse_commutation := TrmRel.elimination_converse_commutation
+  introduction_unit_oplaxity := TrmRel.introduction_unit_oplaxity
+  elimination_unit_oplaxity := TrmRel.elimination_unit_oplaxity
+  introduction_elimination_orthogonality := TrmRel.introduction_elimination_orthogonality
+  scr_decomposition := TrmRel.scr_decomposition
+  subst_introduction_oplaxity := fun a b _ => TrmRel.subst_introduction_oplaxity a b
+  subst_elimination_oplaxity := TrmRel.subst_elimination_oplaxity
+  box_elimination_oplaxity := TrmRel.box_elimination_oplaxity
 
 /-!
 Everything above was preparation. We can now state the primitive
-reduction of Peano arithmetic as a `SynRel`: the disjunction of the
+reduction of Peano arithmetic as a `TrmRel`: the disjunction of the
 four defining rewrite rules, `plus(zero, n) → n`,
 `plus(succ m, n) → succ (plus m n)`, `mult(zero, n) → zero`, and
 `mult(succ m, n) → plus (mult m n) n`. Renaming-closure of the family
@@ -1626,7 +1626,7 @@ bridge theorem delivers confluence of parallel reduction as a
 one-liner: `rule_confluent := local_confluence rule_isReduction …`.
 -/
 
-namespace SynRel
+namespace TrmRel
 
 /-- The primitive reduction: the four Peano defining equations,
 ```
@@ -1635,11 +1635,11 @@ plus(succ m, n) → succ (plus m n)
 mult(zero,   n) → zero
 mult(succ m, n) → plus (mult m n) n
 ```
-packaged as a single `SynRel` by disjunction. All five bridge-theorem
+packaged as a single `TrmRel` by disjunction. All five bridge-theorem
 hypotheses below (`IsReduction`, `IsSubstitutiveAtIdentity`,
-`IsDeterministic`, `GIP`, `GCP`) are stated against this `SynRel` and
+`IsDeterministic`, `GIP`, `GCP`) are stated against this `TrmRel` and
 proceed by `rcases` on the disjunction. -/
-def rule : SynRel := {
+def rule : TrmRel := {
   rel := fun Γ t s =>
     (∃ n : Tm Γ, t = Tm.plus Tm.zero n ∧ s = n) ∨
     (∃ x y : Tm Γ, t = Tm.plus (Tm.succ x) y ∧ s = Tm.succ (Tm.plus x y)) ∨
@@ -1667,7 +1667,7 @@ def rule : SynRel := {
 }
 
 @[simp] theorem rule_rel {Γ} {t s : Tm Γ} :
-    (rule : SynRel).rel Γ t s ↔
+    (rule : TrmRel).rel Γ t s ↔
       (∃ n : Tm Γ, t = Tm.plus Tm.zero n ∧ s = n) ∨
       (∃ x y : Tm Γ, t = Tm.plus (Tm.succ x) y ∧
                       s = Tm.succ (Tm.plus x y)) ∨
@@ -1675,8 +1675,8 @@ def rule : SynRel := {
       (∃ x y : Tm Γ, t = Tm.mult (Tm.succ x) y ∧
                       s = Tm.plus (Tm.mult x y) y) := Iff.rfl
 
-theorem rule_isReduction : LeanTra.Confluence.IsReduction (rule : SynRel) := by
-  change (SRA.varDiag * rule : SynRel) = ⊥
+theorem rule_isReduction : LeanTra.Confluence.IsReduction (rule : TrmRel) := by
+  change (TRA.varDiag * rule : TrmRel) = ⊥
   ext Γ t v
   constructor
   · rintro ⟨m, ⟨z, rfl, rfl⟩, hrule⟩
@@ -1687,8 +1687,8 @@ theorem rule_isReduction : LeanTra.Confluence.IsReduction (rule : SynRel) := by
   · intro h; exact h.elim
 
 theorem rule_isSubstitutiveAtIdentity :
-    LeanTra.Confluence.IsSubstitutiveAtIdentity (rule : SynRel) := by
-  change (SRA.subst rule 1 : SynRel) ≤ rule
+    LeanTra.Confluence.IsSubstitutiveAtIdentity (rule : TrmRel) := by
+  change (TRA.subst rule 1 : TrmRel) ≤ rule
   rintro Θ u v ⟨Γ, t, s, τ, σ, rfl, rfl, hrule, hτσ⟩
   have hτσ_eq : τ = σ := funext hτσ
   subst hτσ_eq
@@ -1709,8 +1709,8 @@ theorem rule_isSubstitutiveAtIdentity :
     · rw [ht]; simp
     · rw [hs]; simp
 
-theorem rule_isDeterministic : LeanTra.Algebra.IsDeterministic (rule : SynRel) := by
-  change ((rule : SynRel)ᵒ * rule) ≤ 1
+theorem rule_isDeterministic : LeanTra.Algebra.IsDeterministic (rule : TrmRel) := by
+  change ((rule : TrmRel)ᵒ * rule) ≤ 1
   rintro Γ t t' ⟨m, h1, h2⟩
   -- h1 : rule^o (t, m) = rule (m, t); h2 : rule (m, t').
   -- 4 × 4 = 16 sub-cases; the diagonal ones give t = t', the off-diagonal
@@ -1772,7 +1772,7 @@ theorem rule_isDeterministic : LeanTra.Algebra.IsDeterministic (rule : SynRel) :
     have : x = x' := Tm.succ.inj hs
     subst this; rfl
 
-theorem rule_gip : LeanTra.Metatheory.GIP (rule : SynRel) := by
+theorem rule_gip : LeanTra.Metatheory.GIP (rule : TrmRel) := by
   intro Γ t s hrule
   rcases hrule with ⟨n, ht, hs⟩
                   | ⟨x, y, ht, hs⟩
@@ -1803,11 +1803,11 @@ theorem rule_gip : LeanTra.Metatheory.GIP (rule : SynRel) := by
                    Or.inr ⟨x, x, rfl, rfl, rfl⟩, rfl⟩,
            Or.inr (Or.inr (Or.inr ⟨x, y, rfl, rfl⟩))⟩
 
-theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
+theorem rule_gcp : LeanTra.Metatheory.GCP (rule : TrmRel) := by
   intro rx hcompat
-  change (OperationalDecomposition.elimination (SRA.cr rx) rx : SynRel)
-           * (rule : SynRel)
-       ≤ (rule : SynRel) * SRA.subst rx rx
+  change (OperationalDecomposition.elimination (TRA.cr rx) rx : TrmRel)
+           * (rule : TrmRel)
+       ≤ (rule : TrmRel) * TRA.subst rx rx
   -- Compatibility gives rx-reflexivity on any `t`, since `varDiag ⊔ scr rx ≤ rx`
   -- and by structural induction on `t` we cover every case.
   have hvar_refl : ∀ (Γ : Type) (x : Γ), rx.rel Γ (Tm.var x) (Tm.var x) :=
@@ -1829,7 +1829,7 @@ theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
       have heq := hm_eq.symm.trans hm_ru
       obtain ⟨hm2, hn2⟩ := Tm.plus.injEq _ _ _ _ |>.mp heq
       subst hm2; subst hn2
-      unfold SRA.cr at hmaj
+      unfold TRA.cr at hmaj
       rcases hmaj with ⟨z, _, hz⟩ | hscr
       · cases hz
       · rcases hscr with ⟨hm1, _⟩
@@ -1857,7 +1857,7 @@ theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
       have heq := hm_eq.symm.trans hm_ru
       obtain ⟨hm2, hn2⟩ := Tm.plus.injEq _ _ _ _ |>.mp heq
       subst hm2; subst hn2
-      unfold SRA.cr at hmaj
+      unfold TRA.cr at hmaj
       rcases hmaj with ⟨z, _, hz⟩ | hscr
       · cases hz
       · rcases hscr with ⟨_, hz⟩
@@ -1879,14 +1879,14 @@ theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
                   fun b : Bool => if b then n₂ else x',
                   rfl, rfl, ?_, ?_⟩
           · have h_scr_plus :
-                (SRA.scr rx : SynRel).rel Bool
+                (TRA.scr rx : TrmRel).rel Bool
                   (Tm.plus (Tm.var false) (Tm.var true))
                   (Tm.plus (Tm.var false) (Tm.var true)) :=
               Or.inr (Or.inr (Or.inl
                 ⟨_, _, _, _, rfl, rfl, hvar_refl _ _, hvar_refl _ _⟩))
             have h_rx_plus := hcompat _ _ _ (Or.inr h_scr_plus)
             have h_scr_succ :
-                (SRA.scr rx : SynRel).rel Bool
+                (TRA.scr rx : TrmRel).rel Bool
                   (Tm.succ (Tm.plus (Tm.var false) (Tm.var true)))
                   (Tm.succ (Tm.plus (Tm.var false) (Tm.var true))) :=
               Or.inr (Or.inl ⟨_, _, rfl, rfl, h_rx_plus⟩)
@@ -1911,7 +1911,7 @@ theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
       have heq := hm_eq.symm.trans hm_ru
       obtain ⟨hm2, hn2⟩ := Tm.mult.injEq _ _ _ _ |>.mp heq
       subst hm2; subst hn2
-      unfold SRA.cr at hmaj
+      unfold TRA.cr at hmaj
       rcases hmaj with ⟨z, _, hz⟩ | hscr
       · cases hz
       · rcases hscr with ⟨hm1, _⟩
@@ -1936,7 +1936,7 @@ theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
       have heq := hm_eq.symm.trans hm_ru
       obtain ⟨hm2, hn2⟩ := Tm.mult.injEq _ _ _ _ |>.mp heq
       subst hm2; subst hn2
-      unfold SRA.cr at hmaj
+      unfold TRA.cr at hmaj
       rcases hmaj with ⟨z, _, hz⟩ | hscr
       · cases hz
       · rcases hscr with ⟨_, hz⟩
@@ -1959,14 +1959,14 @@ theorem rule_gcp : LeanTra.Metatheory.GCP (rule : SynRel) := by
                   fun b : Bool => if b then n₂ else x',
                   rfl, rfl, ?_, ?_⟩
           · have h_scr_mult :
-                (SRA.scr rx : SynRel).rel Bool
+                (TRA.scr rx : TrmRel).rel Bool
                   (Tm.mult (Tm.var false) (Tm.var true))
                   (Tm.mult (Tm.var false) (Tm.var true)) :=
               Or.inr (Or.inr (Or.inr
                 ⟨_, _, _, _, rfl, rfl, hvar_refl _ _, hvar_refl _ _⟩))
             have h_rx_mult := hcompat _ _ _ (Or.inr h_scr_mult)
             have h_scr_plus :
-                (SRA.scr rx : SynRel).rel Bool
+                (TRA.scr rx : TrmRel).rel Bool
                   (Tm.plus (Tm.mult (Tm.var false) (Tm.var true)) (Tm.var true))
                   (Tm.plus (Tm.mult (Tm.var false) (Tm.var true)) (Tm.var true)) :=
               Or.inr (Or.inr (Or.inl
@@ -1982,7 +1982,7 @@ Peano-arithmetic reduction system. Obtained by feeding the five local
 hypotheses proved above to the abstract bridge theorem
 `local_confluence`; no Peano-specific tactic appears in the body. -/
 theorem rule_confluent :
-    LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed (rule : SynRel)) :=
+    LeanTra.Algebra.IsConfluent (LeanTra.Confluence.parRed (rule : TrmRel)) :=
   LeanTra.Confluence.local_confluence
     rule_isReduction
     rule_isSubstitutiveAtIdentity
@@ -1997,21 +1997,21 @@ The metatheorem `LeanTra.Determinism.bigStep_determinism` concludes
 the rule. Plain `rule` does not satisfy `IsClosed`: it fires between
 open terms too — e.g. `plus zero (var x)` with `x` free reduces to
 `var x`. The natural instantiation is on the closed part of the
-rule, `SRA.box rule`, which relates only closed terms; its three
-hypotheses are discharged here. `IsClosed (SRA.box rule)` is
-`SRA.box_isClosed`. `IsDeterministic (SRA.box rule)` follows from
-`rule_isDeterministic` and `SRA.box_le`. `GIP (SRA.box rule)` is
+rule, `TRA.box rule`, which relates only closed terms; its three
+hypotheses are discharged here. `IsClosed (TRA.box rule)` is
+`TRA.box_isClosed`. `IsDeterministic (TRA.box rule)` follows from
+`rule_isDeterministic` and `TRA.box_le`. `GIP (TRA.box rule)` is
 proved directly by the same four-way case analysis as `rule_gip`,
 adapted to carry the closedness bookkeeping through the two `j`
-factors of `SRA.box`. The final theorem `rule_bigStep_determinism`
+factors of `TRA.box`. The final theorem `rule_bigStep_determinism`
 is then a one-line application of the metatheorem. -/
 
 /-- Gentzen inversion for the closed part of the rule: every closed
 step factors on the left through an elimination with an introduction
 form in the major slot, with the closedness of the source preserved.
 Same four-case argument as `rule_gip`, threading closedness through
-the two `j` factors of `SRA.box`. -/
-theorem rule_boxed_gip : LeanTra.Metatheory.GIP (SRA.box (rule : SynRel)) := by
+the two `j` factors of `TRA.box`. -/
+theorem rule_boxed_gip : LeanTra.Metatheory.GIP (TRA.box (rule : TrmRel)) := by
   rintro Γ t s ⟨w, ⟨w', ⟨rfl, t₀, ht_close⟩, hrule⟩, ⟨rfl, s₀, hs_close⟩⟩
   -- Preserve `hs`/`hs'`/etc. as equational hypotheses instead of substituting
   -- them away: the plus-zero and mult-zero cases have `s = n` with `n` and `s`
@@ -2058,30 +2058,30 @@ theorem rule_boxed_gip : LeanTra.Metatheory.GIP (SRA.box (rule : SynRel)) := by
 Immediate from `rule_isDeterministic` and the deflationarity `□a ≤ a`
 on both sides. -/
 theorem rule_boxed_isDeterministic :
-    LeanTra.Algebra.IsDeterministic (SRA.box (rule : SynRel)) := by
-  change ((SRA.box (rule : SynRel))ᵒ * SRA.box rule) ≤ 1
-  calc (SRA.box (rule : SynRel))ᵒ * SRA.box rule
-      ≤ (rule : SynRel)ᵒ * SRA.box rule :=
-        mul_le_mul' (IsInvolutiveQuantale.converse_monotonicity (SRA.box_le _)) le_rfl
-    _ ≤ (rule : SynRel)ᵒ * rule :=
-        mul_le_mul' le_rfl (SRA.box_le _)
+    LeanTra.Algebra.IsDeterministic (TRA.box (rule : TrmRel)) := by
+  change ((TRA.box (rule : TrmRel))ᵒ * TRA.box rule) ≤ 1
+  calc (TRA.box (rule : TrmRel))ᵒ * TRA.box rule
+      ≤ (rule : TrmRel)ᵒ * TRA.box rule :=
+        mul_le_mul' (IsInvolutiveQuantale.converse_monotonicity (TRA.box_le _)) le_rfl
+    _ ≤ (rule : TrmRel)ᵒ * rule :=
+        mul_le_mul' le_rfl (TRA.box_le _)
     _ ≤ 1 := rule_isDeterministic
 
 /-- **Determinism of big-step Peano-arithmetic evaluation.** For the
 closed part of the four-rule reduction system,
 `(r^⇓)ᵒ * r^⇓ ≤ Δκ`. Direct instantiation of
-`LeanTra.Determinism.bigStep_determinism` at `SRA.box rule`, with
+`LeanTra.Determinism.bigStep_determinism` at `TRA.box rule`, with
 the three hypotheses discharged just above. -/
 theorem rule_bigStep_determinism :
-    (LeanTra.Determinism.bigStepEvaluation (SRA.box (rule : SynRel)))ᵒ
-        * LeanTra.Determinism.bigStepEvaluation (SRA.box rule)
-      ≤ (OperationalDecomposition.valueCoreflexive : SynRel) :=
+    (LeanTra.Determinism.bigStepEvaluation (TRA.box (rule : TrmRel)))ᵒ
+        * LeanTra.Determinism.bigStepEvaluation (TRA.box rule)
+      ≤ (OperationalDecomposition.valueCoreflexive : TrmRel) :=
   LeanTra.Determinism.bigStep_determinism
     rule_boxed_gip
-    (SRA.box_isClosed _)
+    (TRA.box_isClosed _)
     rule_boxed_isDeterministic
 
-end SynRel
+end TrmRel
 
 end LeanTra.Instances.PeanoArithmetic
 
@@ -2094,19 +2094,19 @@ Lean 4 prelude axioms. No `sorryAx`, no opaque bridge assumption: the
 instance is closed.
 -/
 
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.instIsInvolutiveQuantale
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.subst_varDiag_unit_right
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.scr_compositionality
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.subst_associativity
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.subst_compositionality_oplax
-#print axioms LeanTra.Instances.PeanoArithmetic.instSRA
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.scr_decomposition
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.box_elimination_oplaxity
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.instIsInvolutiveQuantale
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.subst_varDiag_unit_right
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.scr_compositionality
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.subst_associativity
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.subst_compositionality_oplax
+#print axioms LeanTra.Instances.PeanoArithmetic.instTRA
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.scr_decomposition
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.box_elimination_oplaxity
 #print axioms LeanTra.Instances.PeanoArithmetic.instOperationalDecomposition
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_isReduction
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_isSubstitutiveAtIdentity
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_isDeterministic
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_gip
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_gcp
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_confluent
-#print axioms LeanTra.Instances.PeanoArithmetic.SynRel.rule_bigStep_determinism
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_isReduction
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_isSubstitutiveAtIdentity
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_isDeterministic
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_gip
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_gcp
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_confluent
+#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_bigStep_determinism

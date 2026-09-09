@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Basic
+public import LeanTra.TRA.Basic
 public import Mathlib.Order.FixedPoints
 
 /-!
@@ -17,7 +17,7 @@ structure at a time, into a term that `a` relates to the second — the
 congruence-like closure that makes coinductive relations compatible with
 term formation.
 
-The construction needs nothing beyond the `SRA` axioms. `⌃·` is monotone,
+The construction needs nothing beyond the `TRA` axioms. `⌃·` is monotone,
 so `x ↦ ⌃x * a` is monotone and Knaster–Tarski gives the least fixed
 point; `OrderHom.lfp` supplies both the characteristic equation and the
 induction principle.
@@ -62,10 +62,10 @@ assumption.
 
 open scoped IsInvolutiveQuantale Quantale
 
-namespace SRA
+namespace TRA
 
 variable {α : Type*}
-variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [SRA α]
+variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [TRA α]
 
 
 
@@ -219,52 +219,52 @@ theorem howe_converse (a : α) : (howe a)ᵒ = opHowe (aᵒ) := by
 /-! ### Closedness: residual of substitution -/
 
 /-- Right adjoint of `·⟦b⟧`: the largest `a` such that `a⟦b⟧ ≤ c`. -/
-def substResid (b c : α) : α := sSup {a | SRA.subst a b ≤ c}
+def substResid (b c : α) : α := sSup {a | TRA.subst a b ≤ c}
 
 /-- The substitution/residual adjunction `·⟦b⟧ ⊣ b » ·`. -/
-theorem subst_le_iff {a b c : α} : SRA.subst a b ≤ c ↔ a ≤ substResid b c := by
+theorem subst_le_iff {a b c : α} : TRA.subst a b ≤ c ↔ a ≤ substResid b c := by
   refine ⟨fun h => le_sSup h, fun h => ?_⟩
-  calc SRA.subst a b
-      ≤ SRA.subst (substResid b c) b := subst_monotonicity_left h
-    _ = sSup ((fun x => SRA.subst x b) '' {x | SRA.subst x b ≤ c}) :=
-        SRA.subst_join_preservation_left _ _
+  calc TRA.subst a b
+      ≤ TRA.subst (substResid b c) b := subst_monotonicity_left h
+    _ = sSup ((fun x => TRA.subst x b) '' {x | TRA.subst x b ≤ c}) :=
+        TRA.subst_join_preservation_left _ _
     _ ≤ c := by
         refine sSup_le ?_
         rintro _ ⟨y, hy, rfl⟩
         exact hy
 
 /-- `Δ⟦Δ⟧ = Δ`: substituting the identity into the identity is the identity. -/
-theorem subst_one_one : SRA.subst (1 : α) 1 = 1 := by
+theorem subst_one_one : TRA.subst (1 : α) 1 = 1 := by
   refine le_antisymm ?_ ?_
   · refine subst_le_iff.mpr ?_
     refine one_le_of_cr_le ?_
     refine sup_le ?_ ?_
-    · exact subst_le_iff.mp (by rw [SRA.subst_varDiag_unit_left])
+    · exact subst_le_iff.mp (by rw [TRA.subst_varDiag_unit_left])
     · refine subst_le_iff.mp ?_
-      calc SRA.subst (scr (substResid (1 : α) 1)) 1
-          ≤ scr (SRA.subst (substResid (1 : α) 1) 1) :=
-            SRA.subst_scr_oplaxity _ _ varDiag_coreflexivity
-        _ ≤ scr 1 := SRA.scr_monotonicity (subst_le_iff.mpr le_rfl)
+      calc TRA.subst (scr (substResid (1 : α) 1)) 1
+          ≤ scr (TRA.subst (substResid (1 : α) 1) 1) :=
+            TRA.subst_scr_oplaxity _ _ varDiag_coreflexivity
+        _ ≤ scr 1 := TRA.scr_monotonicity (subst_le_iff.mpr le_rfl)
         _ ≤ 1 := scr_unit_oplaxity
   · calc (1 : α)
-        = SRA.subst varDiag 1 := (SRA.subst_varDiag_unit_left 1).symm
-      _ ≤ SRA.subst 1 1 := subst_monotonicity_left varDiag_coreflexivity
+        = TRA.subst varDiag 1 := (TRA.subst_varDiag_unit_left 1).symm
+      _ ≤ TRA.subst 1 1 := subst_monotonicity_left varDiag_coreflexivity
 
 /-- The base instance is idempotent: `(a⟦Δ⟧)⟦Δ⟧ = a⟦Δ⟧`. -/
 theorem subst_one_idempotence (a : α) :
-    SRA.subst (SRA.subst a 1) 1 = SRA.subst a 1 := by
-  rw [SRA.subst_associativity, subst_one_one]
+    TRA.subst (TRA.subst a 1) 1 = TRA.subst a 1 := by
+  rw [TRA.subst_associativity, subst_one_one]
 
 /-- Compatibility implies Leibniz: if `⌃a ≤ a` then `Δ⟦a⟧ ≤ a`. -/
-theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
-    SRA.subst 1 a ≤ a := by
+theorem subst_one_le_of_cr_le {a : α} (h : TRA.cr a ≤ a) :
+    TRA.subst 1 a ≤ a := by
   refine subst_le_iff.mpr ?_
   refine one_le_of_cr_le ?_
   refine subst_le_iff.mp ?_
-  calc SRA.subst (SRA.cr (SRA.substResid a a)) a
-      ≤ a ⊔ SRA.cr (SRA.subst (SRA.substResid a a) a) :=
-        subst_cr_oplaxity _ _ ((le_sup_left : SRA.varDiag ≤ SRA.cr a).trans h)
-    _ ≤ a ⊔ SRA.cr a := sup_le_sup_left (cr_monotonicity (subst_le_iff.mpr le_rfl)) a
+  calc TRA.subst (TRA.cr (TRA.substResid a a)) a
+      ≤ a ⊔ TRA.cr (TRA.subst (TRA.substResid a a) a) :=
+        subst_cr_oplaxity _ _ ((le_sup_left : TRA.varDiag ≤ TRA.cr a).trans h)
+    _ ≤ a ⊔ TRA.cr a := sup_le_sup_left (cr_monotonicity (subst_le_iff.mpr le_rfl)) a
     _ ≤ a ⊔ a := sup_le_sup_left h a
     _ = a := sup_idem a
 
@@ -272,7 +272,7 @@ theorem subst_one_le_of_cr_le {a : α} (h : SRA.cr a ≤ a) :
 
 /-! ### Notation -/
 
-@[inherit_doc] scoped postfix:max "ᴴ" => SRA.howe
-@[inherit_doc] scoped postfix:max "§" => SRA.opHowe
+@[inherit_doc] scoped postfix:max "ᴴ" => TRA.howe
+@[inherit_doc] scoped postfix:max "§" => TRA.opHowe
 
-end SRA
+end TRA

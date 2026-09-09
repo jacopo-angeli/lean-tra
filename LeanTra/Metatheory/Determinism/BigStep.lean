@@ -61,7 +61,7 @@ to a value.
 -/
 @[expose] public section
 
-open scoped IsInvolutiveQuantale Quantale SRA
+open scoped IsInvolutiveQuantale Quantale TRA
 open LeanTra.Algebra
 open LeanTra.Metatheory
 open OperationalDecomposition
@@ -86,7 +86,7 @@ the proof. -/
 
 theorem bigStep_determinism {a : α}
     (hgip : GIP a)
-    (hclosed : SRA.IsClosed a)
+    (hclosed : TRA.IsClosed a)
     (hdet : IsDeterministic a) :
     (bigStepEvaluation a)ᵒ * bigStepEvaluation a ≤ (valueCoreflexive : α) := by
   -- Δ̄-inertness under `a^E`
@@ -209,19 +209,19 @@ theorem bigStep_determinism {a : α}
       _ = (valueCoreflexive : α)
             ⊔ majorProjection (oneStepEvaluation a) * a * bigStepEvaluation a := by
           rw [← sup_assoc, sup_idem]
-  have ha_eq : SRA.box a = a := SRA.isClosed_iff.mp hclosed
+  have ha_eq : TRA.box a = a := TRA.isClosed_iff.mp hclosed
   have hcip : a ≤ majorProjection (valueCoreflexive : α) * a := by
     calc a
-        = SRA.box a := ha_eq.symm
-      _ ≤ SRA.box (majorProjection (introductionCoreflexive : α) * a) :=
-          SRA.box_monotonicity hgip
-      _ = SRA.box (majorProjection (introductionCoreflexive : α) * SRA.box a) := by
+        = TRA.box a := ha_eq.symm
+      _ ≤ TRA.box (majorProjection (introductionCoreflexive : α) * a) :=
+          TRA.box_monotonicity hgip
+      _ = TRA.box (majorProjection (introductionCoreflexive : α) * TRA.box a) := by
           rw [ha_eq]
-      _ = SRA.box (majorProjection (introductionCoreflexive : α)) * SRA.box a := by
-          rw [← SRA.box_absorption_right]
-      _ = SRA.box (majorProjection (introductionCoreflexive : α)) * a := by
+      _ = TRA.box (majorProjection (introductionCoreflexive : α)) * TRA.box a := by
+          rw [← TRA.box_absorption_right]
+      _ = TRA.box (majorProjection (introductionCoreflexive : α)) * a := by
           rw [ha_eq]
-      _ ≤ majorProjection (SRA.box (introductionCoreflexive : α)) * a := by
+      _ ≤ majorProjection (TRA.box (introductionCoreflexive : α)) * a := by
           refine mul_le_mul' ?_ le_rfl
           exact OperationalDecomposition.box_elimination_oplaxity _ _
   have hunfold : bigStepEvaluation a
@@ -306,7 +306,7 @@ theorem bigStep_determinism {a : α}
     change (oneStepEvaluation a)∗ * valueCoreflexive ≤ b
     calc (oneStepEvaluation a)∗ * (valueCoreflexive : α)
         ≤ (b ⇨ₗ b) * (valueCoreflexive : α) := mul_le_mul' hstar le_rfl
-      _ ≤ (b ⇨ₗ b) * b := mul_le_mul' le_rfl ((SRA.box_le _).trans hD)
+      _ ≤ (b ⇨ₗ b) * b := mul_le_mul' le_rfl ((TRA.box_le _).trans hD)
       _ ≤ b := Quantale.leftMulResiduation_le_iff_mul_le.mp le_rfl
   have hindOp : ∀ {b : α}, (introductionCoreflexive : α) ≤ b → b * aᵒ ≤ b →
       b * majorProjection b ≤ b → (bigStepEvaluation a)ᵒ ≤ b := by
@@ -355,7 +355,7 @@ theorem bigStep_determinism {a : α}
                       * (valueCoreflexive : α)
                   ≤ majorProjection (introductionCoreflexive : α)
                       * (introductionCoreflexive : α) :=
-                    mul_le_mul' le_rfl (SRA.box_le _)
+                    mul_le_mul' le_rfl (TRA.box_le _)
                 _ ≤ ⊥ := majorProjection_mul_introductionCoreflexive_le_bot _
             · calc majorProjection (introductionCoreflexive : α)
                       * (majorProjection (oneStepEvaluation a) * a * bigStepEvaluation a)
@@ -403,7 +403,7 @@ theorem bigStep_determinism {a : α}
     refine sup_le ?_ ?_
     · calc majorProjection b * (valueCoreflexive : α)
           ≤ majorProjection b * (introductionCoreflexive : α) :=
-            mul_le_mul' le_rfl (SRA.box_le _)
+            mul_le_mul' le_rfl (TRA.box_le _)
         _ ≤ (⊥ : α) := majorProjection_mul_introductionCoreflexive_le_bot _
         _ ≤ majorProjection (b * bigStepEvaluation a) * bigStepEvaluation a := bot_le
     · calc majorProjection b
@@ -460,7 +460,7 @@ theorem bigStep_determinism {a : α}
           _ ≤ majorProjection (valueCoreflexive : α) * bigStepEvaluation a :=
               mul_le_mul' (majorProjection_monotonicity hc) le_rfl
           _ ≤ majorProjection (introductionCoreflexive : α) * bigStepEvaluation a :=
-              mul_le_mul' (majorProjection_monotonicity (SRA.box_le _)) le_rfl
+              mul_le_mul' (majorProjection_monotonicity (TRA.box_le _)) le_rfl
           _ ≤ 1 * bigStepEvaluation a :=
               mul_le_mul' majorProjection_introductionCoreflexive_le_one le_rfl
           _ = bigStepEvaluation a := one_mul _

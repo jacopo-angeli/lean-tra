@@ -4,7 +4,7 @@ Author: Jacopo Angeli.
 -/
 module
 
-public import LeanTra.SRA.Basic
+public import LeanTra.TRA.Basic
 public import Mathlib.Order.FixedPoints
 
 /-!
@@ -15,7 +15,7 @@ relationally, `j` is the identity restricted to closed terms, so `□a`
 keeps exactly those pairs of `a` whose two endpoints are both closed, and
 `♦a` is the largest relation whose closed part `a` already contains.
 
-`□` is not a field of `SRA`: it is defined from the closure constant `j`,
+`□` is not a field of `TRA`: it is defined from the closure constant `j`,
 and every law below is derived from the four `j` axioms and nothing else.
 That is the point of the file. An earlier presentation took `□` as
 primitive with eight axioms of its own; seven of them are the theorems
@@ -39,10 +39,10 @@ again, which is the useful half in practice.
 
 open scoped IsInvolutiveQuantale Quantale
 
-namespace SRA
+namespace TRA
 
 variable {α : Type*}
-variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [SRA α]
+variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [TRA α]
 
 
 
@@ -55,27 +55,27 @@ equation lemma. -/
 
 /-- The closure modality `□a := j * a * j`: the pairs of `a` whose two
 endpoints are both closed. -/
-def box (a : α) : α := SRA.j * a * SRA.j
+def box (a : α) : α := TRA.j * a * TRA.j
 
 /-- `□` is deflationary: `□a ≤ a`. -/
-theorem box_le (a : α) : SRA.box a ≤ a := by
-  change SRA.j * a * SRA.j ≤ a
-  calc SRA.j * a * SRA.j
-      ≤ 1 * a * 1 := mul_le_mul' (mul_le_mul' SRA.j_coreflexivity le_rfl) SRA.j_coreflexivity
+theorem box_le (a : α) : TRA.box a ≤ a := by
+  change TRA.j * a * TRA.j ≤ a
+  calc TRA.j * a * TRA.j
+      ≤ 1 * a * 1 := mul_le_mul' (mul_le_mul' TRA.j_coreflexivity le_rfl) TRA.j_coreflexivity
     _ = a := by rw [one_mul, mul_one]
 
 /-- `□` is idempotent: `□(□a) = □a`. -/
-theorem box_idempotence (a : α) : SRA.box (SRA.box a) = SRA.box a := by
-  change SRA.j * (SRA.j * a * SRA.j) * SRA.j = SRA.j * a * SRA.j
-  rw [← mul_assoc SRA.j (SRA.j * a) SRA.j] at *
-  -- goal: SRA.j * (SRA.j * a) * SRA.j * SRA.j = SRA.j * a * SRA.j
-  rw [← mul_assoc SRA.j SRA.j a]
-  -- goal: SRA.j * SRA.j * a * SRA.j * SRA.j = SRA.j * a * SRA.j
-  rw [j_idempotence, mul_assoc (SRA.j * a) SRA.j SRA.j, j_idempotence]
+theorem box_idempotence (a : α) : TRA.box (TRA.box a) = TRA.box a := by
+  change TRA.j * (TRA.j * a * TRA.j) * TRA.j = TRA.j * a * TRA.j
+  rw [← mul_assoc TRA.j (TRA.j * a) TRA.j] at *
+  -- goal: TRA.j * (TRA.j * a) * TRA.j * TRA.j = TRA.j * a * TRA.j
+  rw [← mul_assoc TRA.j TRA.j a]
+  -- goal: TRA.j * TRA.j * a * TRA.j * TRA.j = TRA.j * a * TRA.j
+  rw [j_idempotence, mul_assoc (TRA.j * a) TRA.j TRA.j, j_idempotence]
 
 /-- `□` is monotone: from monotonicity of `*`. -/
-theorem box_monotonicity ⦃a b : α⦄ (h : a ≤ b) : SRA.box a ≤ SRA.box b := by
-  change SRA.j * a * SRA.j ≤ SRA.j * b * SRA.j
+theorem box_monotonicity ⦃a b : α⦄ (h : a ≤ b) : TRA.box a ≤ TRA.box b := by
+  change TRA.j * a * TRA.j ≤ TRA.j * b * TRA.j
   exact mul_le_mul' (mul_le_mul' le_rfl h) le_rfl
 
 
@@ -93,55 +93,55 @@ whether the remaining `j` is consumed by `j ≤ Δ` (the lax law) or kept
 where it is (the absorption laws). -/
 
 /-- Left absorption: `□a * □b = □(□a * b)`. -/
-theorem box_absorption_left (a b : α) : SRA.box a * SRA.box b = SRA.box (SRA.box a * b) := by
-  change SRA.j * a * SRA.j * (SRA.j * b * SRA.j)
-       = SRA.j * (SRA.j * a * SRA.j * b) * SRA.j
-  have hL : SRA.j * a * SRA.j * (SRA.j * b * SRA.j)
-          = SRA.j * a * SRA.j * b * SRA.j := by
-    rw [← mul_assoc (SRA.j * a * SRA.j) (SRA.j * b) SRA.j,
-        ← mul_assoc (SRA.j * a * SRA.j) SRA.j b,
-        mul_assoc (SRA.j * a) SRA.j SRA.j, j_idempotence]
-  have hR : SRA.j * (SRA.j * a * SRA.j * b) * SRA.j
-          = SRA.j * a * SRA.j * b * SRA.j := by
-    rw [← mul_assoc SRA.j (SRA.j * a * SRA.j) b,
-        ← mul_assoc SRA.j (SRA.j * a) SRA.j,
-        ← mul_assoc SRA.j SRA.j a, j_idempotence]
+theorem box_absorption_left (a b : α) : TRA.box a * TRA.box b = TRA.box (TRA.box a * b) := by
+  change TRA.j * a * TRA.j * (TRA.j * b * TRA.j)
+       = TRA.j * (TRA.j * a * TRA.j * b) * TRA.j
+  have hL : TRA.j * a * TRA.j * (TRA.j * b * TRA.j)
+          = TRA.j * a * TRA.j * b * TRA.j := by
+    rw [← mul_assoc (TRA.j * a * TRA.j) (TRA.j * b) TRA.j,
+        ← mul_assoc (TRA.j * a * TRA.j) TRA.j b,
+        mul_assoc (TRA.j * a) TRA.j TRA.j, j_idempotence]
+  have hR : TRA.j * (TRA.j * a * TRA.j * b) * TRA.j
+          = TRA.j * a * TRA.j * b * TRA.j := by
+    rw [← mul_assoc TRA.j (TRA.j * a * TRA.j) b,
+        ← mul_assoc TRA.j (TRA.j * a) TRA.j,
+        ← mul_assoc TRA.j TRA.j a, j_idempotence]
   rw [hL, hR]
 
 /-- Right absorption: `□a * □b = □(a * □b)`. -/
-theorem box_absorption_right (a b : α) : SRA.box a * SRA.box b = SRA.box (a * SRA.box b) := by
-  change SRA.j * a * SRA.j * (SRA.j * b * SRA.j)
-       = SRA.j * (a * (SRA.j * b * SRA.j)) * SRA.j
-  have hL : SRA.j * a * SRA.j * (SRA.j * b * SRA.j)
-          = SRA.j * a * SRA.j * b * SRA.j := by
-    rw [← mul_assoc (SRA.j * a * SRA.j) (SRA.j * b) SRA.j,
-        ← mul_assoc (SRA.j * a * SRA.j) SRA.j b,
-        mul_assoc (SRA.j * a) SRA.j SRA.j, j_idempotence]
-  have hR : SRA.j * (a * (SRA.j * b * SRA.j)) * SRA.j
-          = SRA.j * a * SRA.j * b * SRA.j := by
-    rw [← mul_assoc SRA.j a (SRA.j * b * SRA.j),
-        ← mul_assoc (SRA.j * a) (SRA.j * b) SRA.j,
-        ← mul_assoc (SRA.j * a) SRA.j b,
-        mul_assoc (SRA.j * a * SRA.j * b) SRA.j SRA.j, j_idempotence]
+theorem box_absorption_right (a b : α) : TRA.box a * TRA.box b = TRA.box (a * TRA.box b) := by
+  change TRA.j * a * TRA.j * (TRA.j * b * TRA.j)
+       = TRA.j * (a * (TRA.j * b * TRA.j)) * TRA.j
+  have hL : TRA.j * a * TRA.j * (TRA.j * b * TRA.j)
+          = TRA.j * a * TRA.j * b * TRA.j := by
+    rw [← mul_assoc (TRA.j * a * TRA.j) (TRA.j * b) TRA.j,
+        ← mul_assoc (TRA.j * a * TRA.j) TRA.j b,
+        mul_assoc (TRA.j * a) TRA.j TRA.j, j_idempotence]
+  have hR : TRA.j * (a * (TRA.j * b * TRA.j)) * TRA.j
+          = TRA.j * a * TRA.j * b * TRA.j := by
+    rw [← mul_assoc TRA.j a (TRA.j * b * TRA.j),
+        ← mul_assoc (TRA.j * a) (TRA.j * b) TRA.j,
+        ← mul_assoc (TRA.j * a) TRA.j b,
+        mul_assoc (TRA.j * a * TRA.j * b) TRA.j TRA.j, j_idempotence]
   rw [hL, hR]
 
 /-- `□` is lax over composition: `□a * □b ≤ □(a * b)`. -/
-theorem box_compositionality_lax (a b : α) : SRA.box a * SRA.box b ≤ SRA.box (a * b) := by
-  change SRA.j * a * SRA.j * (SRA.j * b * SRA.j) ≤ SRA.j * (a * b) * SRA.j
-  have hcollapse : SRA.j * a * SRA.j * (SRA.j * b * SRA.j)
-                 = SRA.j * a * SRA.j * b * SRA.j := by
-    rw [← mul_assoc (SRA.j * a * SRA.j) (SRA.j * b) SRA.j,
-        ← mul_assoc (SRA.j * a * SRA.j) SRA.j b,
-        mul_assoc (SRA.j * a) SRA.j SRA.j, j_idempotence]
+theorem box_compositionality_lax (a b : α) : TRA.box a * TRA.box b ≤ TRA.box (a * b) := by
+  change TRA.j * a * TRA.j * (TRA.j * b * TRA.j) ≤ TRA.j * (a * b) * TRA.j
+  have hcollapse : TRA.j * a * TRA.j * (TRA.j * b * TRA.j)
+                 = TRA.j * a * TRA.j * b * TRA.j := by
+    rw [← mul_assoc (TRA.j * a * TRA.j) (TRA.j * b) TRA.j,
+        ← mul_assoc (TRA.j * a * TRA.j) TRA.j b,
+        mul_assoc (TRA.j * a) TRA.j TRA.j, j_idempotence]
   rw [hcollapse]
-  calc SRA.j * a * SRA.j * b * SRA.j
-      = SRA.j * a * (SRA.j * b) * SRA.j := by
-        rw [mul_assoc (SRA.j * a) SRA.j b]
-    _ ≤ SRA.j * a * (1 * b) * SRA.j :=
+  calc TRA.j * a * TRA.j * b * TRA.j
+      = TRA.j * a * (TRA.j * b) * TRA.j := by
+        rw [mul_assoc (TRA.j * a) TRA.j b]
+    _ ≤ TRA.j * a * (1 * b) * TRA.j :=
         mul_le_mul' (mul_le_mul' le_rfl
-          (mul_le_mul' SRA.j_coreflexivity le_rfl)) le_rfl
-    _ = SRA.j * a * b * SRA.j := by rw [one_mul]
-    _ = SRA.j * (a * b) * SRA.j := by rw [mul_assoc SRA.j a b]
+          (mul_le_mul' TRA.j_coreflexivity le_rfl)) le_rfl
+    _ = TRA.j * a * b * TRA.j := by rw [one_mul]
+    _ = TRA.j * (a * b) * TRA.j := by rw [mul_assoc TRA.j a b]
 
 
 
@@ -154,40 +154,40 @@ Variables do not pass through at all: no variable is closed, so `□Δη`
 collapses to `⊥`. -/
 
 /-- `□` commutes with converse: `(□a)ᵒ = □(aᵒ)`. -/
-theorem box_converse_commutation (a : α) : (SRA.box a)ᵒ = SRA.box (aᵒ) := by
-  change (SRA.j * a * SRA.j)ᵒ = SRA.j * aᵒ * SRA.j
-  calc (SRA.j * a * SRA.j)ᵒ
-      = (SRA.j)ᵒ * (SRA.j * a)ᵒ := IsInvolutiveQuantale.converse_compositionality _ _
-    _ = (SRA.j)ᵒ * (aᵒ * (SRA.j)ᵒ) := by rw [IsInvolutiveQuantale.converse_compositionality]
-    _ = SRA.j * (aᵒ * SRA.j) := by rw [j_symmetry_eq]
-    _ = SRA.j * aᵒ * SRA.j := (mul_assoc _ _ _).symm
+theorem box_converse_commutation (a : α) : (TRA.box a)ᵒ = TRA.box (aᵒ) := by
+  change (TRA.j * a * TRA.j)ᵒ = TRA.j * aᵒ * TRA.j
+  calc (TRA.j * a * TRA.j)ᵒ
+      = (TRA.j)ᵒ * (TRA.j * a)ᵒ := IsInvolutiveQuantale.converse_compositionality _ _
+    _ = (TRA.j)ᵒ * (aᵒ * (TRA.j)ᵒ) := by rw [IsInvolutiveQuantale.converse_compositionality]
+    _ = TRA.j * (aᵒ * TRA.j) := by rw [j_symmetry_eq]
+    _ = TRA.j * aᵒ * TRA.j := (mul_assoc _ _ _).symm
 
 /-- `□` preserves arbitrary joins. -/
-theorem box_join_preservation (s : Set α) : SRA.box (sSup s) = sSup (SRA.box '' s) := by
+theorem box_join_preservation (s : Set α) : TRA.box (sSup s) = sSup (TRA.box '' s) := by
   refine le_antisymm ?_ ?_
-  · rw [show SRA.box (sSup s) = SRA.j * sSup s * SRA.j from rfl,
+  · rw [show TRA.box (sSup s) = TRA.j * sSup s * TRA.j from rfl,
       mul_assoc, sSup_mul_distrib, ← sSup_image,
       mul_sSup_distrib, ← sSup_image, Set.image_image]
     refine sSup_le_sSup ?_
     rintro _ ⟨y, hy, rfl⟩
     refine ⟨y, hy, ?_⟩
-    change SRA.box y = SRA.j * (y * SRA.j)
+    change TRA.box y = TRA.j * (y * TRA.j)
     rw [box, mul_assoc]
   · refine sSup_le ?_
     rintro _ ⟨y, hy, rfl⟩
     exact box_monotonicity (le_sSup hy)
 
 /-- `□` preserves binary joins: `□(a ⊔ b) = □a ⊔ □b`. -/
-theorem box_join_preservation_binary (a b : α) : SRA.box (a ⊔ b) = SRA.box a ⊔ SRA.box b := by
+theorem box_join_preservation_binary (a b : α) : TRA.box (a ⊔ b) = TRA.box a ⊔ TRA.box b := by
   have h := box_join_preservation ({a, b} : Set α)
   rwa [sSup_pair, Set.image_pair, sSup_pair] at h
 
 /-- `□` and `Δη` are orthogonal: `□Δη = ⊥`. -/
-theorem box_varDiag_orthogonality : SRA.box (SRA.varDiag : α) = ⊥ := by
-  change SRA.j * SRA.varDiag * SRA.j = ⊥
+theorem box_varDiag_orthogonality : TRA.box (TRA.varDiag : α) = ⊥ := by
+  change TRA.j * TRA.varDiag * TRA.j = ⊥
   refine le_antisymm ?_ bot_le
-  calc SRA.j * SRA.varDiag * SRA.j
-      ≤ (⊥ : α) * SRA.j := mul_le_mul' SRA.j_varDiag_orthogonality le_rfl
+  calc TRA.j * TRA.varDiag * TRA.j
+      ≤ (⊥ : α) * TRA.j := mul_le_mul' TRA.j_varDiag_orthogonality le_rfl
     _ = ⊥ := Quantale.bot_mul
 
 
@@ -221,22 +221,22 @@ candidate and the adjunction `□ ⊣ ♦` follows. -/
 
 /-- The diamond `♦a := sSup {x | □x ≤ a}`: the largest relation whose
 closed part `a` contains. -/
-def dia (a : α) : α := sSup {x | SRA.box x ≤ a}
+def dia (a : α) : α := sSup {x | TRA.box x ≤ a}
 
 /-- `♦` is monotone. -/
 theorem dia_monotonicity ⦃a a' : α⦄ (h : a ≤ a') : dia a ≤ dia a' :=
   sSup_le_sSup fun _ hx => le_trans hx h
 
 /-- Introduction half of the adjunction: `□a ≤ b` gives `a ≤ ♦b`. -/
-theorem le_dia_of_box_le {a b : α} (h : SRA.box a ≤ b) : a ≤ dia b :=
+theorem le_dia_of_box_le {a b : α} (h : TRA.box a ≤ b) : a ≤ dia b :=
   le_sSup h
 
 /-- The adjunction `□ ⊣ ♦`: `□a ≤ b ↔ a ≤ ♦b`. -/
-theorem box_le_iff {a b : α} : SRA.box a ≤ b ↔ a ≤ dia b := by
+theorem box_le_iff {a b : α} : TRA.box a ≤ b ↔ a ≤ dia b := by
   refine ⟨le_dia_of_box_le, fun h => ?_⟩
-  calc SRA.box a
-      ≤ SRA.box (dia b) := box_monotonicity h
-    _ = sSup (SRA.box '' {x | SRA.box x ≤ b}) := box_join_preservation _
+  calc TRA.box a
+      ≤ TRA.box (dia b) := box_monotonicity h
+    _ = sSup (TRA.box '' {x | TRA.box x ≤ b}) := box_join_preservation _
     _ ≤ b := by
         refine sSup_le ?_
         rintro _ ⟨x, hx, rfl⟩
@@ -251,14 +251,14 @@ endpoints of every pair it relates are closed. The inequality
 `a ≤ □a` suffices as a definition, since `box_le` gives the other half. -/
 
 /-- `a` is closed when it refines its own `□`. -/
-def IsClosed (a : α) : Prop := a ≤ SRA.box a
+def IsClosed (a : α) : Prop := a ≤ TRA.box a
 
 /-- `a` is closed iff `□a = a`. -/
-theorem isClosed_iff {a : α} : IsClosed a ↔ SRA.box a = a :=
+theorem isClosed_iff {a : α} : IsClosed a ↔ TRA.box a = a :=
   ⟨fun h => le_antisymm (box_le a) h, fun h => h.ge⟩
 
 /-- `□a` is closed. -/
-theorem box_isClosed (a : α) : IsClosed (SRA.box a) := (box_idempotence a).ge
+theorem box_isClosed (a : α) : IsClosed (TRA.box a) := (box_idempotence a).ge
 
 /-- `⊥` is closed. -/
 theorem isClosed_bot : IsClosed (⊥ : α) := bot_le
@@ -274,31 +274,31 @@ a relation defined by recursion on open terms be restricted to closed
 ones without redoing the recursion. -/
 
 /-- `F` is closed when `□ ∘ F ≤ F ∘ □` pointwise. -/
-def IsClosedFun (F : α →o α) : Prop := ∀ x, SRA.box (F x) ≤ F (SRA.box x)
+def IsClosedFun (F : α →o α) : Prop := ∀ x, TRA.box (F x) ≤ F (TRA.box x)
 
 /-- `□ ∘ F`, bundled as an `OrderHom`. -/
 def boxComp (F : α →o α) : α →o α where
-  toFun x := SRA.box (F x)
+  toFun x := TRA.box (F x)
   monotone' _ _ h := box_monotonicity (F.mono h)
 
 /-- Transfer lemma: for a closed monotone `F`, `□(μF) = μ(□∘F)`. -/
 theorem box_lfp {F : α →o α} (hF : IsClosedFun F) :
-    SRA.box F.lfp = (boxComp F).lfp := by
+    TRA.box F.lfp = (boxComp F).lfp := by
   refine le_antisymm ?_ ?_
   · refine box_le_iff.mpr ?_
     refine F.lfp_le ?_
     refine box_le_iff.mp ?_
-    calc SRA.box (F (dia (boxComp F).lfp))
-        = SRA.box (SRA.box (F (dia (boxComp F).lfp))) := (box_idempotence _).symm
-      _ ≤ SRA.box (F (SRA.box (dia (boxComp F).lfp))) := box_monotonicity (hF _)
-      _ ≤ SRA.box (F (boxComp F).lfp) :=
+    calc TRA.box (F (dia (boxComp F).lfp))
+        = TRA.box (TRA.box (F (dia (boxComp F).lfp))) := (box_idempotence _).symm
+      _ ≤ TRA.box (F (TRA.box (dia (boxComp F).lfp))) := box_monotonicity (hF _)
+      _ ≤ TRA.box (F (boxComp F).lfp) :=
           box_monotonicity (F.mono (box_le_iff.mpr le_rfl))
       _ = (boxComp F).lfp := (boxComp F).map_lfp
   · refine (boxComp F).lfp_le ?_
-    change SRA.box (F (SRA.box F.lfp)) ≤ SRA.box F.lfp
-    calc SRA.box (F (SRA.box F.lfp))
-        ≤ SRA.box (F F.lfp) := box_monotonicity (F.mono (box_le _))
-      _ = SRA.box F.lfp := by rw [F.map_lfp]
+    change TRA.box (F (TRA.box F.lfp)) ≤ TRA.box F.lfp
+    calc TRA.box (F (TRA.box F.lfp))
+        ≤ TRA.box (F F.lfp) := box_monotonicity (F.mono (box_le _))
+      _ = TRA.box F.lfp := by rw [F.map_lfp]
 
 
 
@@ -308,7 +308,7 @@ Two statements about `□` that are neither proved nor part of the class.
 
 `IsSubstJClosed` below asserts that substituting by `j` yields a closed
 relation. It holds in the term model
-(`Instances.PeanoArithmetic.SynRel.substJClosed`) but is not derivable from
+(`Instances.PeanoArithmetic.TrmRel.substJClosed`) but is not derivable from
 the axioms, and nothing consumes it yet; it is recorded as a candidate
 rather than assumed.
 
@@ -321,18 +321,18 @@ evaluation development does not use it. -/
 
 /-- Candidate axiom: substituting by `j` yields a closed relation. -/
 def IsSubstJClosed (α : Type*) [Monoid α] [CompleteLattice α]
-    [IsQuantale α] [IsInvolutiveQuantale α] [SRA α] : Prop :=
-  ∀ a : α, SRA.IsClosed (SRA.subst a SRA.j)
+    [IsQuantale α] [IsInvolutiveQuantale α] [TRA α] : Prop :=
+  ∀ a : α, TRA.IsClosed (TRA.subst a TRA.j)
 
 
 
 /-! ### Notation -/
 
-@[inherit_doc] scoped prefix:max "□" => SRA.box
-@[inherit_doc] scoped prefix:max "♦" => SRA.dia
+@[inherit_doc] scoped prefix:max "□" => TRA.box
+@[inherit_doc] scoped prefix:max "♦" => TRA.dia
 
-end SRA
+end TRA
 
 
-#print axioms SRA.box_le_iff
-#print axioms SRA.box_lfp
+#print axioms TRA.box_le_iff
+#print axioms TRA.box_lfp

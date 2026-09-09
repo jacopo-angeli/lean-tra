@@ -31,8 +31,8 @@ predicates on that structure. Viewed relationally, virtually every term
 structure used in program semantics carries the same algebra of predicates, and
 this algebra can be axiomatised in a syntax-independent way. This project
 mechanises that axiomatisation, together with the first body of its metatheory,
-inside Lean 4 on top of Mathlib. In the code the class is called `SRA`
-(Syntax Relation Algebra).
+inside Lean 4 on top of Mathlib. In the code the class is called `TRA`
+(Term Relation Algebra).
 
 The base of the formalisation is a unital involutive quantale rather than a
 locally complete allegory. The two are the same algebra of relations written in

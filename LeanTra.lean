@@ -1,10 +1,10 @@
 import LeanTra.Algebra.InvolutiveQuantale
 import LeanTra.Algebra.KleeneStar
 import LeanTra.Algebra.Diamond
-import LeanTra.SRA.Basic
-import LeanTra.SRA.Howe
-import LeanTra.SRA.Modality
-import LeanTra.SRA.OperationalDecomposition
+import LeanTra.TRA.Basic
+import LeanTra.TRA.Howe
+import LeanTra.TRA.Modality
+import LeanTra.TRA.OperationalDecomposition
 import LeanTra.Metatheory.GentzenPrinciples
 import LeanTra.Metatheory.Determinism.Evaluation
 import LeanTra.Metatheory.Determinism.BigStep
