@@ -18,9 +18,9 @@ public import Mathlib.Algebra.BigOperators.Fin
 # The untyped λ-calculus as a second-order TRA instance
 
 The abstract confluence theorems of the thesis live at the level of
-Structural Relation Algebras and speak only of relations, substitution
+Term Relation Algebras and speak only of relations, substitution
 and structural compatibility; their point is that once a term structure
-is packaged as an TRA, the same argument delivers a confluence result
+is packaged as a TRA, the same argument delivers a confluence result
 whatever the syntax happens to be. To make this promise tangible we
 take the untyped λ-calculus, build the TRA structure by hand, and read
 confluence of β-reduction off the abstract bridge theorem. The
@@ -363,7 +363,7 @@ end Lam
 /-! ## Section 2: Renaming-closed context-indexed relations
 
 With the syntax fixed we build the relational layer that will carry
-the TRA structure. An TRA does not speak of terms directly but of
+the TRA structure. a TRA does not speak of terms directly but of
 *arity-indexed families of relations between terms*, closed under
 renaming: this is what `TrmRel` records, a family of binary relations
 on `Lam n`, one per arity, uniformly closed along any renaming

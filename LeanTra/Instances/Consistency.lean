@@ -32,7 +32,7 @@ namespace LeanTra.Structure.Model
 
 /-! ## The carrier
 
-The key thing to internalise about the model is that the carrier of an TRA
+The key thing to internalise about the model is that the carrier of a TRA
 is **not** itself a set of relations, it is the underlying set of an
 abstract algebra whose elements happen to *behave* like relations. The
 framework is pointfree: it does not care what its elements are, only that
