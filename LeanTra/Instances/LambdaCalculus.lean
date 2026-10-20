@@ -363,7 +363,7 @@ end Lam
 /-! ## Section 2: Renaming-closed context-indexed relations
 
 With the syntax fixed we build the relational layer that will carry
-the TRA structure. a TRA does not speak of terms directly but of
+the TRA structure. A TRA does not speak of terms directly but of
 *arity-indexed families of relations between terms*, closed under
 renaming: this is what `TrmRel` records, a family of binary relations
 on `Lam n`, one per arity, uniformly closed along any renaming
