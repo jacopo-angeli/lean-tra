@@ -419,5 +419,3 @@ theorem local_confluence {a : α}
   exact hDiamond.confluent
 
 end LeanTra.Confluence
-
-#print axioms LeanTra.Confluence.local_confluence

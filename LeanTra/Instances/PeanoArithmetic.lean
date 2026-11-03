@@ -2085,29 +2085,3 @@ theorem rule_bigStep_determinism :
 end TrmRel
 
 end LeanTra.Instances.PeanoArithmetic
-
-/-!
-A discipline the whole project follows: every non-trivial result is
-followed by a `#print axioms` command. The list below runs through the
-seventeen main results of the file. Each depends only on some combination
-of `propext`, `Classical.choice`, and `Quot.sound` — the three standard
-Lean 4 prelude axioms. No `sorryAx`, no opaque bridge assumption: the
-instance is closed.
--/
-
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.instIsInvolutiveQuantale
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.subst_varDiag_unit_right
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.scr_compositionality
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.subst_associativity
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.subst_compositionality_oplax
-#print axioms LeanTra.Instances.PeanoArithmetic.instTRA
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.scr_decomposition
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.box_elimination_oplaxity
-#print axioms LeanTra.Instances.PeanoArithmetic.instOperationalDecomposition
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_isReduction
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_isSubstitutiveAtIdentity
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_isDeterministic
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_gip
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_gcp
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_confluent
-#print axioms LeanTra.Instances.PeanoArithmetic.TrmRel.rule_bigStep_determinism

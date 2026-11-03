@@ -206,5 +206,3 @@ theorem orthogonality_confluence {a : α}
       _ = parRed a * (parRed a)ᵒ := by rw [mul_one]
 
 end LeanTra.Confluence
-
-#print axioms LeanTra.Confluence.orthogonality_confluence

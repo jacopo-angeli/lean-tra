@@ -228,8 +228,3 @@ closed canonical form. -/
 def bigStepEvaluation (a : α) : α := (oneStepEvaluation a)∗ * valueCoreflexive
 
 end LeanTra.Determinism
-
-#print axioms LeanTra.Determinism.majorDescent_fixpoint
-#print axioms LeanTra.Determinism.majorDescent_induction
-#print axioms LeanTra.Determinism.oneStepEvaluation_fixpoint
-#print axioms LeanTra.Determinism.oneStepEvaluation_induction

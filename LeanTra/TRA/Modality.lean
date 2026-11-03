@@ -333,7 +333,3 @@ def IsSubstJClosed (α : Type*) [Monoid α] [CompleteLattice α]
 @[inherit_doc] scoped prefix:max "♦" => TRA.dia
 
 end TRA
-
-
-#print axioms TRA.box_le_iff
-#print axioms TRA.box_lfp
