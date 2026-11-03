@@ -1785,29 +1785,3 @@ theorem betaRule_bigStep_determinism :
 end TrmRel
 
 end LeanTra.Instances.Lambda
-
-/-! ## Axiom trace
-
-Explicit `#check` and `#print axioms` on the main results, cf. the
-tail of `Instances/PeanoArithmetic.lean`. Every trace below shows a
-subset of the three standard Lean-prelude axioms `propext`,
-`Classical.choice`, `Quot.sound`; no non-standard axiom is used. -/
-
-#check @LeanTra.Instances.Lambda.TrmRel.instTRA
-#check @LeanTra.Instances.Lambda.TrmRel.instOperationalDecomposition
-#check @LeanTra.Instances.Lambda.TrmRel.betaRule_isReduction
-#check @LeanTra.Instances.Lambda.TrmRel.betaRule_local_confluent
-#check @LeanTra.Instances.Lambda.TrmRel.betaRule_confluent_orthogonal
-#check @LeanTra.Instances.Lambda.TrmRel.betaRule_bigStep_determinism
-
-#print axioms LeanTra.Instances.Lambda.TrmRel.instTRA
-#print axioms LeanTra.Instances.Lambda.TrmRel.instOperationalDecomposition
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_isReduction
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_isSubstitutiveAtIdentity
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_isDeterministic
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_gip
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_gcp
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_local_confluent
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_confluent_orthogonal
-#print axioms LeanTra.Instances.Lambda.TrmRel.betaRule_bigStep_determinism
-#print axioms LeanTra.Instances.Lambda.TrmRel.not_subst_scr_oplaxity_unguarded

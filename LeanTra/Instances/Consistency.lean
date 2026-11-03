@@ -225,10 +225,7 @@ element, the whole model would live inside a trivial algebra where every
 statement holds vacuously, and its existence would say nothing about the
 axioms. The two declarations below rule this out: `bot_ne_top` exhibits
 `⊥ ≠ ⊤` in `Toy`, and `Nontrivial Toy` packages the same fact as the
-Mathlib-standard typeclass. Together with the `#print axioms` commands at
-the very bottom, they close the consistency argument mechanically: a model
-exists, its carrier has more than one element, and no non-standard axiom is
-required to state either fact. -/
+Mathlib-standard typeclass. -/
 
 instance instNontrivial : Nontrivial Toy where
   exists_pair_ne :=
@@ -240,23 +237,3 @@ theorem bot_ne_top : (⊥ : Toy) ≠ (⊤ : Toy) := fun h =>
 end Toy
 
 end LeanTra.Structure.Model
-
-/-! ## Axiom trace
-
-The two `#print axioms` commands below make the axiom footprint of the two
-class instances visible in the build log. Both consist of `propext` and
-`Quot.sound` only, without `Classical.choice`, so consistency of `TRA` and
-`OperationalDecomposition` is established already in the choice-free
-fragment of Lean. What this file does *not* certify is that the axioms
-have any non-trivial content: on a two-element carrier the compatible
-refinement and the whole operational-decomposition layer are forced to
-collapse, so no substantive propagation through term structure is being
-tested. That job is delegated to the term-model instances in
-`Instances/PeanoArithmetic.lean` and `Instances/LambdaCalculus.lean`, where
-`scr` really does propagate a relation through the constructors of a
-genuine signature and `j` really does isolate closed terms. This file has
-the complementary role: not to check that the axioms *say something*, but
-to check that what they say is *not internally contradictory*. -/
-
-#print axioms LeanTra.Structure.Model.Toy.instTRA
-#print axioms LeanTra.Structure.Model.Toy.instOperationalDecomposition

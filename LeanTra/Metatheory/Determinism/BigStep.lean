@@ -482,5 +482,3 @@ theorem bigStep_determinism {a : α}
     _ ≤ valueCoreflexive := hc
 
 end LeanTra.Determinism
-
-#print axioms LeanTra.Determinism.bigStep_determinism

@@ -129,5 +129,3 @@ theorem IsDiamond.confluent {a : α} (hd : IsDiamond a) : IsConfluent a := by
       _ ≤ a∗ * (aᵒ)∗ := mul_le_mul_right (star_absorption_left aᵒ) _
 
 end LeanTra.Algebra
-
-#print axioms LeanTra.Algebra.IsDiamond.confluent
