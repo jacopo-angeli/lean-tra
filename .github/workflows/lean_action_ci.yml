@@ -14,3 +14,5 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           test: true
+      - name: Check that LeanTra.lean imports every file
+        run: lake exe mk_all --lib LeanTra --check
