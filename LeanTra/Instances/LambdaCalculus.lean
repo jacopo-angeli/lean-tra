@@ -1291,7 +1291,8 @@ finally cashes them into confluence of parallel β via
 `LeanTra.Confluence.local_confluence`. -/
 
 /-- `scr = introduction ⊔ elimination` on the diagonal. -/
-theorem scr_decomposition (a : TrmRel) : (TRA.scr a : TrmRel) = introduction a ⊔ elimination a a := by
+theorem scr_decomposition (a : TrmRel) :
+  (TRA.scr a : TrmRel) = introduction a ⊔ elimination a a := by
   ext n t s
   change (scr a).rel n t s ↔
     (introduction a).rel n t s ∨ (elimination a a).rel n t s
@@ -1313,7 +1314,8 @@ computation; `subst_introduction_oplaxity` carries the same
 binder-side reason. -/
 
 /-- OD axiom: `introduction` preserves arbitrary joins. -/
-theorem introduction_join_preservation (𝒮 : Set TrmRel) : introduction (sSup 𝒮) = sSup (introduction '' 𝒮) := by
+theorem introduction_join_preservation (𝒮 : Set TrmRel) :
+  introduction (sSup 𝒮) = sSup (introduction '' 𝒮) := by
   ext n t s
   refine ⟨?_, ?_⟩
   · rintro ⟨t', s', rfl, rfl, φ, hφ𝒮, hφ⟩

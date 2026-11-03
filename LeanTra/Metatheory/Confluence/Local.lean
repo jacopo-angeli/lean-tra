@@ -117,8 +117,10 @@ theorem local_confluence {a : α}
     intro b h
     have hL : TRA.scr b * a ≤ a * TRA.subst b b := h
     have hc := IsInvolutiveQuantale.converse_monotonicity hL
-    rw [IsInvolutiveQuantale.converse_compositionality, IsInvolutiveQuantale.converse_compositionality,
-        ← TRA.scr_converse_commutation, TRA.subst_converse_commutation] at hc
+    rw [IsInvolutiveQuantale.converse_compositionality,
+        IsInvolutiveQuantale.converse_compositionality,
+        ← TRA.scr_converse_commutation,
+        TRA.subst_converse_commutation] at hc
     exact hc
   have hN6 : TRA.subst ((parRed a)ᵒ) ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
     have hL := parRed_substitutivity h1

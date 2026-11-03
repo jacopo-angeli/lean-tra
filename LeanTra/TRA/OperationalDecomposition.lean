@@ -40,10 +40,10 @@ pairwise `b`-related.
 
 Both are morphisms of the ambient structure: each preserves arbitrary
 joins, composition and converse — three axioms for `introduction`, and
-four for `elimination`, whose join-preservation is taken slot by slot (7). Both are oplax on the
-unit (2). They are orthogonal: a constructor and a destructor never meet,
-so their composite is `⊥` (1). Together they exhaust the strict
-compatible refinement, `~a = ιa ⊔ ε(a, a)`, which is
+four for `elimination`, whose join-preservation is taken slot by slot (7).
+Both are oplax on the unit (2). They are orthogonal: a constructor and
+a destructor never meet, so their composite is `⊥` (1). Together they
+exhaust the strict compatible refinement, `~a = ιa ⊔ ε(a, a)`, which is
 the axiom that makes the decomposition a decomposition rather than a
 pair of unrelated operations (1). Substitution passes oplaxly through
 both (2), and the closure modality passes through the major slot of an
@@ -101,9 +101,11 @@ class OperationalDecomposition (α : Type u)
   protected introduction_join_preservation (s : Set α) (hs : s.Nonempty) :
       introduction (sSup s) = sSup (introduction '' s)
   /-- `introduction` preserves composition. -/
-  protected introduction_compositionality (a b : α) : introduction (a * b) = introduction a * introduction b
+  protected introduction_compositionality (a b : α) :
+    introduction (a * b) = introduction a * introduction b
   /-- `introduction` preserves converse. -/
-  protected introduction_converse_commutation (a : α) : introduction (aᵒ) = (introduction a)ᵒ
+  protected introduction_converse_commutation (a : α) :
+    introduction (aᵒ) = (introduction a)ᵒ
 
   /-- `elimination` preserves arbitrary non-empty joins in the major (left)
   slot. See `introduction_join_preservation` for why the empty case is
@@ -116,7 +118,8 @@ class OperationalDecomposition (α : Type u)
   protected elimination_join_preservation_right (a : α) (s : Set α) (hs : s.Nonempty) :
       elimination a (sSup s) = sSup ((fun b => elimination a b) '' s)
   /-- `elimination` preserves composition, slot by slot. -/
-  protected elimination_compositionality (a a' b b' : α) : elimination (a * a') (b * b') = elimination a b * elimination a' b'
+  protected elimination_compositionality (a a' b b' : α) :
+    elimination (a * a') (b * b') = elimination a b * elimination a' b'
   /-- `elimination` preserves converse, slot by slot. -/
   protected elimination_converse_commutation (a b : α) : elimination (aᵒ) (bᵒ) = (elimination a b)ᵒ
 
@@ -126,7 +129,8 @@ class OperationalDecomposition (α : Type u)
   protected elimination_unit_oplaxity : elimination 1 1 ≤ 1
 
   /-- `introduction` and `elimination` are orthogonal. -/
-  protected introduction_elimination_orthogonality (a b c : α) : introduction a * elimination b c ≤ ⊥
+  protected introduction_elimination_orthogonality (a b c : α) :
+    introduction a * elimination b c ≤ ⊥
 
   /-- The strict compatible refinement decomposes into its
   constructor part and its destructor part, and into nothing else. -/
@@ -144,15 +148,21 @@ class OperationalDecomposition (α : Type u)
   protected subst_introduction_oplaxity (a b : α) (hb : TRA.varDiag ≤ b) :
       TRA.subst (introduction a) b ≤ introduction (TRA.subst a b)
   /-- Substitution distributes, oplaxly, over `elimination`, slot by slot. -/
-  protected subst_elimination_oplaxity (a₁ a₂ b : α) : TRA.subst (elimination a₁ a₂) b ≤ elimination (TRA.subst a₁ b) (TRA.subst a₂ b)
+  protected subst_elimination_oplaxity (a₁ a₂ b : α) :
+    TRA.subst (elimination a₁ a₂) b ≤ elimination (TRA.subst a₁ b) (TRA.subst a₂ b)
 
   /-- The closure modality passes through the major slot of an elimination form. -/
-  protected box_elimination_oplaxity (a b : α) : TRA.box (elimination a b) ≤ elimination (TRA.box a) b
+  protected box_elimination_oplaxity (a b : α) :
+    TRA.box (elimination a b) ≤ elimination (TRA.box a) b
 
 namespace OperationalDecomposition
 
 variable {α : Type u}
-variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [OperationalDecomposition α]
+variable [Monoid α]
+         [CompleteLattice α]
+         [IsQuantale α]
+         [IsInvolutiveQuantale α]
+         [OperationalDecomposition α]
 
 
 
@@ -203,7 +213,8 @@ theorem introduction_monotonicity ⦃a b : α⦄ (h : a ≤ b) : ι a ≤ ι b :
   rw [Set.image_pair, sSup_pair, sSup_pair, hsup] at hs
   exact le_sup_left.trans hs.ge
 /-- `elimination` is monotone in each slot. -/
-theorem elimination_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : ε(a, b) ≤ ε(a', b') := by
+theorem elimination_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') :
+  ε(a, b) ≤ ε(a', b') := by
   -- Monotone in the left slot via left join preservation.
   have hleft : ε(a, b) ≤ ε(a', b) := by
     have hsup_a : a ⊔ a' = a' := sup_of_le_right ha
