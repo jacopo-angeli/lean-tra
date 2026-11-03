@@ -77,7 +77,13 @@ open OperationalDecomposition
 namespace LeanTra.Determinism
 
 variable {α : Type*}
-variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [OperationalDecomposition α]
+variable [Monoid α]
+         [CompleteLattice α]
+         [IsQuantale α]
+         [IsInvolutiveQuantale α]
+         [OperationalDecomposition α]
+
+
 
 /-! ### The subterm recursion
 
@@ -136,24 +142,30 @@ remains is `introductionCoreflexive ⊔ majorProjection x * a`. -/
 private theorem majorDescentRecursor_sup_introductionCoreflexive {a : α}
   (hGIP : GIP a)
   (x : α) :
-  ((introductionCoreflexive : α) ⊔ majorProjection x) * (a ⊔ introductionCoreflexive) = introductionCoreflexive ⊔ majorProjection x * a := by
-  have elimination_mul_introduction_le_bot : ∀ b c d : α, OperationalDecomposition.elimination b c * OperationalDecomposition.introduction d ≤ ⊥ := fun b c d => by
+  ((introductionCoreflexive : α) ⊔ majorProjection x) * (a ⊔ introductionCoreflexive)
+    = introductionCoreflexive ⊔ majorProjection x * a := by
+  have elimination_mul_introduction_le_bot : ∀ b c d : α,
+    OperationalDecomposition.elimination b c * OperationalDecomposition.introduction d ≤ ⊥ :=
+    fun b c d => by
     rw [← IsInvolutiveQuantale.converse_monotonicity_iff,
         IsInvolutiveQuantale.converse_bot_strictness,
         IsInvolutiveQuantale.converse_compositionality,
         ← OperationalDecomposition.introduction_converse_commutation,
         ← OperationalDecomposition.elimination_converse_commutation]
     exact OperationalDecomposition.introduction_elimination_orthogonality _ _ _
-  have introductionCoreflexive_mul_self : (introductionCoreflexive : α) * introductionCoreflexive = introductionCoreflexive := by
+  have introductionCoreflexive_mul_self :
+    (introductionCoreflexive : α) * introductionCoreflexive = introductionCoreflexive := by
     change OperationalDecomposition.introduction 1
          * OperationalDecomposition.introduction 1
        = OperationalDecomposition.introduction 1
     rw [← OperationalDecomposition.introduction_compositionality, one_mul]
-  have majorProjection_mul_introductionCoreflexive_le_bot : ∀ b : α, majorProjection b * (introductionCoreflexive : α) ≤ ⊥ := fun b => by
+  have majorProjection_mul_introductionCoreflexive_le_bot : ∀ b : α,
+    majorProjection b * (introductionCoreflexive : α) ≤ ⊥ := fun b => by
     change OperationalDecomposition.elimination b 1
        * OperationalDecomposition.introduction 1 ≤ ⊥
     exact elimination_mul_introduction_le_bot _ _ _
-  have introduction_mul_rule_le_bot : ∀ y : α, OperationalDecomposition.introduction y * a ≤ (⊥ : α) := fun y => by
+  have introduction_mul_rule_le_bot : ∀ y : α,
+    OperationalDecomposition.introduction y * a ≤ (⊥ : α) := fun y => by
     calc OperationalDecomposition.introduction y * a
         ≤ OperationalDecomposition.introduction y
             * (majorProjection (introductionCoreflexive : α) * a) := by

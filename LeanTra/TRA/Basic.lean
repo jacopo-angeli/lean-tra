@@ -190,14 +190,16 @@ class TRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvo
   protected subst_monotonicity_right ⦃a b b' : α⦄ : b ≤ b' → subst a b ≤ subst a b'
   /-- Substitution is oplax on composition in both arguments: substituting a
   composite is refined by composing the substitutions of its parts. -/
-  protected subst_compositionality_oplax (a a' b b' : α) : subst (a * a') (b * b') ≤ subst a b * subst a' b'
+  protected subst_compositionality_oplax (a a' b b' : α) :
+    subst (a * a') (b * b') ≤ subst a b * subst a' b'
   /-- Substitution commutes with converse: swapping the endpoints of a
   substitution is the substitution of the swapped relations. -/
   protected subst_converse_commutation (a b : α) : (subst a b)ᵒ = subst (aᵒ) (bᵒ)
   /-- Substitution preserves arbitrary joins in the first argument:
   substituting into a join of relations is the join of the substituted
   relations. -/
-  protected subst_join_preservation_left (s : Set α) (b : α) : subst (sSup s) b = sSup ((fun a => subst a b) '' s)
+  protected subst_join_preservation_left (s : Set α) (b : α) :
+    subst (sSup s) b = sSup ((fun a => subst a b) '' s)
   /-- `Δη` is a left unit for substitution: substituting into the variable
   relation is the identity. -/
   protected subst_varDiag_unit_left (a : α) : subst varDiag a = a
@@ -321,7 +323,8 @@ variable or built from the same operator with `a`-related sub-terms. -/
 def cr (a : α) : α := varDiag ⊔ scr a
 
 /-- `⌃·` is monotone. -/
-theorem cr_monotonicity ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b := sup_le_sup_left (TRA.scr_monotonicity h) _
+theorem cr_monotonicity ⦃a b : α⦄ (h : a ≤ b) : cr a ≤ cr b :=
+  sup_le_sup_left (TRA.scr_monotonicity h) _
 
 /-- Fixed-point law for `⌃·`: `⌃Δ = Δ`. -/
 @[simp] theorem cr_one : cr (1 : α) = 1 := TRA.cr_fixpoint
@@ -349,8 +352,9 @@ theorem cr_compositionality (a b : α) : cr a * cr b = cr (a * b) := by
 @[simp]
 theorem cr_converse_commutation (a : α) : (cr a)ᵒ = cr (aᵒ) := by
   unfold cr
-  rw [IsInvolutiveQuantale.converse_join_preservation_binary, varDiag_symmetry_eq, ← TRA.scr_converse_commutation]
-
+  rw [IsInvolutiveQuantale.converse_join_preservation_binary,
+      varDiag_symmetry_eq,
+      ← TRA.scr_converse_commutation]
 
 
 /-! ### Laws of `·⟦·⟧`
@@ -384,7 +388,8 @@ theorem subst_monotonicity_left ⦃a a' b : α⦄ (h : a ≤ a') : TRA.subst a b
   exact hle
 
 /-- Full two-argument monotonicity of substitution. -/
-theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') : TRA.subst a b ≤ TRA.subst a' b' :=
+theorem subst_monotonicity ⦃a a' b b' : α⦄ (ha : a ≤ a') (hb : b ≤ b') :
+  TRA.subst a b ≤ TRA.subst a' b' :=
   (subst_monotonicity_left ha).trans (TRA.subst_monotonicity_right hb)
 
 /-- Substituting into a compatible refinement: `(⌃a)⟦b⟧ ≤ b ⊔ ⌃(a⟦b⟧)`,

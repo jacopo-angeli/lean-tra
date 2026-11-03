@@ -65,7 +65,11 @@ open OperationalDecomposition
 namespace LeanTra.Metatheory
 
 variable {α : Type*}
-variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale α] [OperationalDecomposition α]
+variable [Monoid α]
+         [CompleteLattice α]
+         [IsQuantale α]
+         [IsInvolutiveQuantale α]
+         [OperationalDecomposition α]
 
 
 

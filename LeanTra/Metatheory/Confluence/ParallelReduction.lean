@@ -130,7 +130,8 @@ theorem scr_factorisation {a : α} (h : IsReduction a) : a = TRA.scr Δ * a := b
 
 /-- The base instance of a reduction is again a reduction:
 `Δη * a⟦Δ⟧ = ⊥`. -/
-theorem varDiag_subst_one_orthogonality {a : α} (h : IsReduction a) : TRA.varDiag * TRA.subst a Δ = ⊥ := by
+theorem varDiag_subst_one_orthogonality {a : α} (h : IsReduction a) :
+  TRA.varDiag * TRA.subst a Δ = ⊥ := by
   refine le_antisymm ?_ bot_le
   have key : TRA.subst a Δ ≤ TRA.scr Δ * TRA.subst a Δ :=
     calc TRA.subst a Δ
@@ -148,7 +149,8 @@ theorem varDiag_subst_one_orthogonality {a : α} (h : IsReduction a) : TRA.varDi
     _ = ⊥ := Quantale.bot_mul
 
 /-- `a⇛` is substitutive: `(a⇛)⟦a⇛⟧ ≤ a⇛`. -/
-theorem parRed_substitutivity {a : α} (h : IsReduction a) : TRA.subst (parRed a) (parRed a) ≤ parRed a := by
+theorem parRed_substitutivity {a : α} (h : IsReduction a) :
+  TRA.subst (parRed a) (parRed a) ≤ parRed a := by
   refine TRA.subst_le_iff.mpr ?_
   refine TRA.howe_induction ?_
   refine TRA.subst_le_iff.mp ?_
@@ -244,7 +246,8 @@ theorem parRed_converse_leibniz (a : α) : TRA.subst Δ ((parRed a)ᵒ) ≤ (par
   TRA.subst_one_le_of_cr_le (parRed_converse_compatibility a)
 
 /-- Converse of `varDiag_subst_one_orthogonality`: `aᵒ⟦Δ⟧ * Δη = ⊥`. -/
-theorem subst_one_varDiag_orthogonality {a : α} (h : IsReduction a) : TRA.subst aᵒ Δ * TRA.varDiag = (⊥ : α) := by
+theorem subst_one_varDiag_orthogonality {a : α} (h : IsReduction a) :
+  TRA.subst aᵒ Δ * TRA.varDiag = (⊥ : α) := by
   have hL := varDiag_subst_one_orthogonality h
   have := congrArg IsInvolutiveQuantale.converse hL
   rw [IsInvolutiveQuantale.converse_compositionality, TRA.subst_one_converse_commutation,
@@ -252,7 +255,8 @@ theorem subst_one_varDiag_orthogonality {a : α} (h : IsReduction a) : TRA.subst
   exact this
 
 /-- Converse nesting: `a⟦(a⇛)ᵒ⟧ ≤ a⟦Δ⟧ * (a⇛)ᵒ`. -/
-theorem parRed_converse_nesting (a : α) : TRA.subst a ((parRed a)ᵒ) ≤ TRA.subst a Δ * (parRed a)ᵒ := by
+theorem parRed_converse_nesting (a : α) :
+  TRA.subst a ((parRed a)ᵒ) ≤ TRA.subst a Δ * (parRed a)ᵒ := by
   calc TRA.subst a ((parRed a)ᵒ)
       = TRA.subst (a * Δ) (Δ * (parRed a)ᵒ) := by rw [mul_one, one_mul]
     _ ≤ TRA.subst a Δ * TRA.subst Δ ((parRed a)ᵒ) := TRA.subst_compositionality_oplax _ _ _ _
@@ -260,7 +264,8 @@ theorem parRed_converse_nesting (a : α) : TRA.subst a ((parRed a)ᵒ) ≤ TRA.s
         mul_le_mul_right (parRed_converse_leibniz a) _
 
 /-- Converse unfolding: `aᵒ⟦Δ⟧ * ⌃((a⇛)ᵒ) ≤ (a⇛)ᵒ`. -/
-theorem parRed_converse_unfolding (a : α) : TRA.subst aᵒ Δ * TRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
+theorem parRed_converse_unfolding (a : α) :
+ TRA.subst aᵒ Δ * TRA.cr ((parRed a)ᵒ) ≤ (parRed a)ᵒ := by
   have hfwd := parRed_unfolding a
   have := IsInvolutiveQuantale.converse_monotonicity hfwd
   rw [IsInvolutiveQuantale.converse_compositionality, TRA.subst_one_converse_commutation,
