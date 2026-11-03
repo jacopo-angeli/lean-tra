@@ -1,6 +1,7 @@
 /-
-Master's thesis — Lean 4 formalisation of Term Relation Algebras.
-Author: Jacopo Angeli.
+Copyright (c) 2026 Jacopo Angeli. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jacopo Angeli
 -/
 
 module
