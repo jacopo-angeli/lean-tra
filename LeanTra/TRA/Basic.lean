@@ -5,7 +5,7 @@ Authors: Jacopo Angeli
 -/
 module
 
-public import LeanTra.Algebra.InvolutiveQuantale
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.Involutive
 
 /-!
 # Term Relation Algebras

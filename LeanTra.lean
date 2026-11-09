@@ -1,8 +1,5 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
-public import LeanTra.Algebra.Diamond
-public import LeanTra.Algebra.InvolutiveQuantale
-public import LeanTra.Algebra.KleeneStar
 public import LeanTra.Instances.Consistency
 public import LeanTra.Instances.LambdaCalculus
 public import LeanTra.Instances.PeanoArithmetic
@@ -16,3 +13,6 @@ public import LeanTra.TRA.Basic
 public import LeanTra.TRA.Howe
 public import LeanTra.TRA.Modality
 public import LeanTra.TRA.OperationalDecomposition
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.Diamond
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.Involutive
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.KleeneStar

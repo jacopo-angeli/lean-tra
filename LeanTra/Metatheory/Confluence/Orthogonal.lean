@@ -6,7 +6,7 @@ Authors: Jacopo Angeli
 module
 
 public import LeanTra.Metatheory.Confluence.ParallelReduction
-public import LeanTra.Algebra.Diamond
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.Diamond
 
 /-!
 # Confluence of orthogonal reduction

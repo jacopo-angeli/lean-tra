@@ -6,7 +6,7 @@ Authors: Jacopo Angeli
 module
 
 public import LeanTra.Metatheory.Determinism.Evaluation
-public import LeanTra.Algebra.Diamond
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.Diamond
 
 /-!
 # Determinism of big-step evaluation

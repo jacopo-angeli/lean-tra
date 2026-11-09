@@ -5,7 +5,7 @@ Authors: Jacopo Angeli
 -/
 module
 
-public import LeanTra.Algebra.KleeneStar
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.KleeneStar
 
 /-!
 # The diamond property and confluence
