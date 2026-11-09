@@ -6,7 +6,7 @@ Authors: Jacopo Angeli
 module
 
 public import LeanTra.Metatheory.GentzenPrinciples
-public import LeanTra.Algebra.KleeneStar
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.KleeneStar
 
 /-!
 # Evaluation

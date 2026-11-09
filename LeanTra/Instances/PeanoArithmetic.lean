@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Logic.IsEmpty.Defs
 public import Mathlib.Logic.Function.Basic
-public import LeanTra.Algebra.InvolutiveQuantale
+public import LeanTra.ToMathlib.Algebra.Order.Quantale.Involutive
 public import LeanTra.TRA.Basic
 public import LeanTra.TRA.Modality
 public import LeanTra.TRA.OperationalDecomposition
