@@ -9,6 +9,7 @@ public import LeanTra.Metatheory.Confluence.ParallelReduction
 public import LeanTra.Metatheory.Determinism.BigStep
 public import LeanTra.Metatheory.Determinism.Evaluation
 public import LeanTra.Metatheory.GentzenPrinciples
+public import LeanTra.Syntax.Lambda
 public import LeanTra.TRA.Basic
 public import LeanTra.TRA.Howe
 public import LeanTra.TRA.Modality
