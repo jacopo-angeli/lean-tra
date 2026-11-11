@@ -216,7 +216,7 @@ class TRA (α : Type u) [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvo
   variable to itself, and the pointwise `b`-obligation of relation
   substitution then requires that variable to be `b`-related to itself,
   which the guard supplies. Without the guard the law is refuted in the
-  second-order λ-calculus model (see `LambdaCalculus.lean`,
+  second-order λ-calculus model (see `LeanTra.Instances.Lambda.TRA`,
   `not_subst_scr_oplaxity_unguarded`). At first order the guard is
   vacuous — the underlying syntax has no binders — but stating the class
   field with the guard costs nothing there. Every use of this law in the
