@@ -1106,7 +1106,7 @@ of the twenty TRA fields we hand back the corresponding proof. Peano
 has no binders, so the model proves `subst_scr_oplaxity` without the
 class-level `Δη ≤ b` guard (the field is `fun a b _ =>
 TrmRel.subst_scr_oplaxity a b`); at the second-order level the guard
-does real work, see `LambdaCalculus.lean`. From this point on, every
+does real work, see `LeanTra.Instances.Lambda.TRA`. From this point on, every
 abstract lemma proved against a generic `TRA α` — including the
 closure modality `TRA.box`, the combinator `TRA.cr`, and eventually
 the bridge theorem itself — becomes a concrete lemma about `TrmRel`.

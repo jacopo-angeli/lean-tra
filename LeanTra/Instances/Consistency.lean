@@ -185,7 +185,7 @@ the `TRA` instance, the derived operations (`introductionCoreflexive`,
 `eliminationCoreflexive`, `valueCoreflexive`, the evaluation recursors) all
 collapse to `⊥`, so no operational content is exercised; that job is left to
 the concrete term models in `Instances/PeanoArithmetic.lean` and
-`Instances/LambdaCalculus.lean`. -/
+`LeanTra.Instances.Lambda.TRA`. -/
 instance instOperationalDecomposition : OperationalDecomposition Toy where
   introduction _ := False
   elimination _ _ := False
