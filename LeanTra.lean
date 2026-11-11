@@ -1,7 +1,7 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
 public import LeanTra.Instances.Consistency
-public import LeanTra.Instances.LambdaCalculus
+public import LeanTra.Instances.Lambda.TRA
 public import LeanTra.Instances.PeanoArithmetic
 public import LeanTra.Metatheory.Confluence.Local
 public import LeanTra.Metatheory.Confluence.Orthogonal
