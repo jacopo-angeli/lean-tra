@@ -33,7 +33,7 @@ on `(a⇛)ᵒ`, which is the op-Howe extension of `Δ ⊔ aᵒ⟦Δ⟧`, transpo
 along the composition residual. The two branches of the induction consume
 the two orthogonality conjuncts, and the first conjunct cancels an
 `aᵒ * a` that appears in the middle of the two-sided branch. Confluence
-then follows from `IsDiamond.confluent` in `Algebra/Diamond.lean`.
+then follows from `IsDiamond.confluent` in `LeanTra.ToMathlib.Algebra.Order.Quantale.Diamond`.
 
 ## References
 

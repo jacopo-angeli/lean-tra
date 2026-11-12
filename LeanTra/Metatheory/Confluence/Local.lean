@@ -60,7 +60,7 @@ variable [Monoid α] [CompleteLattice α] [IsQuantale α] [IsInvolutiveQuantale 
 /-! ### Predicates on rules
 
 Two inequalities on the rule alone, used only in the theorem below,
-alongside `IsDeterministic` from `Algebra/Diamond.lean`.
+alongside `IsDeterministic` from `LeanTra.ToMathlib.Algebra.Order.Quantale.Diamond`.
 `IsSubstitutiveAtIdentity` and `IsDeterministic` are the local
 counterparts of the two orthogonality conjuncts; `IsStruct` is the
 intermediate condition on `(a, b)` that the diamond argument actually

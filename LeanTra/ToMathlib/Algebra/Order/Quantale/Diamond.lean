@@ -19,7 +19,7 @@ they have a common reduct, again in one step each. *Confluence* is the
 same property of the reflexive-transitive closure `a∗`, so it says the
 same thing with "in one step" weakened to "in any number of steps".
 
-Everything here rests on the Kleene star of `Algebra/KleeneStar.lean`,
+Everything here rests on the Kleene star of `LeanTra.ToMathlib.Algebra.Order.Quantale.KleeneStar`,
 and the involution supplies the converse `·ᵒ` that turns "reachable from"
 into "reaches". Nothing in the file mentions terms, substitution or
 syntax: the argument is the standard Kleene-algebra one, and it applies

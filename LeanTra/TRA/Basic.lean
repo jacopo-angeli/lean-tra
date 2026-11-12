@@ -133,7 +133,7 @@ Not all of these live in this file. `howe`, `opHowe` and `substResid`
 live in `TRA/Howe.lean`; `box` and `dia` in `TRA/Modality.lean`; all
 five are scoped in `TRA`. `parRed` is scoped in `LeanTra.Confluence`
 (`Confluence/ParallelReduction.lean`); `star` in `LeanTra.Algebra`
-(`Algebra/KleeneStar.lean`); `introduction` and `elimination` in
+(`LeanTra.ToMathlib.Algebra.Order.Quantale.KleeneStar`); `introduction` and `elimination` in
 `OperationalDecomposition` (`TRA/OperationalDecomposition.lean`). A
 file that wants the last three notations needs the corresponding
 `open scoped`.
