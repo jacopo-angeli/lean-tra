@@ -206,7 +206,7 @@ below, via `subst_varDiag_unit_right` and `Δη ≤ Δ`. The bound one
 actually obtains is `□(a⟦b⟧)`, which is incomparable with `□a`.
 
 It is also false. In the context-indexed term model of
-`Instances/PeanoArithmetic`, with `j` the identity on closed terms, take
+`LeanTra.Instances.Peano.TRA`, with `j` the identity on closed terms, take
 `a` to be the relation holding at every non-empty context and `b := ⊤`.
 At the empty context the left-hand side holds by instantiating the outer
 existential at a non-empty context, while the right-hand side reduces to

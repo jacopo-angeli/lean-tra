@@ -184,8 +184,8 @@ carrier. On `Toy` they coexist, so no such contradiction can exist. As with
 the `TRA` instance, the derived operations (`introductionCoreflexive`,
 `eliminationCoreflexive`, `valueCoreflexive`, the evaluation recursors) all
 collapse to `⊥`, so no operational content is exercised; that job is left to
-the concrete term models in `Instances/PeanoArithmetic.lean` and
-`LeanTra.Instances.Lambda.TRA`. -/
+the concrete term models in `LeanTra.Instances.Peano.OperationalDecomposition`
+and `LeanTra.Instances.Lambda.TRA`. -/
 instance instOperationalDecomposition : OperationalDecomposition Toy where
   introduction _ := False
   elimination _ _ := False

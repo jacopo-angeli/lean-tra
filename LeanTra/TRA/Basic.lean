@@ -82,7 +82,7 @@ follow from the axioms above:
 
 One law of `□` does not follow: `(□a)⟦b⟧ ≤ □a`. No condition
 on `j` alone yields it through the oplax `subst_compositionality_oplax`,
-and the first-order term model of `Instances/PeanoArithmetic`, where `j` is
+and the first-order term model of `LeanTra.Instances.Peano.TRA`, where `j` is
 the identity on closed terms, exhibits a relation and a substituent for
 which it fails. The obstruction and the counterexample are recorded in
 the *Investigation* block of `TRA/Modality.lean`. It is therefore

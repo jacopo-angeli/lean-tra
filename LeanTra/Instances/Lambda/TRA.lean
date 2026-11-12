@@ -411,7 +411,7 @@ Every use of the law in the abstract metatheory (see
 `Metatheory/Confluence/ParallelReduction.lean` and `TRA/Howe.lean`)
 instantiates `ψ` with a relation containing the identity (typically
 `ψ = Δ` or `ψ = a⇛`); the guard is therefore satisfied at every
-real call site. The first-order model in `PeanoArithmetic.lean`
+real call site. The first-order model in `LeanTra.Instances.Peano.TRA`
 proves the same law without the guard, because that syntax has no
 binders and the fresh-position obligation never appears; the guard
 is vacuous there. -/
