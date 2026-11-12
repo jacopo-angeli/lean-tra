@@ -5,7 +5,7 @@ public import LeanTra.Instances.Lambda.Beta
 public import LeanTra.Instances.Lambda.OperationalDecomposition
 public import LeanTra.Instances.Lambda.Relations
 public import LeanTra.Instances.Lambda.TRA
-public import LeanTra.Instances.PeanoArithmetic
+public import LeanTra.Instances.Peano.TRA
 public import LeanTra.Metatheory.Confluence.Local
 public import LeanTra.Metatheory.Confluence.Orthogonal
 public import LeanTra.Metatheory.Confluence.ParallelReduction
