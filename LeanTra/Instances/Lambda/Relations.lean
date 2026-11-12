@@ -14,7 +14,7 @@ public import LeanTra.ToMathlib.Algebra.Order.Quantale.Involutive
 Renaming-closed, context-indexed relations on `Lam` form an involutive quantale.
 
 ## Main definitions
-* `TrmRel.TrmRel`: arity-indexed families of binary relations on `Lam n`, closed under renaming.
+* `TrmRel`: arity-indexed families of binary relations on `Lam n`, closed under renaming.
 * `TrmRel.converse`: the involution swapping the two endpoints of a relation.
 
 ## Main statements
