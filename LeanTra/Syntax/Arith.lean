@@ -5,7 +5,7 @@ Authors: Jacopo Angeli
 -/
 module
 
-public import Mathlib.Logic.IsEmpty.Defs
+public import Mathlib.Basic.IsEmpty.Defs
 public import Mathlib.Logic.Function.Basic
 
 /-!
